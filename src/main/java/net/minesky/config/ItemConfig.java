@@ -14,11 +14,11 @@ public class ItemConfig {
     private List<String> lore;
 
     public ItemConfig() {
-        this.name = "Nome Foda!";
+        this.name = "DisplayName";
         this.model = 0;
         this.material = Material.IRON_AXE;
         this.level = 1;
-        this.classe = "nenhum";
+        this.classe = "Nenhuma";
         this.lore = new ArrayList<>();
     }
 

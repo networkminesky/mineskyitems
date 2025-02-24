@@ -1,5 +1,6 @@
 package net.minesky.commands;
 
+import net.minesky.MineskyItems;
 import net.minesky.config.ItemConfig;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
@@ -11,16 +12,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.Plugin;
 
 import java.util.*;
 import java.util.logging.Level;
 
-public class CriarItemsCommand implements CommandExecutor, Listener {
 
-    private final Map<Player, ItemConfig> itemConfigMap = new HashMap<>();
+public class CriarItemsCommand implements CommandExecutor, Listener {
+    
     @Override
     public boolean onCommand(CommandSender s, Command command, String lbl, String[] args) {
         if (!s.hasPermission("mineskyitems.criador")) {
@@ -29,6 +32,9 @@ public class CriarItemsCommand implements CommandExecutor, Listener {
         }
         if (s instanceof Player) {
             Player player = (Player) s;
+            /*if (args.length < 1) {
+                return true; Talvez Implementar o ITEM_ID e CATEGORY
+            }*/
             abrirMenu(player);
             return true;
         }
@@ -38,7 +44,7 @@ public class CriarItemsCommand implements CommandExecutor, Listener {
 
     private void abrirMenu(Player player) {
         ItemConfig config = new ItemConfig();
-        itemConfigMap.put(player, config);
+        MineskyItems.getItemConfigMap().put(player, config);
 
         Inventory menu = Bukkit.createInventory(null, 27, "Configurar itens");
 
@@ -47,7 +53,7 @@ public class CriarItemsCommand implements CommandExecutor, Listener {
     }
 
     public void updateMenu(Player player, Inventory menu) {
-        ItemConfig config = itemConfigMap.get(player);
+        ItemConfig config = MineskyItems.getItemConfigMap().get(player);
 
         // Botão de Nome
         ItemStack nameItem = new ItemStack(Material.PAPER);
@@ -133,6 +139,58 @@ public class CriarItemsCommand implements CommandExecutor, Listener {
         if (menu == null || !event.getView().getTitle().equals("Configurar itens")) return;
 
         event.setCancelled(true);
-        //IMPLEMENTAR DADOS MO PREGUIÇA
+        if (event.getSlot() == 10) {
+            // Alterar Nome
+            player.closeInventory();
+            player.sendMessage("§e[MineskyItems] §7Informe o display name do item. Para cancelar utilize CANCEL.");
+
+            // Criar um listener de chat para pegar o nome
+            Listener chatListener = new Listener() {
+                @EventHandler
+                public void onChat(AsyncPlayerChatEvent chatEvent) {
+                    if (chatEvent.getPlayer().equals(player)) {
+                        chatEvent.setCancelled(true);
+                        String newName = chatEvent.getMessage();
+                        if (newName.equalsIgnoreCase("cancel") || newName.equalsIgnoreCase("cancelar")) {
+                            player.sendMessage("§e[MineskyItems] §cVocê cancelou o evento!");
+                            AsyncPlayerChatEvent.getHandlerList().unregister(this);
+                            Bukkit.getScheduler().runTask(MineskyItems.get(), () -> {
+                                Inventory menu = Bukkit.createInventory(null, 27, "Configurar itens");
+
+                                updateMenu(player, menu);
+                                player.openInventory(menu);
+                            });
+                            return;
+                        }
+
+                        ItemConfig itemConfig = MineskyItems.getItemConfigMap().get(player);
+                        if (itemConfig == null) {
+                            player.sendMessage("§e[MineskyItems] §cErro: Nenhuma configuração foi encontrada para você. Tente novamente.");
+                            Utils.Logger(Level.SEVERE, "Nenhuma configuração foi encontrada para " + player.getName() + ". Tente novamente.");
+                            return;
+                        }
+                        itemConfig.setName(newName);
+                            player.sendMessage("§e[MineskyItems] §7Display name definido para: §a" + newName);
+
+                        // Desregistrar o listener após pegar o nome
+                        AsyncPlayerChatEvent.getHandlerList().unregister(this);
+
+                        // Reabrir o menu atualizado
+                        Bukkit.getScheduler().runTask(MineskyItems.get(), () -> {
+                            Inventory menu = Bukkit.createInventory(null, 27, "Configurar itens");
+
+                            updateMenu(player, menu);
+                            player.openInventory(menu);
+                        });
+                    }
+                }
+            };
+
+            // Registrar o listener
+            Bukkit.getServer().getPluginManager().registerEvents(chatListener, MineskyItems.get());
+        } else if (event.getSlot() == 6) {
+            //CANCELAR
+            player.closeInventory();
+        }
     }
 }
