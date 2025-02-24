@@ -1,2 +1,2 @@
-# MineSky Events
+# MineSky Items
 Plugin para facilitar a criação de itens.
