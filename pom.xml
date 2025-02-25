@@ -72,6 +72,7 @@
             <version>1.20.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>io.lumine</groupId>
             <artifactId>MythicLib-dist</artifactId>
@@ -86,6 +87,5 @@
             <version>6.9.5-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
-
     </dependencies>
 </project>

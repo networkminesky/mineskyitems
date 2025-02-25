@@ -1,15 +1,14 @@
-name: MineskyItems
+name: MineSkyItems
 version: '1.0.1-ALPHA'
-main: net.minesky.MineskyItems
+main: net.minesky.MineSkyItems
 api-version: '1.19'
-authors: [zBrunoC (Bruno C.), Drawn (G. Druta)]
-commands:
-  criaritem:
-    Description: Criar Item. LITERALMENTE
-    Usage: /criaritem [ESPADA] [ITEM_ID]
-    aliases: [mci]
+depend:
+  - MMOItems
+authors: [zBrunoC (Bruno C.), Drawn (Giovane D.)]
 
-permissions:
-  mineskyitems.criador:
-    description: Permissão para criar itens LOL.
-    default: op
+commands:
+  item:
+    Description: Criar ou editar um item
+    Usage: /item <editar|criar|give> <nome>
+    aliases:
+    - msit
