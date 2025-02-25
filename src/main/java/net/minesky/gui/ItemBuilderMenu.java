@@ -21,7 +21,7 @@ public class ItemBuilderMenu implements Listener {
     public static HashMap<Player, ItemBuilder> builderHashMap = new HashMap<>();
 
     private static ItemStack simpleButton(Material m, String name, String... lore) {
-        simpleButton(m, name, 1, lore);
+        return simpleButton(m, name, 1, lore);
     }
     private static ItemStack simpleButton(Material m, String name, int count, String... lore) {
         ItemStack it = new ItemStack(m, count);
