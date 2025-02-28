@@ -1,0 +1,40 @@
+GENERIC_MAX_HEALTH:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10
+GENERIC_KNOCKBACK_RESISTANCE:
+  - 0.5
+  - 1
+  - 2
+GENERIC_MOVEMENT_SPEED:
+  - 1
+  - 2
+  - 3
+GENERIC_FLYING_SPEED:
+  - 1
+  - 2
+  - 3
+GENERIC_ATTACK_DAMAGE:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+GENERIC_ATTACK_KNOCKBACK("generic.attack_knockback"),
+GENERIC_ATTACK_SPEED("generic.attack_speed"),
+GENERIC_ARMOR("generic.armor"),
+GENERIC_ARMOR_TOUGHNESS("generic.armor_toughness"),
+GENERIC_LUCK("generic.luck"),
+HORSE_JUMP_STRENGTH("horse.jump_strength"),
+ZOMBIE_SPAWN_REINFORCEMENTS("zombie.spawn_reinforcements");

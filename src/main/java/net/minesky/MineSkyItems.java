@@ -3,12 +3,16 @@ package net.minesky;
 import net.minesky.commands.ItemCommand;
 import net.minesky.config.ItemConfig;
 import net.minesky.gui.ItemBuilderMenu;
+import net.minesky.logics.LevelCurves;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -20,6 +24,8 @@ public final class MineSkyItems extends JavaPlugin {
     public static Map<Player, ItemConfig> getItemConfigMap() {
         return itemConfigMap;
     }
+
+    public static YamlConfiguration defaultCurveConfig;
 
     public static Logger l;
 
@@ -38,18 +44,14 @@ public final class MineSkyItems extends JavaPlugin {
     }
 
     private void System() {
-        if(!Bukkit.getPluginManager().isPluginEnabled("MMOItems")) {
-            l.info(Utils.c("&cMMOItems não foi detectado no servidor, desligando..."));
 
-            getPluginLoader().disablePlugin(this);
-            return;
-        }
+        LevelCurves.setupCurves();
 
         Bukkit.getPluginManager().registerEvents(new ItemBuilderMenu(), this);
         this.getCommand("item").setExecutor(new ItemCommand());
     }
 
-    public static MineSkyItems get() {
+    public static MineSkyItems getInstance() {
         return MineSkyItems.getPlugin(MineSkyItems.class);
     }
 }

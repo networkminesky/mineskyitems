@@ -1,6 +1,6 @@
 package net.minesky.gui;
 
-import net.minesky.utils.ItemBuilder;
+import net.minesky.handler.ItemBuilder;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -14,7 +14,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
 public class ItemBuilderMenu implements Listener {
 

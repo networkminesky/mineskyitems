@@ -1,0 +1,6 @@
+espadas:
+  default-item: IRON_SWORD
+machados:
+  default-item: IRON_AXE
+arcos:
+  default-item: PAPER

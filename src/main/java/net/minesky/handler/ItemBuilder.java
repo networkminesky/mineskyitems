@@ -1,5 +1,6 @@
-package net.minesky.utils;
+package net.minesky.handler;
 
+import net.minesky.utils.Utils;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
