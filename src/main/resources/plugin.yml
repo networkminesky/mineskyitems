@@ -3,7 +3,7 @@ version: '1.0.1-ALPHA'
 main: net.minesky.MineSkyItems
 api-version: '1.19'
 depend:
-  - MMOItems
+  - MMOCore
 authors: [zBrunoC (Bruno C.), Drawn (Giovane D.)]
 
 commands:

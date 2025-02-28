@@ -63,9 +63,21 @@
             <id>phoenix</id>
             <url>https://nexus.phoenixdevt.fr/repository/maven-public/</url>
         </repository>
+        <repository>
+            <id>nexus</id>
+            <name>Lumine Releases</name>
+            <url>https://mvn.lumine.io/repository/maven-public/</url>
+        </repository>
     </repositories>
 
     <dependencies>
+        <dependency>
+            <groupId>net.Indyuce</groupId>
+            <artifactId>MMOCore-API</artifactId>
+            <version>1.12.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
@@ -81,10 +93,11 @@
             <optional>true</optional>
         </dependency>
 
+
         <dependency>
-            <groupId>net.Indyuce</groupId>
-            <artifactId>MMOItems-API</artifactId>
-            <version>6.9.5-SNAPSHOT</version>
+            <groupId>io.lumine</groupId>
+            <artifactId>Mythic-Dist</artifactId>
+            <version>5.7.1</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

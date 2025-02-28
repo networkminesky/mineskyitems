@@ -1,8 +1,11 @@
 package net.minesky;
 
+import net.Indyuce.mmocore.api.MMOCoreAPI;
 import net.minesky.commands.ItemCommand;
 import net.minesky.config.ItemConfig;
+import net.minesky.events.InteractionEvents;
 import net.minesky.gui.ItemBuilderMenu;
+import net.minesky.handler.categories.CategoryHandler;
 import net.minesky.logics.LevelCurves;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
@@ -27,6 +30,8 @@ public final class MineSkyItems extends JavaPlugin {
 
     public static YamlConfiguration defaultCurveConfig;
 
+    public static MMOCoreAPI mmocoreAPI;
+
     public static Logger l;
 
     @Override
@@ -44,10 +49,17 @@ public final class MineSkyItems extends JavaPlugin {
     }
 
     private void System() {
-
         LevelCurves.setupCurves();
+        CategoryHandler.setupCategories();
+
+        if(Bukkit.getPluginManager().getPlugin("MMOCore") != null) {
+            mmocoreAPI = new MMOCoreAPI(this);
+        }
 
         Bukkit.getPluginManager().registerEvents(new ItemBuilderMenu(), this);
+
+        Bukkit.getPluginManager().registerEvents(new InteractionEvents(), this);
+
         this.getCommand("item").setExecutor(new ItemCommand());
     }
 

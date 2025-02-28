@@ -1,0 +1,31 @@
+itemid:
+  metadata:
+    material: IRON_SWORD
+    displayname: "Item exemplo"
+    model: 20
+    lore:
+      - "Item de exemplo"
+      - "Totalmente pelo MSI"
+  required-level: 20
+  required-class: [Mago, Outra classe aqui]
+  skills:
+    skill1:
+      interaction-type: "RIGHT_CLICK"
+      cooldown: 2
+      mythic-id: "ID_DE_SKILL_MYTHIC"
+
+itemid-2:
+  metadata:
+    material: IRON_SWORD
+    displayname: "Item exemplo"
+    model: 21
+    lore:
+      - "Item de exemplo 2"
+      - "Totalmente pelo MSI"
+  required-level: 20
+  required-class: [Espartano]
+  skills:
+    skill1:
+      interaction-type: "RIGHT_CLICK"
+      cooldown: 2
+      mythic-id: "ID_DE_SKILL_MYTHIC"

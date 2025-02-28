@@ -2,6 +2,8 @@ package net.minesky.commands;
 
 import net.minesky.MineSkyItems;
 import net.minesky.config.ItemConfig;
+import net.minesky.handler.Item;
+import net.minesky.handler.ItemHandler;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -26,7 +28,7 @@ public class ItemCommand implements TabExecutor {
 
     void commandList(CommandSender s) {
         s.sendMessage(Utils.c(
-                "&c/item criar &8- &7Cria um novo item"+
+                "&c/item criar <categoria> &8- &7Cria um novo item"+
                         "\n&c/item editar <nome> &8- &7Edita um item já criado a partir do nome"+
                         "\n&c/item give <player> <nome> &8- &7Pega uma cópia do item a partir do nome"+
                         "\n&c/item achar [id, nome ou nada] &8- &7Procura um item pela parte do nome dele, ou pelo seu ID, ou pelo item em sua mão."
@@ -45,7 +47,42 @@ public class ItemCommand implements TabExecutor {
             return true;
         }
 
-        if(args[0].equalsIgnoreCase("give")) {
+        // give <player> <nome>
+        if(args.length >= 3) {
+            if(args[0].equalsIgnoreCase("give")) {
+                Player player = Bukkit.getPlayer(args[1]);
+                if(player == null) {
+                    s.sendMessage(Utils.c("&cNinguém encontrado com esse nick. Você pode usar /item get (nome) para dar o item a você mesmo."));
+                    return true;
+                }
+
+                String itemName = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+
+                giveItemByName(player, itemName);
+
+                return true;
+            }
+        }
+
+        // criar, achar
+        if(args.length >= 2) {
+            if(args[0].equalsIgnoreCase("get")) {
+                String itemName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+
+                giveItemByName((Player) s, itemName);
+
+                return true;
+
+            }
+
+            if(args[0].equalsIgnoreCase("criar")) {
+
+
+            }
+
+            if(args[0].equalsIgnoreCase("editar")) {
+
+            }
 
         }
 
@@ -53,15 +90,18 @@ public class ItemCommand implements TabExecutor {
             s.sendMessage(Utils.c("&cEsse comando é de uso exclusivo de um jogador in-game."));
             return true;
         }
-        if(args[0].equalsIgnoreCase("criar")) {
-
-
-        }
-        if(args[0].equalsIgnoreCase("editar")) {
-
-        }
 
         return false;
+    }
+
+    private void giveItemByName(Player player, String name) {
+        Item item = ItemHandler.getItemByName(name);
+        if(item == null) {
+            player.sendMessage(Utils.c("&cNenhum item encontrado com esse nome."));
+            return;
+        }
+
+        player.getInventory().addItem(item.buildStack());
     }
 
     private void abrirMenu(Player player) {
@@ -176,7 +216,7 @@ public class ItemCommand implements TabExecutor {
                         if (newName.equalsIgnoreCase("cancel") || newName.equalsIgnoreCase("cancelar")) {
                             player.sendMessage("§e[MineskyItems] §cVocê cancelou o evento!");
                             AsyncPlayerChatEvent.getHandlerList().unregister(this);
-                            Bukkit.getScheduler().runTask(MineSkyItems.get(), () -> {
+                            Bukkit.getScheduler().runTask(MineSkyItems.getInstance(), () -> {
                                 Inventory menu = Bukkit.createInventory(null, 27, "Configurar itens");
 
                                 updateMenu(player, menu);
@@ -198,7 +238,7 @@ public class ItemCommand implements TabExecutor {
                         AsyncPlayerChatEvent.getHandlerList().unregister(this);
 
                         // Reabrir o menu atualizado
-                        Bukkit.getScheduler().runTask(MineSkyItems.get(), () -> {
+                        Bukkit.getScheduler().runTask(MineSkyItems.getInstance(), () -> {
                             Inventory menu = Bukkit.createInventory(null, 27, "Configurar itens");
 
                             updateMenu(player, menu);
@@ -209,7 +249,7 @@ public class ItemCommand implements TabExecutor {
             };
 
             // Registrar o listener
-            Bukkit.getServer().getPluginManager().registerEvents(chatListener, MineSkyItems.get());
+            Bukkit.getServer().getPluginManager().registerEvents(chatListener, MineSkyItems.getInstance());
         } else if (event.getSlot() == 6) {
             //CANCELAR
             player.closeInventory();
@@ -226,6 +266,7 @@ public class ItemCommand implements TabExecutor {
             return subCommands;
         }
 
-        return List.of();
+        //return List.of();
+        return ItemHandler.getItemsNames();
     }
 }
