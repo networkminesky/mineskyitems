@@ -50,6 +50,8 @@ public final class MineSkyItems extends JavaPlugin {
 
     private void System() {
         LevelCurves.setupCurves();
+
+        l.info("Carregando categorias...");
         CategoryHandler.setupCategories();
 
         if(Bukkit.getPluginManager().getPlugin("MMOCore") != null) {

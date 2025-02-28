@@ -51,7 +51,10 @@ public class CategoryHandler {
             }
 
             assert section != null;
+
             Category category = new Category(configfile, section, key);
+
+            MineSkyItems.l.info("| Carregando categoria "+category.getName());
 
             registerItemsInsideCategory(category);
 
@@ -67,6 +70,8 @@ public class CategoryHandler {
             assert section != null;
             try {
                 Item item = new Item(category, itemId, section);
+
+                MineSkyItems.l.info("  | Item carregado: "+item.getMetadata().displayName());
 
                 ItemHandler.items.add(item);
                 category.addItem(item);

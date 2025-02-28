@@ -18,13 +18,14 @@ public class InteractionEvents implements Listener {
 
         if(e.isCancelled())
             return;
-        if(!e.hasItem())
+        if(!e.hasItem() || e.getItem() == null)
             return;
 
         ItemStack itemStack = e.getItem();
         Item item = ItemHandler.getItemFromStack(itemStack);
 
-        item.onInteraction(p, itemStack, Utils.convertInteractionType(e.getAction()));
+        if(item != null)
+            item.onInteraction(p, itemStack, Utils.convertInteractionType(e.getAction()));
     }
 
 }
