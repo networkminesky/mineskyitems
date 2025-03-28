@@ -25,6 +25,16 @@ public class CategoryHandler {
                 .filter(element -> element.getId().equals(id))
                 .findFirst().orElse(null);
     }
+    public static Category getCategoryByName(String name) {
+        return categories.stream()
+                .filter(element -> element.getName().equals(name))
+                .findFirst().orElse(null);
+    }
+    public static Category getCategory(String nameOrId) {
+        return categories.stream()
+                .filter(category -> category.getId().equals(nameOrId) || category.getName().equals(nameOrId))
+                .findFirst().orElse(null);
+    }
 
     public static List<String> getCategoriesString() {
         return categories.stream()
@@ -64,31 +74,9 @@ public class CategoryHandler {
 
             MineSkyItems.l.info("| Carregando categoria "+category.getName());
 
-            registerItemsInsideCategory(category);
+            category.reloadCategory();
 
             categories.add(category);
         }
     }
-
-    private static void registerItemsInsideCategory(Category category) {
-
-        for(String itemId : category.getConfig().getKeys(false)) {
-            final ConfigurationSection section = category.getConfig().getConfigurationSection(itemId);
-
-            assert section != null;
-            try {
-                Item item = new Item(category, itemId, section);
-
-                MineSkyItems.l.info("  | Item carregado: "+item.getMetadata().displayName());
-
-                category.addItem(item);
-            } catch (Exception exception) {
-                exception.fillInStackTrace();
-            }
-        }
-
-        category.reloadFile();
-
-    }
-
 }

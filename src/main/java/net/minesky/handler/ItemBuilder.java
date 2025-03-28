@@ -67,7 +67,6 @@ public class ItemBuilder {
         this.itemSkills = itemSkills;
     }
 
-
     public void setLore(List<String> lore) {
         this.lore = lore;
     }
@@ -149,14 +148,15 @@ public class ItemBuilder {
         return config.getConfigurationSection(id);
     }
 
-    public void build() {
+    public Item build() {
         final String generatedId = generateId();
 
         ConfigurationSection section = setInsideCategory();
 
         Item item = new Item(category, generatedId, section);
 
-        category.addItem(item);
-        category.reloadFile();
+        category.reloadCategory();
+
+        return item;
     }
 }

@@ -5,6 +5,7 @@ import net.minesky.config.ItemConfig;
 import net.minesky.gui.ItemBuilderMenu;
 import net.minesky.handler.Item;
 import net.minesky.handler.ItemHandler;
+import net.minesky.handler.categories.Category;
 import net.minesky.handler.categories.CategoryHandler;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
@@ -74,6 +75,8 @@ public class ItemCommand implements TabExecutor {
 
         // criar, achar, get, editar
         if(args.length >= 2) {
+            final String prompt = args[1];
+
             if(args[0].equalsIgnoreCase("get")) {
                 String itemName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
 
@@ -83,6 +86,12 @@ public class ItemCommand implements TabExecutor {
             }
 
             if(args[0].equalsIgnoreCase("criar")) {
+
+                Category category = CategoryHandler.getCategoryById(prompt);
+
+                if(category == null) {
+                    s.sendMessage("Nenhuma categoria encontrada com esse Nome ou ID.");
+                }
 
                 ItemBuilderMenu.mainMenu(p);
 

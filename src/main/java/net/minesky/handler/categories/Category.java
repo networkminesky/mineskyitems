@@ -1,5 +1,6 @@
 package net.minesky.handler.categories;
 
+import net.minesky.MineSkyItems;
 import net.minesky.handler.Item;
 import net.minesky.handler.ItemHandler;
 import org.bukkit.Material;
@@ -47,7 +48,6 @@ public class Category {
 
     public void addItem(Item item) {
         itemList.add(item);
-        ItemHandler.items.add(item);
     }
 
     public void reloadFile() {
@@ -58,6 +58,28 @@ public class Category {
             ex.fillInStackTrace();
         }
         config = YamlConfiguration.loadConfiguration(file);
+    }
+
+    private void registerItemsInsideCategory() {
+        for(String itemId : getConfig().getKeys(false)) {
+            final ConfigurationSection section = getConfig().getConfigurationSection(itemId);
+
+            assert section != null;
+            try {
+                Item item = new Item(this, itemId, section);
+                //MineSkyItems.l.info("  | Item carregado: "+item.getMetadata().displayName());
+
+                addItem(item);
+            } catch (Exception exception) {
+                exception.fillInStackTrace();
+            }
+        }
+        reloadFile();
+    }
+
+    public void reloadCategory() {
+        //reloadFile();
+        registerItemsInsideCategory();
     }
 
     public Material getDefaultItem() {
