@@ -16,15 +16,13 @@ public class InteractionEvents implements Listener {
     public void onClick(PlayerInteractEvent e) {
         final Player p = e.getPlayer();
 
-        if(e.isCancelled())
-            return;
-        if(!e.hasItem() || e.getItem() == null)
+        if (!e.hasItem() || e.getItem() == null)
             return;
 
         ItemStack itemStack = e.getItem();
         Item item = ItemHandler.getItemFromStack(itemStack);
 
-        if(item != null)
+        if (item != null)
             item.onInteraction(p, itemStack, Utils.convertInteractionType(e.getAction()));
     }
 

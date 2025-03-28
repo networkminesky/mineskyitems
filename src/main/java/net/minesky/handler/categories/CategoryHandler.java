@@ -9,6 +9,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class CategoryHandler {
 
@@ -22,6 +24,12 @@ public class CategoryHandler {
         return categories.stream()
                 .filter(element -> element.getId().equals(id))
                 .findFirst().orElse(null);
+    }
+
+    public static List<String> getCategoriesString() {
+        return categories.stream()
+                .map(Category::getName)
+                .collect(Collectors.toList());
     }
 
     public static void setupCategories() {
@@ -73,12 +81,13 @@ public class CategoryHandler {
 
                 MineSkyItems.l.info("  | Item carregado: "+item.getMetadata().displayName());
 
-                ItemHandler.items.add(item);
                 category.addItem(item);
             } catch (Exception exception) {
                 exception.fillInStackTrace();
             }
         }
+
+        category.reloadFile();
 
     }
 

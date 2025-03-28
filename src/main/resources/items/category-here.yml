@@ -9,7 +9,7 @@ itemid:
   required-level: 20
   required-class: [Mago, Outra classe aqui]
   skills:
-    skill1:
+    1:
       interaction-type: "RIGHT_CLICK"
       cooldown: 2
       mythic-id: "ID_DE_SKILL_MYTHIC"
@@ -25,7 +25,7 @@ itemid-2:
   required-level: 20
   required-class: [Espartano]
   skills:
-    skill1:
+    1:
       interaction-type: "RIGHT_CLICK"
       cooldown: 2
       mythic-id: "ID_DE_SKILL_MYTHIC"

@@ -48,6 +48,14 @@ public final class MineSkyItems extends JavaPlugin {
         System();
     }
 
+    // Método visando que o plugin está em um ambiente de desenvolvimento.
+    public static void reload() {
+
+        getInstance().getPluginLoader().disablePlugin(getInstance());
+        getInstance().getPluginLoader().enablePlugin(getInstance());
+
+    }
+
     private void System() {
         LevelCurves.setupCurves();
 

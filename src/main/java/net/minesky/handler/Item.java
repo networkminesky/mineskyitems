@@ -7,6 +7,7 @@ import net.minesky.MineSkyItems;
 import net.minesky.handler.categories.Category;
 import net.minesky.utils.InteractionType;
 import net.minesky.utils.Utils;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -88,7 +89,7 @@ public class Item {
             return;
 
         getItemSkills().forEach(itemSkill -> {
-            if(itemSkill.interactionType() == interactionType) {
+            if(itemSkill.interactionType == interactionType) {
                 // check cooldown dps
 
                 List<Entity> targets = new ArrayList();
@@ -110,6 +111,7 @@ public class Item {
         return level >= this.levelRequirement;
     }
     public boolean hasClassRequirement(String className) {
+        if(requiredClasses.isEmpty()) return true;
         return requiredClasses.contains(className);
     }
 

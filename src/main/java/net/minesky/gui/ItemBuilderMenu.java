@@ -1,6 +1,7 @@
 package net.minesky.gui;
 
 import net.minesky.handler.ItemBuilder;
+import net.minesky.handler.categories.Category;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -32,6 +33,18 @@ public class ItemBuilderMenu implements Listener {
         it.setItemMeta(im);
         return it;
     }
+
+    public static void createNewitem(Player player, Category category) {
+
+        ItemBuilder itemBuilder = new ItemBuilder(category)
+                .itemLevel(10)
+                .customModel(10);
+        itemBuilder.build();
+
+        mainMenu(player);
+
+    }
+
     public static Inventory mainMenu(Player player) {
         Inventory inv = Bukkit.createInventory(null, 27, "Customização de item");
 

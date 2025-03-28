@@ -41,6 +41,7 @@ public class ItemHandler {
             return null;
 
         try {
+
             String s = itemStack.getItemMeta().getPersistentDataContainer().get(
                     NamespacedKey.fromString("mineskyitems"), PersistentDataType.STRING);
             if (s == null) return null;
