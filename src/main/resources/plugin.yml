@@ -8,7 +8,7 @@ authors: [zBrunoC (Bruno C.), Drawn (Giovane D.)]
 
 commands:
   item:
-    Description: Criar ou editar um item
-    Usage: /item <editar|criar|give> <nome>
+    description: Criar ou editar um item
+    usage: /item <editar|criar|give> <nome>
     aliases:
     - msit

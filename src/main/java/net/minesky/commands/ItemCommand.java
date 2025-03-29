@@ -38,6 +38,10 @@ public class ItemCommand implements TabExecutor {
             return true;
         }
 
+        if(s instanceof Player p) {
+            p.playSound(p.getLocation(), Sound.ENTITY_CHICKEN_EGG, 0.5f, 1);
+        }
+
         if(args.length == 0) {
             commandList(s);
             return true;

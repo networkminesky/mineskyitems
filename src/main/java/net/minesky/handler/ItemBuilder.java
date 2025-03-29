@@ -89,6 +89,10 @@ public class ItemBuilder {
         this.setPlayerClass(classes);
         return this;
     }
+    public ItemBuilder requiredClasses(String... classes) {
+        this.setPlayerClass(List.of(classes));
+        return this;
+    }
     public ItemBuilder displayName(String displayName) {
         this.setDisplayName(displayName);
         return this;
