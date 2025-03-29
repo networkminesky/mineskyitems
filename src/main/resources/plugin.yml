@@ -1,8 +1,8 @@
 name: MineSkyItems
 version: '1.0.1-ALPHA'
 main: net.minesky.MineSkyItems
-api-version: '1.19'
-depend:
+api-version: '1.20'
+softdepend:
   - MMOCore
 authors: [zBrunoC (Bruno C.), Drawn (Giovane D.)]
 

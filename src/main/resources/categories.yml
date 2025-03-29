@@ -1,11 +1,14 @@
 espadas:
   name: Espadas
   default-item: IRON_SWORD
+  tooltip: default
 
 machados:
   name: Machados
   default-item: IRON_AXE
+  tooltip: default
 
 arcos:
   name: Arcos
   default-item: PAPER
+  tooltip: default

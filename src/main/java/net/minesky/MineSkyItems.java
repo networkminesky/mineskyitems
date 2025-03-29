@@ -2,31 +2,20 @@ package net.minesky;
 
 import net.Indyuce.mmocore.api.MMOCoreAPI;
 import net.minesky.commands.ItemCommand;
-import net.minesky.config.ItemConfig;
 import net.minesky.events.InteractionEvents;
 import net.minesky.gui.ItemBuilderMenu;
 import net.minesky.handler.categories.CategoryHandler;
+import net.minesky.handler.tooltip.TooltipHandler;
 import net.minesky.logics.LevelCurves;
-import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Logger;
 
 public final class MineSkyItems extends JavaPlugin {
-
-    private static final Map<Player, ItemConfig> itemConfigMap = new HashMap<>();
-
-    public static Map<Player, ItemConfig> getItemConfigMap() {
-        return itemConfigMap;
-    }
 
     public static YamlConfiguration defaultCurveConfig;
 
@@ -58,6 +47,9 @@ public final class MineSkyItems extends JavaPlugin {
 
     private void System() {
         LevelCurves.setupCurves();
+
+        l.info("Carregando tooltips...");
+        TooltipHandler.setupTooltips();
 
         l.info("Carregando categorias...");
         CategoryHandler.setupCategories();

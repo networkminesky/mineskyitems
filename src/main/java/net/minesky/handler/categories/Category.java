@@ -3,6 +3,8 @@ package net.minesky.handler.categories;
 import net.minesky.MineSkyItems;
 import net.minesky.handler.Item;
 import net.minesky.handler.ItemHandler;
+import net.minesky.handler.tooltip.Tooltip;
+import net.minesky.handler.tooltip.TooltipHandler;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -23,6 +25,8 @@ public class Category {
     private final String name;
     private final Material defaultItem;
 
+    private final Tooltip tooltip;
+
     private final List<Item> itemList;
 
     public Category(File file, ConfigurationSection categoriesSection, String id) {
@@ -32,10 +36,16 @@ public class Category {
         this.file = file;
         this.config = YamlConfiguration.loadConfiguration(file);
 
+        this.tooltip = TooltipHandler.getTooltipById(categoriesSection.getString("tooltip", "default"));
+
         this.name = categoriesSection.getString("name", id.toLowerCase());
         this.defaultItem = Material.valueOf(categoriesSection.getString("default-item", "STONE"));
 
         this.itemList = new ArrayList<>();
+    }
+
+    public Tooltip getTooltip() {
+        return tooltip;
     }
 
     public void removeItem(Item item) {

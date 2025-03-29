@@ -1,6 +1,7 @@
 package net.minesky.handler;
 
 import net.minesky.handler.categories.CategoryHandler;
+import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
@@ -20,7 +21,7 @@ public class ItemHandler {
 
     public static Item getItemByName(String name) {
         return getAllItems().stream()
-                .filter(element -> element.getMetadata().displayName().toLowerCase().contains(name.toLowerCase()))
+                .filter(element -> element.getMetadata().displayName().toLowerCase().contains(ChatColor.stripColor(name).toLowerCase()))
                 .findFirst().orElse(null);
     }
     public static Item getItemById(String id) {
@@ -33,7 +34,7 @@ public class ItemHandler {
         List<String> names = new ArrayList<>();
         getAllItems().forEach(item -> {
 
-            names.add(item.getMetadata().displayName());
+            names.add(ChatColor.stripColor(item.getMetadata().displayName()));
 
         });
 

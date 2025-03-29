@@ -1,41 +1,33 @@
 package net.minesky.commands;
 
 import net.minesky.MineSkyItems;
-import net.minesky.config.ItemConfig;
 import net.minesky.gui.ItemBuilderMenu;
 import net.minesky.handler.Item;
+import net.minesky.handler.ItemBuilder;
 import net.minesky.handler.ItemHandler;
 import net.minesky.handler.categories.Category;
 import net.minesky.handler.categories.CategoryHandler;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.command.*;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
-import java.util.logging.Level;
 
 public class ItemCommand implements TabExecutor {
 
-    public static final List<String> subCommands = Arrays.asList("criar", "editar", "give", "get");
+    public static final List<String> subCommands = Arrays.asList("criar", "editar", "give", "get", "reload", "achar");
 
     void commandList(CommandSender s) {
+        s.sendMessage(Utils.PURPLE_COLOR+Utils.c("&lMineSkyItems v"+MineSkyItems.getInstance().getDescription().getVersion()));
         s.sendMessage(Utils.c(
-                "&c/item criar <categoria> &8- &7Cria um novo item"+
-                        "\n&c/item editar <nome> &8- &7Edita um item já criado a partir do nome"+
-                        "\n&c/item give <player> <nome> &8- &7Pega uma cópia do item a partir do nome para um jogador"+
-                        "\n&c/item get <nome> &8- &7Pega uma cópia do item a partir do nome"+
-                        "\n&c/item achar [id, nome ou nada] &8- &7Procura um item pela parte do nome dele, ou pelo seu ID, ou pelo item em sua mão."
+                Utils.PURPLE_COLOR+"/item criar <categoria> &8- &7Cria um novo item\n"+
+                        Utils.PURPLE_COLOR+"/item editar <nome> &8- &7Edita um item já criado a partir do nome\n"+
+                        Utils.PURPLE_COLOR+"/item give <player> <nome> &8- &7Pega uma cópia do item a partir do nome para um jogador\n"+
+                        Utils.PURPLE_COLOR+"/item get <nome> &8- &7Pega uma cópia do item a partir do nome\n"+
+                        Utils.PURPLE_COLOR+"/item reload &8- &7Recarregar o plugin (não recomendado)\n"+
+                        Utils.PURPLE_COLOR+"/item achar [id, nome ou nada] &8- &7Procura um item pela parte do nome dele, ou pelo seu ID, ou pelo item em sua mão."
         ));
     }
 
@@ -49,6 +41,11 @@ public class ItemCommand implements TabExecutor {
         if(args.length == 0) {
             commandList(s);
             return true;
+        }
+
+        if(args[0].equalsIgnoreCase("reload")) {
+            s.sendMessage("Recarregando...");
+            MineSkyItems.reload();
         }
 
         // give <player> <nome>
@@ -87,13 +84,15 @@ public class ItemCommand implements TabExecutor {
 
             if(args[0].equalsIgnoreCase("criar")) {
 
-                Category category = CategoryHandler.getCategoryById(prompt);
+                Category category = CategoryHandler.getCategory(prompt);
 
                 if(category == null) {
                     s.sendMessage("Nenhuma categoria encontrada com esse Nome ou ID.");
+                    return true;
                 }
 
-                ItemBuilderMenu.mainMenu(p);
+                s.sendMessage("Criando um novo item na categoria "+category.getName());
+                ItemBuilderMenu.openMainMenu(p, new ItemBuilder(category));
 
             }
 
@@ -130,7 +129,57 @@ public class ItemCommand implements TabExecutor {
             return CategoryHandler.getCategoriesString();
         }
 
+        if(args[0].equalsIgnoreCase("get")) {
+            String[] args2 = Arrays.copyOfRange(args, 1, args.length);
+
+            List<String> e = new ArrayList<>(ItemHandler.getItemsNames());
+            String input = String.join(" ", args2);
+
+            reorganizeTabComplete(e, input, args2.length);
+
+            return e;
+        }
+
+        if(args[0].equalsIgnoreCase("give")) {
+            if(args.length == 2) {
+                return null;
+            }
+
+            String[] args2 = Arrays.copyOfRange(args, 2, args.length);
+
+            List<String> e = new ArrayList<>(ItemHandler.getItemsNames());
+            String input = String.join(" ", args2);
+
+            reorganizeTabComplete(e, input, args2.length);
+
+            return e;
+        }
+
         //return List.of();
         return ItemHandler.getItemsNames();
     }
+
+    private static void reorganizeTabComplete(List<String> list, String input, int length) {
+        Iterator<String> iterator = list.iterator();
+        List<String> elementosAdicionais = new ArrayList<>();
+
+        while (iterator.hasNext()) {
+            String elemento = iterator.next();
+            String[] elementoArgs = elemento.split(" ");
+
+            // Adiciona o elemento à lista filtrada se contiver a substring desejada
+            if (!elemento.toLowerCase().contains(input.toLowerCase())) {
+                iterator.remove();
+            } else {
+                if (length >= 2) {
+                    iterator.remove();
+                    elementosAdicionais.add(elemento.toLowerCase().replace(input.toLowerCase(), "").trim());
+                }
+            }
+        }
+
+        // Adiciona os elementos adicionais à lista original após concluir a iteração
+        list.addAll(elementosAdicionais);
+    }
+
 }

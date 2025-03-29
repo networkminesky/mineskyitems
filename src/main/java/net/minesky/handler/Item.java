@@ -48,7 +48,7 @@ public class Item {
 
         final ConfigurationSection metadataSec = itemSection.getConfigurationSection("metadata");
         this.metadata = new ItemMetadata(
-                Material.valueOf(metadataSec.getString("material", "IRON_AXE")),
+                Material.getMaterial(metadataSec.getString("material", getCategory().getDefaultItem().name())),
                 metadataSec.getString("displayname", "Nome inválido"),
                 metadataSec.getInt("model", -1),
                 metadataSec.getStringList("lore")
@@ -58,7 +58,11 @@ public class Item {
         this.levelRequirement = itemSection.getInt("required-level", 0);
 
         ConfigurationSection skillsSection = itemSection.getConfigurationSection("skills");
-        this.itemSkills = skillsSection.getKeys(false).stream()
+
+        if(skillsSection == null)
+            this.itemSkills = new ArrayList<>();
+        else
+            this.itemSkills = skillsSection.getKeys(false).stream()
                 .map(key -> {
                     ConfigurationSection skill = skillsSection.getConfigurationSection(key);
 
@@ -75,7 +79,14 @@ public class Item {
                     );
                 })
                 .collect(Collectors.toList());
+    }
 
+    public ItemAttributes getItemAttributes() {
+        return null;
+    }
+
+    public String getRarity() {
+        return "\uF815";
     }
 
     public void onInteraction(Player player, ItemStack itemStack, InteractionType interactionType) {
@@ -144,8 +155,8 @@ public class Item {
 
         im.getPersistentDataContainer().set(NamespacedKey.fromString("mineskyitems"), PersistentDataType.STRING, getId());
 
-        im.setDisplayName(Utils.c(metadata.displayName()));
-        im.setLore(metadata.lore());
+        im.setDisplayName(Utils.c("&f"+metadata.displayName()));
+        im.setLore(getCategory().getTooltip().getFormattedLore(this));
         im.setCustomModelData(metadata.modelData());
 
         itemStack.setItemMeta(im);

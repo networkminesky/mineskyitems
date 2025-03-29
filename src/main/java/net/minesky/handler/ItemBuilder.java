@@ -11,17 +11,18 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class ItemBuilder {
 
     private Material material = Material.IRON_AXE;
-    private String displayName;
+    private String displayName = UUID.randomUUID().toString();
     private List<String> lore;
 
     private List<Item.ItemSkill> itemSkills = new ArrayList<>();
 
     private int customModel = 0;
-    private List<String> playerClass;
+    private List<String> playerClass = new ArrayList<>();;
 
     private int itemLevel = -1;
 
