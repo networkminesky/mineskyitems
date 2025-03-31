@@ -6,6 +6,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -62,10 +63,11 @@ public class ItemAttributes {
                 new AttributeModifier(UUID.randomUUID(), namespaceName, this.getDamage()-1, defaultOperation, EquipmentSlot.HAND));
 
         // Speed
+        // this.getSpeed()-4
         itemMeta.addAttributeModifier(Attribute.GENERIC_ATTACK_SPEED,
-                new AttributeModifier(UUID.randomUUID(), namespaceName, this.getSpeed()-4, defaultOperation, EquipmentSlot.HAND));
+                new AttributeModifier(UUID.randomUUID(), namespaceName, this.getSpeed() - 4, defaultOperation, EquipmentSlot.HAND));
 
-        //itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
 
         itemStack.setItemMeta(itemMeta);
 

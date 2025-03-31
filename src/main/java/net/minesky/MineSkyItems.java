@@ -8,6 +8,7 @@ import net.minesky.events.MiscEvents;
 import net.minesky.gui.ItemBuilderMenu;
 import net.minesky.entities.categories.CategoryHandler;
 import net.minesky.entities.tooltip.TooltipHandler;
+import net.minesky.gui.ItemSkillsMenu;
 import net.minesky.logics.LevelCurves;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
@@ -56,9 +57,11 @@ public final class MineSkyItems extends JavaPlugin {
             mmocoreAPI = new MMOCoreAPI(this);
         }
 
-        Bukkit.getPluginManager().registerEvents(new ItemBuilderMenu(), this);
         Bukkit.getPluginManager().registerEvents(new InteractionEvents(), this);
         Bukkit.getPluginManager().registerEvents(new MiscEvents(), this);
+
+        Bukkit.getPluginManager().registerEvents(new ItemBuilderMenu(), this);
+        Bukkit.getPluginManager().registerEvents(new ItemSkillsMenu(), this);
 
         this.getCommand("item").setExecutor(new ItemCommand());
     }

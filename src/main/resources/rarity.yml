@@ -3,7 +3,7 @@ common:
     font: "rarity"
     char: "A"
   name: "Comum"
-  color: "#cfe6de"
+  color: "#9ba399"
   max-level: 15
 
 uncommon:
@@ -45,6 +45,6 @@ special:
     font: "rarity"
     char: "F"
   name: "Especial"
-  color: "#c22d2d"
+  color: "#e5383b"
   max-level: 120
   glowing: true

@@ -45,7 +45,7 @@ public class RarityHandler {
 
             ItemRarity rarity = new ItemRarity(key, configuration.getConfigurationSection(key));
 
-            MineSkyItems.l.info("| Carregando raridade "+rarity.getId());
+            MineSkyItems.l.info("| Carregando raridade "+rarity.getId() + " com custom font?: "+rarity.hasCustomFont());
 
             rarities.add(rarity);
 

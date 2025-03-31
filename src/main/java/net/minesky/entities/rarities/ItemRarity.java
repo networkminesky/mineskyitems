@@ -5,6 +5,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -58,15 +59,15 @@ public class ItemRarity {
             return getFontComponent();
         else
             return Component.text(getName())
-                    .style(getColor());
+                    .color(getTextColor());
     }
 
     public String getChatColor() {
         return ChatColor.of(color)+"";
     }
 
-    public Style getColor() {
-        return Style.style(TextColor.fromHexString(color));
+    public TextColor getTextColor() {
+        return TextColor.fromHexString(color);
     }
 
     public static final Key KEY = Key.key(Key.MINECRAFT_NAMESPACE, "rarity");
@@ -74,7 +75,8 @@ public class ItemRarity {
     public Component getFontComponent() {
         return Component.text(getConfig().getString("custom-font.char", "Z"))
                 .color(NamedTextColor.WHITE)
-                .font(KEY);
+                .font(KEY)
+                .decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE);
     }
 
 }

@@ -3,6 +3,8 @@ package net.minesky.entities.item;
 import io.lumine.mythic.bukkit.MythicBukkit;
 import io.lumine.mythic.core.utils.MythicUtil;
 import net.Indyuce.mmocore.api.player.PlayerData;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.minesky.MineSkyItems;
 import net.minesky.entities.categories.Category;
 import net.minesky.entities.rarities.ItemRarity;
@@ -20,6 +22,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -107,14 +110,20 @@ public class Item {
 
         PlayerData playerData = MineSkyItems.mmocoreAPI.getPlayerData(player);
 
-        if(!hasClassRequirement(playerData.getProfess().getName()))
+        if(!player.hasPermission("mineskyitems.bypass.class-requirement") &&
+                !hasClassRequirement(playerData.getProfess().getName())) {
+            player.sendMessage("§cSua classe não possui conhecimento de como usar esse item.");
             return;
+        }
 
-        if(!hasLevelRequirement(playerData.getLevel()))
+        if(!player.hasPermission("mineskyitems.bypass.level-requirement") &&
+                !hasLevelRequirement(playerData.getLevel())) {
+            player.sendMessage("§cVocê ainda não possui o nível apropriado para usar esse item.");
             return;
+        }
 
         getItemSkills().forEach(itemSkill -> {
-            if(itemSkill.interactionType == interactionType) {
+            if(itemSkill.getInteractionType() == interactionType) {
                 // check cooldown dps
 
                 List<Entity> targets = new ArrayList();
@@ -123,7 +132,7 @@ public class Item {
                 LivingEntity target = MythicUtil.getTargetedEntity(player);
                 targets.add(target);
 
-                String spell = itemSkill.mythicSkillId();
+                String spell = itemSkill.getMythicSkillId();
 
                 MythicBukkit.inst().getAPIHelper().castSkill(casterEntity, spell, casterEntity, origin, targets, null, 1.0F);
 
@@ -165,14 +174,16 @@ public class Item {
     public ItemStack buildStack() {
         // Setar os atributos aqui
         ItemStack itemStack = getItemAttributes().translateAndUpdate(new ItemStack(metadata.material()));
-
-        Bukkit.broadcastMessage("speed: "+getItemAttributes().getSpeed() + " | damage: "+getItemAttributes().getDamage());
+        //Bukkit.broadcastMessage("speed: "+getItemAttributes().getSpeed() + " | damage: "+getItemAttributes().getDamage());
 
         ItemMeta im = itemStack.getItemMeta();
 
         im.getPersistentDataContainer().set(MineSkyItems.NAMESPACED_KEY, PersistentDataType.STRING, getId());
 
-        im.setDisplayName(Utils.c("&#cfe6de"+metadata.displayName()));
+        Component itemName = Component.text(metadata.displayName())
+                .color(getItemRarity().getTextColor())
+                .decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE);
+        im.displayName(itemName);
 
         im.lore(getCategory().getTooltip().getFormattedLore(this));
 
@@ -187,9 +198,4 @@ public class Item {
                                String displayName,
                                int modelData,
                                List<String> lore) {}
-
-    public record ItemSkill(String id,
-                            InteractionType interactionType,
-                            float cooldown,
-                            String mythicSkillId) {}
 }

@@ -17,10 +17,13 @@ public class MiscEvents implements Listener {
         final net.minesky.entities.item.Item item = ItemHandler.getItemFromStack(drop.getItemStack());
         if(item == null) return;
 
-        //drop.setGlowing(true);
+        if(item.getItemRarity().shouldHaveGlowing())
+            drop.setGlowing(true);
+
+
 
         drop.setCustomNameVisible(true);
-        drop.setCustomName(item.getMetadata().displayName());
+        drop.customName(drop.getItemStack().displayName());
 
     }
 

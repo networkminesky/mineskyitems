@@ -1,8 +1,10 @@
 package net.minesky.api;
 
 import net.minesky.MineSkyItems;
+import net.minesky.entities.categories.CategoryHandler;
 import net.minesky.entities.item.Item;
 import net.minesky.entities.ItemBuilder;
+import net.minesky.entities.item.ItemSkill;
 import net.minesky.utils.InteractionType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -23,11 +25,11 @@ public class MineSkyItemsAPI {
 
     public void test() {
 
-        ItemBuilder builder = new ItemBuilder(null)
+        ItemBuilder builder = new ItemBuilder(CategoryHandler.categories.iterator().next())
                 .displayName("Item teste")
                 .lore("Item incrivel", "e muito foda!")
                 .itemSkills(
-                        List.of(new Item.ItemSkill("1", InteractionType.LEFT_CLICK, 20,"mythicskill"))
+                        List.of(new ItemSkill("1", InteractionType.LEFT_CLICK, 20,"mythicskill"))
                 )
                 .customModel(20);
 

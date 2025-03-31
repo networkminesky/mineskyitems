@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -30,6 +31,24 @@ public class Utils {
             return InteractionType.LEFT_CLICK;
 
         return InteractionType.RIGHT_CLICK;
+    }
+    public static InteractionType convertInteractionType(ClickType clickType) {
+        if(clickType.name().contains("RIGHT"))
+            return InteractionType.RIGHT_CLICK;
+        if(clickType.name().contains("LEFT"))
+            return InteractionType.LEFT_CLICK;
+
+        if(clickType == ClickType.DROP || clickType == ClickType.CONTROL_DROP)
+            return InteractionType.KEY_Q;
+
+        if(clickType == ClickType.SWAP_OFFHAND)
+            return InteractionType.KEY_F;
+
+        return InteractionType.RIGHT_CLICK;
+    }
+
+    public static String format(double value) {
+        return String.format("%.1f", value);
     }
 
     private static String createHex(String hexString) {

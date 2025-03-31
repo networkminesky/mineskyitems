@@ -2,6 +2,7 @@ package net.minesky.entities;
 
 import net.minesky.entities.categories.Category;
 import net.minesky.entities.item.Item;
+import net.minesky.entities.item.ItemSkill;
 import net.minesky.utils.Utils;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -9,6 +10,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -19,7 +21,7 @@ public class ItemBuilder {
     private String displayName = UUID.randomUUID().toString();
     private List<String> lore;
 
-    private List<Item.ItemSkill> itemSkills = new ArrayList<>();
+    private List<ItemSkill> itemSkills = new ArrayList<>();
 
     private int customModel = 0;
     private List<String> playerClass = new ArrayList<>();;
@@ -33,8 +35,24 @@ public class ItemBuilder {
         this.material = category.getDefaultItem();
     }
 
+    public ItemBuilder(Item item) {
+        this.material = item.getMetadata().material();
+        this.displayName = item.getMetadata().displayName();
+        this.lore = item.getMetadata().lore();
+        this.itemSkills = item.getItemSkills();
+        this.customModel = item.getMetadata().modelData();
+        this.playerClass = item.getRequiredClasses();
+        this.itemLevel = item.getRequiredLevel();
+        this.category = item.getCategory();
+    }
+
     public String generateId() {
-        return displayName.toLowerCase().replace("/\s+/g", "_").replace("/[^w-]+/g", "");
+        return displayName == null || displayName.isEmpty() ? "" : Normalizer.normalize(displayName, Normalizer.Form.NFD)
+                .replaceAll("[^\\p{ASCII}]", "")
+                .replaceAll("[^a-zA-Z0-9]+", "_")
+                .replaceAll("_+", "_")
+                .replaceAll("^_|_$", "")
+                .toLowerCase();
     }
 
     public void setMaterial(Material material) {
@@ -48,7 +66,7 @@ public class ItemBuilder {
     public List<String> getPlayerClass() {return playerClass;}
     public String getDisplayName() {return displayName;}
     public List<String> getLore() {return lore;}
-    public List<Item.ItemSkill> getItemSkills() {return itemSkills;}
+    public List<ItemSkill> getItemSkills() {return itemSkills;}
 
     public void setItemLevel(int itemLevel) {
         this.itemLevel = itemLevel;
@@ -65,7 +83,7 @@ public class ItemBuilder {
     public void setPlayerClass(List<String> playerClass) {
         this.playerClass = playerClass;
     }
-    public void setItemSkills(List<Item.ItemSkill> itemSkills) {
+    public void setItemSkills(List<ItemSkill> itemSkills) {
         this.itemSkills = itemSkills;
     }
 
@@ -106,7 +124,7 @@ public class ItemBuilder {
         this.setLore(lore);
         return this;
     }
-    public ItemBuilder itemSkills(List<Item.ItemSkill> skills) {
+    public ItemBuilder itemSkills(List<ItemSkill> skills) {
         this.setItemSkills(skills);
         return this;
     }
@@ -139,11 +157,11 @@ public class ItemBuilder {
 
         // Skills
         int n = 1;
-        for(Item.ItemSkill skill : getItemSkills()) {
+        for(ItemSkill skill : getItemSkills()) {
             final String path = id+".skills."+ n;
-            config.set(path+".interaction-type", skill.interactionType().name());
-            config.set(path+".cooldown", skill.cooldown());
-            config.set(path+".mythic-id", skill.mythicSkillId());
+            config.set(path+".interaction-type", skill.getInteractionType().name());
+            config.set(path+".cooldown", skill.getCooldown());
+            config.set(path+".mythic-id", skill.getMythicSkillId());
             n++;
         }
 

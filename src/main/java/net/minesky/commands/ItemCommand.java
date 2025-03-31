@@ -9,6 +9,7 @@ import net.minesky.entities.categories.Category;
 import net.minesky.entities.categories.CategoryHandler;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Sound;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
@@ -17,7 +18,9 @@ import java.util.*;
 
 public class ItemCommand implements TabExecutor {
 
-    public static final List<String> subCommands = Arrays.asList("criar", "editar", "give", "get", "reload", "achar");
+    public static final List<String> subCommands = Arrays.asList("criar", "editar", "give", "get", "reload", "achar", "deletar");
+
+    public static final
 
     void commandList(CommandSender s) {
         s.sendMessage(Utils.PURPLE_COLOR+Utils.c("&lMineSkyItems v"+MineSkyItems.getInstance().getDescription().getVersion()));
@@ -25,6 +28,7 @@ public class ItemCommand implements TabExecutor {
                 Utils.PURPLE_COLOR+"/item criar <categoria> &8- &7Cria um novo item\n"+
                         Utils.PURPLE_COLOR+"/item editar <nome> &8- &7Edita um item já criado a partir do nome\n"+
                         Utils.PURPLE_COLOR+"/item give <player> <nome> &8- &7Pega uma cópia do item a partir do nome para um jogador\n"+
+                        Utils.PURPLE_COLOR+"/item deletar <nome> &8- &7Deleta um item existente\n"+
                         Utils.PURPLE_COLOR+"/item get <nome> &8- &7Pega uma cópia do item a partir do nome\n"+
                         Utils.PURPLE_COLOR+"/item reload &8- &7Recarregar o plugin (não recomendado)\n"+
                         Utils.PURPLE_COLOR+"/item achar [id, nome ou nada] &8- &7Procura um item pela parte do nome dele, ou pelo seu ID, ou pelo item em sua mão."
@@ -85,6 +89,21 @@ public class ItemCommand implements TabExecutor {
                 return true;
             }
 
+            if(args[0].equalsIgnoreCase("deletar")) {
+                String itemName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+
+                Item item = ItemHandler.getItemByName(itemName);
+                if(item != null) {
+                    s.sendMessage("§aItem deletado com sucesso!");
+                    ItemHandler.deleteItemEntry(item.getCategory(), item.getId());
+                    return true;
+                }
+
+                s.sendMessage("§cNenhum item existe com esse nome.");
+
+                return true;
+            }
+
             if(args[0].equalsIgnoreCase("criar")) {
 
                 Category category = CategoryHandler.getCategory(prompt);
@@ -94,12 +113,25 @@ public class ItemCommand implements TabExecutor {
                     return true;
                 }
 
-                s.sendMessage("Criando um novo item na categoria "+category.getName());
+                s.sendMessage("§aCriando um novo item na categoria "+category.getName());
                 ItemBuilderMenu.openMainMenu(p, new ItemBuilder(category));
 
+                return true;
             }
 
             if(args[0].equalsIgnoreCase("editar")) {
+                String itemName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+
+                Item item = ItemHandler.getItemByName(itemName);
+                if(item != null) {
+
+                    ItemBuilderMenu.openMainMenu(p, new ItemBuilder(item));
+                    return true;
+
+                }
+
+                s.sendMessage("§cNenhum item existe com esse nome.");
+                return true;
 
             }
 
@@ -132,7 +164,7 @@ public class ItemCommand implements TabExecutor {
             return CategoryHandler.getCategoriesString();
         }
 
-        if(args[0].equalsIgnoreCase("get")) {
+        if(args[0].equalsIgnoreCase("get") || args[0].equalsIgnoreCase("deletar")) {
             String[] args2 = Arrays.copyOfRange(args, 1, args.length);
 
             List<String> e = new ArrayList<>(ItemHandler.getItemsNames());
@@ -170,7 +202,6 @@ public class ItemCommand implements TabExecutor {
             String elemento = iterator.next();
             String[] elementoArgs = elemento.split(" ");
 
-            // Adiciona o elemento à lista filtrada se contiver a substring desejada
             if (!elemento.toLowerCase().contains(input.toLowerCase())) {
                 iterator.remove();
             } else {
@@ -181,7 +212,6 @@ public class ItemCommand implements TabExecutor {
             }
         }
 
-        // Adiciona os elementos adicionais à lista original após concluir a iteração
         list.addAll(elementosAdicionais);
     }
 

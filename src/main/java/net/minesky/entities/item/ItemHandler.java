@@ -1,6 +1,7 @@
 package net.minesky.entities.item;
 
 import net.minesky.MineSkyItems;
+import net.minesky.entities.categories.Category;
 import net.minesky.entities.categories.CategoryHandler;
 import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
@@ -41,6 +42,11 @@ public class ItemHandler {
         Collections.sort(names);
 
         return names;
+    }
+
+    public static void deleteItemEntry(Category category, String idEntry) {
+        category.getConfig().set(idEntry, null);
+        category.reloadFile();
     }
 
     public static Item getItemFromStack(ItemStack itemStack) {

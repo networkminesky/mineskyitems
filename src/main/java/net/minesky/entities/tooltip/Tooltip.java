@@ -34,15 +34,32 @@ public class Tooltip {
 
         List<Component> definitiveLore = new ArrayList<>();
 
+        final Component empty = Component.space().style(Style.style());
+
+        int n = 0;
         for(String s : getRawFormat()) {
-            if(s.isBlank() || s.isEmpty() || s.contains("%vazio%")) {
-                definitiveLore.add(Component.text(" ").style(Style.style()));
+            if(s.contains("%vazio%")) {
+                try {
+                    final int check = (n - 1);
+                    if (!empty.equals(definitiveLore.get(check))) {
+                        definitiveLore.add(empty);
+                        n++;
+                    }
+                } catch (Exception ignore) {}
                 continue;
             }
 
             if(s.equalsIgnoreCase("%rarity%")) {
-                Bukkit.getOnlinePlayers().iterator().next().sendMessage(item.getItemRarity().getFullComponent());
-                definitiveLore.add(item.getItemRarity().getFullComponent());
+                Component categoryName = Component.space().append(Component.text(item.getCategory().getName()))
+                        .font(Style.DEFAULT_FONT)
+                        .decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE)
+                        .color(item.getItemRarity().getTextColor());
+
+                Component full = item.getItemRarity().getFullComponent()
+                                .append(categoryName);
+
+                n++;
+                definitiveLore.add(full);
                 continue;
             }
 
@@ -54,8 +71,8 @@ public class Tooltip {
             s = s.replace("%classes%", classes.substring(1, classes.length() - 1));
             s = s.replace("%level%", item.getRequiredLevel()+"");
 
-            s = s.replace("%damage%", attributes.getDamage()+"");
-            s = s.replace("%speed%", attributes.getSpeed() + "");
+            s = s.replace("%damage%", Utils.format(attributes.getDamage()));
+            s = s.replace("%speed%", Utils.format(attributes.getSpeed()));
 
             s = Utils.c(s);
 
@@ -65,15 +82,17 @@ public class Tooltip {
                     for(String loreLine : lore) {
                         definitiveLore.add(Component.text(loreLine)
                                 .style(Style.style(NamedTextColor.GRAY, TextDecoration.ITALIC)));
+                        n++;
                     }
                 }
                 continue;
             }
 
             Component textComponent = LegacyComponentSerializer.legacySection().deserialize(s)
-                    .style(Style.style());
+                    .decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE);
 
             definitiveLore.add(textComponent);
+            n++;
         }
 
         /*definitiveLore = definitiveLore.stream()

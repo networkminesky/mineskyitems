@@ -1,6 +1,10 @@
 package net.minesky.gui;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.minesky.entities.ItemBuilder;
+import net.minesky.entities.item.ItemHandler;
 import net.minesky.utils.ChatInputCallback;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
@@ -9,6 +13,7 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -27,10 +32,10 @@ public class ItemBuilderMenu implements Listener {
     public static HashMap<Player, ItemBuilder> builderHashMap = new HashMap<>();
     public static HashMap<Player, Inventory> inventories = new HashMap<>();
 
-    private static ItemStack simpleButton(Material m, String name, String... lore) {
+    public static ItemStack simpleButton(Material m, String name, String... lore) {
         return simpleButton(m, name, 1, lore);
     }
-    private static ItemStack simpleButton(Material m, String name, int count, String... lore) {
+    public static ItemStack simpleButton(Material m, String name, int count, String... lore) {
         ItemStack it = new ItemStack(m, count);
         ItemMeta im = it.getItemMeta();
 
@@ -45,7 +50,21 @@ public class ItemBuilderMenu implements Listener {
     }
 
     private static void reorganizeItems(ItemBuilder builder, Inventory inv) {
-        inv.setItem(4, builder.build().buildStack());
+        ItemStack item = builder.build().buildStack();
+        ItemMeta im = item.getItemMeta();
+        List<Component> lore = im.lore();
+
+        lore.add(Component.text("-                        -")
+                .color(NamedTextColor.GRAY).decorate(TextDecoration.STRIKETHROUGH));
+        lore.add(Component.text("➳ Clique direito ou esquerdo - Pegar item")
+                .color(NamedTextColor.YELLOW));
+        lore.add(Component.text("➳ Clique direito + shift - Trocar item vanilla base")
+                .color(NamedTextColor.YELLOW));
+
+        im.lore(lore);
+        item.setItemMeta(im);
+
+        inv.setItem(4, item);
 
         inv.setItem(10, simpleButton(
                 Material.PLAYER_HEAD, "Classe necessária", "• Define classe(s) obrigatória(s)", " para usar esse item.",
@@ -82,6 +101,40 @@ public class ItemBuilderMenu implements Listener {
                 "&e➳ Clique esquerdo - Definir modelo",
                 "&e➳ Clique direito - Remover modelo")
         );
+
+        String[] str = new String[] {"A","B","C"};
+
+        ItemStack loreItem = new ItemStack(Material.PAPER);
+        ItemMeta loreMeta = loreItem.getItemMeta();
+
+        loreMeta.setDisplayName(Utils.c("&6&lDescrição do item"));
+
+        List<String> lo = new ArrayList<>();
+        lo.addAll(Arrays.asList("&7• Não é necessariamente obrigatório.", "&7• A descrição são textos visíveis no item.", " ", "&6Descrição:"));
+        lo.addAll(builder.getLore());
+        lo.add(" ");
+        lo.addAll(Arrays.asList("&e➳ Clique esquerdo - Adicionar nova linha", "&e➳ Clique direito - Remover última linha"));
+
+        lo = lo.stream()
+                .map(a -> Utils.c("&7&o"+a))
+                .collect(Collectors.toList());
+
+        loreMeta.setLore(lo);
+        loreItem.setItemMeta(loreMeta);
+
+        inv.setItem(21, loreItem);
+
+        inv.setItem(23, simpleButton(
+                Material.BLAZE_POWDER, "Skills (poderes/magias)","• Você também pode adicionar skills", " (poderes) para os items.",
+                " ",
+                "&6Skills: &e"+( builder.getItemSkills().isEmpty() ? "Nenhuma skill" : builder.getItemSkills().stream()
+                        .map(a -> "["+a.getMythicSkillId()+"] - "+a.getInteractionType().name())
+                        .collect(Collectors.joining())),
+                " ",
+                "&e➳ Clique esquerdo - Adicionar nova skill",
+                "&e➳ Clique direito - Remover última skill")
+        );
+
     }
 
     public static void openMainMenu(Player player, ItemBuilder builder) {
@@ -95,7 +148,7 @@ public class ItemBuilderMenu implements Listener {
         player.openInventory(inv);
     }
 
-    private static void reopenInventory(Player player) {
+    public static void reopenInventory(Player player) {
         Inventory inv = inventories.get(player);
         ItemBuilder builder = builderHashMap.get(player);
         if(inv == null || builder == null)
@@ -220,6 +273,7 @@ public class ItemBuilderMenu implements Listener {
 
             // Modificar nome do item
             case 14 -> {
+                final String oldId = builder.generateId();
                 switch(clickType) {
                     case RIGHT -> {
                         return;
@@ -229,6 +283,8 @@ public class ItemBuilderMenu implements Listener {
                         public void onInput(String response) {
                             builder.setDisplayName(response);
                             reopenInventory(p);
+
+                            ItemHandler.deleteItemEntry(builder.getCategory(), oldId);
                         }
 
                         @Override
@@ -264,6 +320,41 @@ public class ItemBuilderMenu implements Listener {
                             reopenInventory(p);
                         }
                     });
+                }
+            }
+
+            // Lore do item
+            case 21 -> {
+                switch(clickType) {
+                    case RIGHT -> builder.getLore().removeLast();
+                    case LEFT -> Utils.awaitChatInput(p, new ChatInputCallback() {
+                        @Override
+                        public void onInput(String response) {
+                            builder.getLore().add(response);
+                            reopenInventory(p);
+                        }
+
+                        @Override
+                        public void onCancel() {
+                            reopenInventory(p);
+                        }
+                    });
+                }
+            }
+
+            // Skills
+            case 23 -> {
+                switch(clickType) {
+                    case RIGHT -> {
+
+                        builder.getItemSkills().removeLast();
+
+                    }
+                    case LEFT -> {
+
+                        ItemSkillsMenu.openInventory(p.getPlayer(), builder);
+
+                    }
                 }
             }
         }
