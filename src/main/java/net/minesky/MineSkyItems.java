@@ -4,6 +4,7 @@ import net.Indyuce.mmocore.api.MMOCoreAPI;
 import net.minesky.commands.ItemCommand;
 import net.minesky.entities.rarities.RarityHandler;
 import net.minesky.events.InteractionEvents;
+import net.minesky.events.MiscEvents;
 import net.minesky.gui.ItemBuilderMenu;
 import net.minesky.entities.categories.CategoryHandler;
 import net.minesky.entities.tooltip.TooltipHandler;
@@ -39,14 +40,6 @@ public final class MineSkyItems extends JavaPlugin {
         System();
     }
 
-    // Método visando que o plugin está em um ambiente de desenvolvimento.
-    public static void reload() {
-
-        getInstance().getPluginLoader().disablePlugin(getInstance());
-        getInstance().getPluginLoader().enablePlugin(getInstance());
-
-    }
-
     private void System() {
         LevelCurves.setupCurves();
 
@@ -64,8 +57,8 @@ public final class MineSkyItems extends JavaPlugin {
         }
 
         Bukkit.getPluginManager().registerEvents(new ItemBuilderMenu(), this);
-
         Bukkit.getPluginManager().registerEvents(new InteractionEvents(), this);
+        Bukkit.getPluginManager().registerEvents(new MiscEvents(), this);
 
         this.getCommand("item").setExecutor(new ItemCommand());
     }

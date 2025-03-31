@@ -49,7 +49,6 @@ public class ItemCommand implements TabExecutor {
 
         if(args[0].equalsIgnoreCase("reload")) {
             s.sendMessage("Recarregando...");
-            MineSkyItems.reload();
         }
 
         // give <player> <nome>
