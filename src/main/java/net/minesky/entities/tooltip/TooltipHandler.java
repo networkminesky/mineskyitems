@@ -1,15 +1,11 @@
-package net.minesky.handler.tooltip;
+package net.minesky.entities.tooltip;
 
 import net.minesky.MineSkyItems;
-import net.minesky.handler.categories.Category;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class TooltipHandler {
 

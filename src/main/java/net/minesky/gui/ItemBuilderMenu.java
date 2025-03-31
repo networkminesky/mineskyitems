@@ -1,7 +1,6 @@
 package net.minesky.gui;
 
-import net.minesky.handler.ItemBuilder;
-import net.minesky.handler.categories.Category;
+import net.minesky.entities.ItemBuilder;
 import net.minesky.utils.ChatInputCallback;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
@@ -13,7 +12,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -198,6 +196,12 @@ public class ItemBuilderMenu implements Listener {
                                 level = Integer.parseInt(response);
                             } catch (Exception ex) {
                                 p.sendMessage("Insira um numero válido.");
+                                reopenInventory(p);
+                                return;
+                            }
+
+                            if(level < 0) {
+                                p.sendMessage("O nível mínimo não deve ser negativo.");
                                 reopenInventory(p);
                                 return;
                             }

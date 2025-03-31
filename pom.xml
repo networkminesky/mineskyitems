@@ -5,32 +5,40 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>net.minesky</groupId>
-    <artifactId>MineskyItems</artifactId>
-    <version>1.0.1-ALPHA</version>
+    <artifactId>MineSkyItems</artifactId>
+    <version>1.0.2-ALPHA</version>
     <packaging>jar</packaging>
 
-    <name>MineskyItems</name>
+    <name>MineSkyItems</name>
 
     <properties>
-        <java.version>17</java.version>
-        <maven.compiler.target>17</maven.compiler.target>
-        <maven.compiler.source>17</maven.compiler.source>
+        <java.version>21</java.version>
+        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <repositories>
         <repository>
-            <id>spigotmc-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+            <id>papermc</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
+
         <repository>
             <id>sonatype</id>
             <url>https://oss.sonatype.org/content/groups/public/</url>
         </repository>
+
+        <repository>
+            <id>mymavenrepo</id>
+            <url>https://mymavenrepo.com/repo/o4hUeICMGIYcAH3l8D3i/</url>
+        </repository>
+
         <repository>
             <id>phoenix</id>
             <url>https://nexus.phoenixdevt.fr/repository/maven-public/</url>
         </repository>
+
         <repository>
             <id>nexus</id>
             <name>Lumine Releases</name>
@@ -47,8 +55,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
             <version>1.20.1-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
@@ -68,4 +76,15 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>myMavenRepo.write</id>
+            <url>${myMavenRepo.write.url}</url>
+        </repository>
+        <snapshotRepository>
+            <id>myMavenRepo.write</id>
+            <url>${myMavenRepo.write.url}</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>

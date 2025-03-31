@@ -1,10 +1,8 @@
-package net.minesky.handler.categories;
+package net.minesky.entities.categories;
 
-import net.minesky.MineSkyItems;
-import net.minesky.handler.Item;
-import net.minesky.handler.ItemHandler;
-import net.minesky.handler.tooltip.Tooltip;
-import net.minesky.handler.tooltip.TooltipHandler;
+import net.minesky.entities.item.Item;
+import net.minesky.entities.tooltip.Tooltip;
+import net.minesky.entities.tooltip.TooltipHandler;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -39,7 +37,7 @@ public class Category {
         this.tooltip = TooltipHandler.getTooltipById(categoriesSection.getString("tooltip", "default"));
 
         this.name = categoriesSection.getString("name", id.toLowerCase());
-        this.defaultItem = Material.valueOf(categoriesSection.getString("default-item", "STONE"));
+        this.defaultItem = Material.getMaterial(categoriesSection.getString("default-item", "STONE"));
 
         this.itemList = new ArrayList<>();
     }

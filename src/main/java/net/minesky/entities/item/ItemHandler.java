@@ -1,8 +1,8 @@
-package net.minesky.handler;
+package net.minesky.entities.item;
 
-import net.minesky.handler.categories.CategoryHandler;
+import net.minesky.MineSkyItems;
+import net.minesky.entities.categories.CategoryHandler;
 import org.bukkit.ChatColor;
-import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -50,7 +50,7 @@ public class ItemHandler {
         try {
 
             String s = itemStack.getItemMeta().getPersistentDataContainer().get(
-                    NamespacedKey.fromString("mineskyitems"), PersistentDataType.STRING);
+                    MineSkyItems.NAMESPACED_KEY, PersistentDataType.STRING);
             if (s == null) return null;
 
             return getItemById(s);

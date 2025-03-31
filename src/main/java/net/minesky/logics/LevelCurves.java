@@ -1,6 +1,7 @@
 package net.minesky.logics;
 
 import net.minesky.MineSkyItems;
+import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.w3c.dom.Attr;
@@ -29,13 +30,22 @@ public class LevelCurves {
         cacheCurves();
     }
 
+    private static String translateDots(String z) {
+        return z.replace(".", "_").toUpperCase();
+    }
+
     protected static HashMap<Attribute, List<Double>> curves = new HashMap<>();
     private static void cacheCurves() {
         for(Attribute attribute : Attribute.values()) {
             List<Double> doubles = new ArrayList<>();
-            for(String s : configuration.getStringList(attribute.getKey().getKey())) {
+
+            final String translatedDots = translateDots(attribute.getKey().getKey());
+            MineSkyItems.l.info("| Caching a curva de nivel do atributo "+translatedDots);
+
+            for(String s : configuration.getStringList(translatedDots)) {
                 try {
                     double d = Double.parseDouble(s);
+                    MineSkyItems.l.info("  | Curve: "+d);
                     doubles.add(d);
                 } catch(Exception ignored) {}
             }
@@ -50,17 +60,27 @@ public class LevelCurves {
     public static double calculateValue(int level, Attribute attribute) {
         final List<Double> curves = getCurves(attribute);
 
-        int size = curves.size();
-        double step = (double) maxLevel / (size - 1); // Define os intervalos entre cada valor
+        if (curves == null || curves.isEmpty()) {
+            return 1.0;
+        }
 
-        int lowerIndex = Math.min((int) (level / step), size - 2); // Índice do menor valor dentro do range
-        int upperIndex = lowerIndex + 1; // Próximo índice
+        int size = curves.size();
+        if (size == 1) {
+            return curves.get(0);
+        }
+
+        double step = (double) maxLevel / (size - 1);
+
+        int lowerIndex = Math.min((int) (level / step), size - 2);
+        int upperIndex = lowerIndex + 1;
 
         double lowerValue = curves.get(lowerIndex);
         double upperValue = curves.get(upperIndex);
 
-        double factor = (level % step) / step; // Posição relativa entre os dois pontos
+        double posLower = lowerIndex * step;
+        double factor = (level - posLower) / step;
 
+        // Interpolação
         return lowerValue + factor * (upperValue - lowerValue);
     }
 

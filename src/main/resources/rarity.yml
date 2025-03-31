@@ -1,0 +1,50 @@
+common:
+  custom-font:
+    font: "rarity"
+    char: "A"
+  name: "Comum"
+  color: "#cfe6de"
+  max-level: 15
+
+uncommon:
+  custom-font:
+    font: "rarity"
+    char: "B"
+  name: "Incomum"
+  color: "#5aba16"
+  max-level: 30
+
+rare:
+  custom-font:
+    font: "rarity"
+    char: "C"
+  name: "Raro"
+  color: "#12b09d"
+  max-level: 60
+
+epic:
+  custom-font:
+    font: "rarity"
+    char: "D"
+  name: "Épico"
+  color: "#a220ab"
+  max-level: 85
+  glowing: true
+
+legendary:
+  custom-font:
+    font: "rarity"
+    char: "E"
+  name: "Lendário"
+  color: "#f77300"
+  max-level: 100
+  glowing: true
+
+special:
+  custom-font:
+    font: "rarity"
+    char: "F"
+  name: "Especial"
+  color: "#c22d2d"
+  max-level: 120
+  glowing: true

@@ -1,7 +1,7 @@
-package net.minesky.handler;
+package net.minesky.entities;
 
-import net.minesky.handler.categories.Category;
-import net.minesky.handler.categories.CategoryHandler;
+import net.minesky.entities.categories.Category;
+import net.minesky.entities.item.Item;
 import net.minesky.utils.Utils;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -15,7 +15,7 @@ import java.util.UUID;
 
 public class ItemBuilder {
 
-    private Material material = Material.IRON_AXE;
+    private Material material;
     private String displayName = UUID.randomUUID().toString();
     private List<String> lore;
 
@@ -24,12 +24,13 @@ public class ItemBuilder {
     private int customModel = 0;
     private List<String> playerClass = new ArrayList<>();;
 
-    private int itemLevel = -1;
+    private int itemLevel = 1;
 
     private final Category category;
 
     public ItemBuilder(Category category) {
         this.category = category;
+        this.material = category.getDefaultItem();
     }
 
     public String generateId() {

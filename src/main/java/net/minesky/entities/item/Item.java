@@ -1,16 +1,17 @@
-package net.minesky.handler;
+package net.minesky.entities.item;
 
 import io.lumine.mythic.bukkit.MythicBukkit;
 import io.lumine.mythic.core.utils.MythicUtil;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.minesky.MineSkyItems;
-import net.minesky.handler.categories.Category;
+import net.minesky.entities.categories.Category;
+import net.minesky.entities.rarities.ItemRarity;
+import net.minesky.entities.rarities.RarityHandler;
 import net.minesky.utils.InteractionType;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -19,10 +20,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,6 +39,13 @@ public class Item {
     private final int levelRequirement;
     private final List<String> requiredClasses;
 
+    private ItemAttributes itemAttributes;
+    private ItemRarity itemRarity;
+
+    public ConfigurationSection getConfig() {
+        return itemSection;
+    }
+
     public Item(Category category, String id, ConfigurationSection itemSection) {
         this.category = category;
         this.id = id;
@@ -47,11 +53,15 @@ public class Item {
         this.itemSection = itemSection;
 
         final ConfigurationSection metadataSec = itemSection.getConfigurationSection("metadata");
+        List<String> lore = new ArrayList<>();
+        if(metadataSec.contains("lore"))
+            lore = metadataSec.getStringList("lore");
+
         this.metadata = new ItemMetadata(
                 Material.getMaterial(metadataSec.getString("material", getCategory().getDefaultItem().name())),
                 metadataSec.getString("displayname", "Nome inválido"),
                 metadataSec.getInt("model", -1),
-                metadataSec.getStringList("lore")
+                lore
         );
 
         this.requiredClasses = itemSection.getStringList("required-class");
@@ -79,14 +89,18 @@ public class Item {
                     );
                 })
                 .collect(Collectors.toList());
+
+        this.itemAttributes = new ItemAttributes(this);
+
+        this.itemRarity = RarityHandler.calculateRarityByLevel(levelRequirement);
+    }
+
+    public ItemRarity getItemRarity() {
+        return itemRarity;
     }
 
     public ItemAttributes getItemAttributes() {
-        return null;
-    }
-
-    public String getRarity() {
-        return "\uF815";
+        return itemAttributes;
     }
 
     public void onInteraction(Player player, ItemStack itemStack, InteractionType interactionType) {
@@ -115,7 +129,6 @@ public class Item {
 
             }
         });
-
     }
 
     public boolean hasLevelRequirement(int level) {
@@ -150,13 +163,19 @@ public class Item {
     }
 
     public ItemStack buildStack() {
-        ItemStack itemStack = new ItemStack(metadata.material());
+        // Setar os atributos aqui
+        ItemStack itemStack = getItemAttributes().translateAndUpdate(new ItemStack(metadata.material()));
+
+        Bukkit.broadcastMessage("speed: "+getItemAttributes().getSpeed() + " | damage: "+getItemAttributes().getDamage());
+
         ItemMeta im = itemStack.getItemMeta();
 
-        im.getPersistentDataContainer().set(NamespacedKey.fromString("mineskyitems"), PersistentDataType.STRING, getId());
+        im.getPersistentDataContainer().set(MineSkyItems.NAMESPACED_KEY, PersistentDataType.STRING, getId());
 
-        im.setDisplayName(Utils.c("&f"+metadata.displayName()));
-        im.setLore(getCategory().getTooltip().getFormattedLore(this));
+        im.setDisplayName(Utils.c("&#cfe6de"+metadata.displayName()));
+
+        im.lore(getCategory().getTooltip().getFormattedLore(this));
+
         im.setCustomModelData(metadata.modelData());
 
         itemStack.setItemMeta(im);

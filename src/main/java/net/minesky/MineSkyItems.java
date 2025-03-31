@@ -2,22 +2,24 @@ package net.minesky;
 
 import net.Indyuce.mmocore.api.MMOCoreAPI;
 import net.minesky.commands.ItemCommand;
+import net.minesky.entities.rarities.RarityHandler;
 import net.minesky.events.InteractionEvents;
 import net.minesky.gui.ItemBuilderMenu;
-import net.minesky.handler.categories.CategoryHandler;
-import net.minesky.handler.tooltip.TooltipHandler;
+import net.minesky.entities.categories.CategoryHandler;
+import net.minesky.entities.tooltip.TooltipHandler;
 import net.minesky.logics.LevelCurves;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.HashMap;
 import java.util.logging.Logger;
 
 public final class MineSkyItems extends JavaPlugin {
 
     public static YamlConfiguration defaultCurveConfig;
+
+    public static final NamespacedKey NAMESPACED_KEY = NamespacedKey.fromString("mineskyitems");
 
     public static MMOCoreAPI mmocoreAPI;
 
@@ -47,6 +49,9 @@ public final class MineSkyItems extends JavaPlugin {
 
     private void System() {
         LevelCurves.setupCurves();
+
+        l.info("Carregando rarities...");
+        RarityHandler.setupRarities();
 
         l.info("Carregando tooltips...");
         TooltipHandler.setupTooltips();

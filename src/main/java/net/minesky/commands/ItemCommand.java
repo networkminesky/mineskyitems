@@ -2,11 +2,11 @@ package net.minesky.commands;
 
 import net.minesky.MineSkyItems;
 import net.minesky.gui.ItemBuilderMenu;
-import net.minesky.handler.Item;
-import net.minesky.handler.ItemBuilder;
-import net.minesky.handler.ItemHandler;
-import net.minesky.handler.categories.Category;
-import net.minesky.handler.categories.CategoryHandler;
+import net.minesky.entities.item.Item;
+import net.minesky.entities.ItemBuilder;
+import net.minesky.entities.item.ItemHandler;
+import net.minesky.entities.categories.Category;
+import net.minesky.entities.categories.CategoryHandler;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;

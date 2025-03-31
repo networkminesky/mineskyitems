@@ -1,15 +1,25 @@
 package net.minesky.api;
 
-import net.minesky.handler.Item;
-import net.minesky.handler.ItemBuilder;
-import net.minesky.handler.categories.CategoryHandler;
+import net.minesky.MineSkyItems;
+import net.minesky.entities.item.Item;
+import net.minesky.entities.ItemBuilder;
 import net.minesky.utils.InteractionType;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class MineSkyItemsAPI {
+
+    public static boolean isMineSkyItem(ItemStack itemStack) {
+        if(!itemStack.hasItemMeta())
+            return false;
+        try {
+            return itemStack.getItemMeta().getPersistentDataContainer().has(MineSkyItems.NAMESPACED_KEY, PersistentDataType.STRING);
+        } catch(Exception ignored) {}
+        return false;
+    }
 
     public void test() {
 

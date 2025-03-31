@@ -1,8 +1,6 @@
-package net.minesky.handler.categories;
+package net.minesky.entities.categories;
 
 import net.minesky.MineSkyItems;
-import net.minesky.handler.Item;
-import net.minesky.handler.ItemHandler;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 

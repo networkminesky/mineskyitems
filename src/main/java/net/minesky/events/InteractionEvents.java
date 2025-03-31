@@ -1,12 +1,13 @@
 package net.minesky.events;
 
-import net.minesky.handler.Item;
-import net.minesky.handler.ItemHandler;
+import net.minesky.entities.item.Item;
+import net.minesky.entities.item.ItemHandler;
 import net.minesky.utils.Utils;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -24,6 +25,14 @@ public class InteractionEvents implements Listener {
 
         if (item != null)
             item.onInteraction(p, itemStack, Utils.convertInteractionType(e.getAction()));
+    }
+
+    @EventHandler
+    public void onDamage(EntityDamageByEntityEvent e) {
+        if(!(e.getDamager() instanceof Player damager))
+            return;
+
+        damager.sendTitle(e.getDamage()+"", e.getFinalDamage()+"", 5, 10, 10);
     }
 
 }
