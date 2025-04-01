@@ -128,7 +128,7 @@ public class ItemBuilderMenu implements Listener {
                 Material.BLAZE_POWDER, "Skills (poderes/magias)","• Você também pode adicionar skills", " (poderes) para os items.",
                 " ",
                 "&6Skills: &e"+( builder.getItemSkills().isEmpty() ? "Nenhuma skill" : builder.getItemSkills().stream()
-                        .map(a -> "["+a.getMythicSkillId()+"] - "+a.getInteractionType().name())
+                        .map(a -> "["+a.getMythicSkillId()+"] - "+a.getInteractionType().name()+", ")
                         .collect(Collectors.joining())),
                 " ",
                 "&e➳ Clique esquerdo - Adicionar nova skill",

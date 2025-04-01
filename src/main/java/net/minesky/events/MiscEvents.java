@@ -20,8 +20,6 @@ public class MiscEvents implements Listener {
         if(item.getItemRarity().shouldHaveGlowing())
             drop.setGlowing(true);
 
-
-
         drop.setCustomNameVisible(true);
         drop.customName(drop.getItemStack().displayName());
 

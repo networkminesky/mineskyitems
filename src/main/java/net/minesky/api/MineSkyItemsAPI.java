@@ -40,7 +40,7 @@ public class MineSkyItemsAPI {
     }
 
     public void forceInteraction(Player player, Item item) {
-        item.onInteraction(player, null, InteractionType.RIGHT_CLICK);
+        item.onInteraction(player, null, InteractionType.RIGHT_CLICK, null);
     }
 
 }

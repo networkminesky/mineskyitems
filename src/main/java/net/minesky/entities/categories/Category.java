@@ -25,7 +25,7 @@ public class Category {
 
     private final Tooltip tooltip;
 
-    private final List<Item> itemList;
+    private final List<Item> itemList = new ArrayList<>();
 
     public Category(File file, ConfigurationSection categoriesSection, String id) {
         this.categoriesSection = categoriesSection;
@@ -38,8 +38,6 @@ public class Category {
 
         this.name = categoriesSection.getString("name", id.toLowerCase());
         this.defaultItem = Material.getMaterial(categoriesSection.getString("default-item", "STONE"));
-
-        this.itemList = new ArrayList<>();
     }
 
     public Tooltip getTooltip() {
@@ -52,10 +50,6 @@ public class Category {
 
     public List<Item> getAllItems() {
         return itemList;
-    }
-
-    public void addItem(Item item) {
-        itemList.add(item);
     }
 
     public void reloadFile() {
@@ -77,7 +71,7 @@ public class Category {
                 Item item = new Item(this, itemId, section);
                 //MineSkyItems.l.info("  | Item carregado: "+item.getMetadata().displayName());
 
-                addItem(item);
+                itemList.add(item);
             } catch (Exception exception) {
                 exception.fillInStackTrace();
             }
@@ -87,6 +81,7 @@ public class Category {
 
     public void reloadCategory() {
         //reloadFile();
+        itemList.clear();
         registerItemsInsideCategory();
     }
 

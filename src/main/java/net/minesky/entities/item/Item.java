@@ -11,13 +11,16 @@ import net.minesky.entities.rarities.ItemRarity;
 import net.minesky.entities.rarities.RarityHandler;
 import net.minesky.utils.InteractionType;
 import net.minesky.utils.Utils;
+import net.minesky.utils.cooldown.CooldownManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -106,8 +109,7 @@ public class Item {
         return itemAttributes;
     }
 
-    public void onInteraction(Player player, ItemStack itemStack, InteractionType interactionType) {
-
+    public void onInteraction(Player player, ItemStack itemStack, InteractionType interactionType, Cancellable event) {
         PlayerData playerData = MineSkyItems.mmocoreAPI.getPlayerData(player);
 
         if(!player.hasPermission("mineskyitems.bypass.class-requirement") &&
@@ -122,22 +124,30 @@ public class Item {
             return;
         }
 
-        getItemSkills().forEach(itemSkill -> {
-            if(itemSkill.getInteractionType() == interactionType) {
-                // check cooldown dps
+        getItemSkills().stream()
+                .filter(skill -> skill.getInteractionType() == interactionType)
+                .findFirst()
+                .ifPresent(skill -> {
+                    // Key feedback
+                    player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1.2f);
+                    event.setCancelled(true);
 
-                List<Entity> targets = new ArrayList();
-                Entity casterEntity = player;
-                Location origin = player.getLocation();
-                LivingEntity target = MythicUtil.getTargetedEntity(player);
-                targets.add(target);
+                    if (CooldownManager.inCooldown(player, skill)) {
+                        player.sendMessage("§cEssa magia está em cooldown, aguarde mais "+CooldownManager.getRemainingCooldown(player, skill)+" segundo(s)!");
+                        return;
+                    }
+                    CooldownManager.createCooldown(player, skill, skill.getCooldown());
 
-                String spell = itemSkill.getMythicSkillId();
+                    List<Entity> targets = new ArrayList();
+                    Entity casterEntity = player;
+                    Location origin = player.getLocation();
+                    LivingEntity target = MythicUtil.getTargetedEntity(player);
+                    targets.add(target);
 
-                MythicBukkit.inst().getAPIHelper().castSkill(casterEntity, spell, casterEntity, origin, targets, null, 1.0F);
+                    String spell = skill.getMythicSkillId();
 
-            }
-        });
+                    MythicBukkit.inst().getAPIHelper().castSkill(casterEntity, spell, casterEntity, origin, targets, null, 1.0F);
+                });
     }
 
     public boolean hasLevelRequirement(int level) {
