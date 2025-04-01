@@ -19,7 +19,7 @@ public class ItemBuilder {
 
     private Material material;
     private String displayName = UUID.randomUUID().toString();
-    private List<String> lore;
+    private List<String> lore = new ArrayList<>();
 
     private List<ItemSkill> itemSkills = new ArrayList<>();
 
