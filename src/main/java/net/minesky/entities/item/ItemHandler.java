@@ -30,14 +30,27 @@ public class ItemHandler {
                 .filter(element -> element.getId().equals(id))
                 .findFirst().orElse(null);
     }
+    public static Item getItem(String nameOrId) {
+        return getAllItems().stream()
+                .filter(item -> item.getId().equals(nameOrId) ||
+                        item.getMetadata().displayName().equalsIgnoreCase(ChatColor.stripColor(item.getMetadata().displayName())))
+                .findFirst().orElse(null);
+    }
 
-    public static List<String> getItemsNames() {
+    public static List<String> getItemsNamesAndIds() {
         List<String> names = new ArrayList<>();
         getAllItems().forEach(item -> {
-
             names.add(ChatColor.stripColor(item.getMetadata().displayName()));
-
+            names.add(item.getId());
         });
+
+        Collections.sort(names);
+
+        return names;
+    }
+    public static List<String> getItemsNames() {
+        List<String> names = new ArrayList<>();
+        getAllItems().forEach(item -> names.add(ChatColor.stripColor(item.getMetadata().displayName())));
 
         Collections.sort(names);
 

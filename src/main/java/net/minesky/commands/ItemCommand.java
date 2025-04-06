@@ -1,5 +1,9 @@
 package net.minesky.commands;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.minesky.MineSkyItems;
 import net.minesky.gui.ItemBuilderMenu;
 import net.minesky.entities.item.Item;
@@ -7,11 +11,14 @@ import net.minesky.entities.ItemBuilder;
 import net.minesky.entities.item.ItemHandler;
 import net.minesky.entities.categories.Category;
 import net.minesky.entities.categories.CategoryHandler;
+import net.minesky.scripts.ItemFrameGenerator;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.command.*;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -73,7 +80,34 @@ public class ItemCommand implements TabExecutor {
         }
 
         if(!(s instanceof Player p)) {
-            s.sendMessage("Apenas jogadores in-game podem utilizar esse comando.");
+            s.sendMessage("§cApenas jogadores in-game podem utilizar esse comando.");
+            return true;
+        }
+
+        if(args[0].equalsIgnoreCase("achar")) {
+            Item item;
+
+            // Comando possui input
+            if(args.length >= 2) {
+                String itemSearch = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+
+                item = ItemHandler.getItem(itemSearch);
+                if(item != null) {
+                    itemInfo(p, item);
+                    return true;
+                }
+
+                p.sendMessage("§7Nenhum item encontrado basedo em seu input.");
+            }
+
+            p.sendMessage("§aVerificando item em sua mão primária...");
+            item = ItemHandler.getItemFromStack(p.getInventory().getItemInMainHand());
+            if(item == null) {
+                p.sendMessage("§cNenhum item encontrado nem em sua mão e nem no prompt do item. Verifique com um Admin ou Desenvolvedor do plugin.");
+                return true;
+            }
+
+            itemInfo(p, item);
             return true;
         }
 
@@ -104,8 +138,19 @@ public class ItemCommand implements TabExecutor {
                 return true;
             }
 
-            if(args[0].equalsIgnoreCase("criar")) {
+            if(args[0].equalsIgnoreCase("script")) {
 
+                int startingFrom = 0;
+                if(args.length >= 3) {
+                    startingFrom = Integer.parseInt(args[2]);
+                }
+
+                ItemFrameGenerator.generate(p.getLocation(), Material.getMaterial(args[1]), startingFrom);
+                return true;
+
+            }
+
+            if(args[0].equalsIgnoreCase("criar")) {
                 Category category = CategoryHandler.getCategory(prompt);
 
                 if(category == null) {
@@ -132,12 +177,25 @@ public class ItemCommand implements TabExecutor {
 
                 s.sendMessage("§cNenhum item existe com esse nome.");
                 return true;
-
             }
 
         }
 
         return false;
+    }
+
+    private static void itemInfo(Player p, Item item) {
+        p.sendMessage("§6§lItem encontrado!");
+        p.sendMessage("§6Nome: §e"+item.getMetadata().displayName());
+        p.sendMessage("§6ID: §e"+item.getId());
+        p.sendMessage("§6Level: §e"+item.getRequiredLevel());
+        p.sendMessage("§6Categoria: §e"+item.getCategory());
+
+        Component component = Component.text("Clique aqui para editar esse item.")
+                .color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD)
+                .clickEvent(ClickEvent.clickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/item editar "+ChatColor.stripColor(item.getMetadata().displayName())));
+
+        p.sendMessage(component);
     }
 
     private void giveItemByName(Player player, String name) {
@@ -162,6 +220,17 @@ public class ItemCommand implements TabExecutor {
 
         if(args[0].equalsIgnoreCase("criar")) {
             return CategoryHandler.getCategoriesString();
+        }
+
+        if(args[0].equalsIgnoreCase("achar")) {
+            String[] args2 = Arrays.copyOfRange(args, 1, args.length);
+
+            List<String> e = new ArrayList<>(ItemHandler.getItemsNamesAndIds());
+            String input = String.join(" ", args2);
+
+            reorganizeTabComplete(e, input, args2.length);
+
+            return e;
         }
 
         if(args[0].equalsIgnoreCase("get") || args[0].equalsIgnoreCase("deletar")) {
