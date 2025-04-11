@@ -24,7 +24,7 @@ public class ItemBuilder {
     private List<ItemSkill> itemSkills = new ArrayList<>();
 
     private int customModel = 0;
-    private List<String> playerClass = new ArrayList<>();;
+    private List<String> playerClass = new ArrayList<>();
 
     private int itemLevel = 1;
 

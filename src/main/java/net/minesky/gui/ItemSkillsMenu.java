@@ -21,6 +21,8 @@ import org.bukkit.inventory.Inventory;
 import java.util.HashMap;
 import java.util.List;
 
+import static net.minesky.gui.MenuUtils.simpleButton;
+
 public class ItemSkillsMenu implements Listener {
 
     public static HashMap<Player, Inventory> skillsInventories = new HashMap<>();
@@ -46,9 +48,9 @@ public class ItemSkillsMenu implements Listener {
     }
 
     private static void reorganizeItems(ItemSkill skill, Inventory inv) {
-        inv.setItem(4, ItemBuilderMenu.simpleButton(Material.BARRIER, "Voltar", "• Clique para voltar ou cancelar, caso você", " tenha editado uma skill, clique", " que a skill será salvada automaticamente."));
+        inv.setItem(4, simpleButton(Material.BARRIER, "Voltar", "• Clique para voltar ou cancelar, caso você", " tenha editado uma skill, clique", " que a skill será salvada automaticamente."));
 
-        inv.setItem(11, ItemBuilderMenu.simpleButton(
+        inv.setItem(11, simpleButton(
                 Material.ENDER_EYE, "Nome da skill mythic", "• Aqui você deve setar o nome da", " skill do plugin MythicMobs.",
                 " ",
                 "&6Atual: &e"+ skill.getMythicSkillId(),
@@ -56,7 +58,7 @@ public class ItemSkillsMenu implements Listener {
                 "&e➳ Clique - Alterar skill mythic"
         ));
 
-        inv.setItem(13, ItemBuilderMenu.simpleButton(
+        inv.setItem(13, simpleButton(
                 Material.PAPER, "Gatilho (trigger)", "• Qual ação o jogador deve executar", " segurando o item para usar a Skill?",
                 " ",
                 "&6Atual: &e"+ skill.getInteractionType().name(),
@@ -64,7 +66,7 @@ public class ItemSkillsMenu implements Listener {
                 "&e➳ Clique - Alterar a ação necessária"
         ));
 
-        inv.setItem(15, ItemBuilderMenu.simpleButton(
+        inv.setItem(15, simpleButton(
                 Material.CLOCK, "Cooldown", "• Qual o intervalo entre o uso dessa skill?", "• Cooldown em segundos.",
                 " ",
                 "&6Atual: &e"+ skill.getCooldown()+" segundos",

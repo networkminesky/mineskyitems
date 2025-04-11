@@ -2,13 +2,77 @@ espadas:
   name: Espadas
   default-item: IRON_SWORD
   tooltip: default
+  on-use:
+    sound: "minesky.effects.sword_swing"
 
 machados:
   name: Machados
   default-item: IRON_AXE
   tooltip: default
 
+martelos:
+  name: Martelos
+  default-item: IRON_AXE
+  tooltip: default
+  on-use:
+    sound: "block.anvil.land"
+
 arcos:
   name: Arcos
   default-item: PAPER
   tooltip: default
+  on-use:
+    sound: "entity.arrow.shoot"
+
+bestas:
+  name: Arcos
+  default-item: PAPER
+  tooltip: default
+  on-use:
+    sound: "item.crossbow.shoot"
+
+luvas:
+  name: Luvas
+  default-item: PAPER
+  tooltip: default
+
+katanas:
+  name: Katanas
+  default-item: IRON_SWORD
+  tooltip: default
+  on-use:
+    sound: "minesky.effects.sword_swing"
+
+lancas:
+  name: Lanças
+  default-item: IRON_SWORD
+  tooltip: default
+
+foices:
+  name: Foices
+  default-item: IRON_SWORD
+  tooltip: default
+  on-use:
+    sound: "minesky.effects.sword_swing"
+    pitch: 0.7
+
+cajados:
+  name: Cajados
+  default-item: IRON_SWORD
+  tooltip: default
+
+adagas:
+  name: Adagas
+  default-item: IRON_SWORD
+  tooltip: default
+  on-use:
+    sound: "minesky.effects.sword_swing"
+    pitch: 2
+
+dusts:
+  name: Pós
+  default-item: PAPER
+  tooltip: misc
+  on-use:
+    sound: "item.brush.brushing.generic"
+    pitch: 1.8

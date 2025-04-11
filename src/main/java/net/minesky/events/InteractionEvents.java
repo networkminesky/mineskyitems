@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -60,12 +61,30 @@ public class InteractionEvents implements Listener {
             item.onInteraction(p, itemStack, Utils.convertInteractionType(ClickType.DROP), e);
     }
 
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onBlockBreak(BlockBreakEvent e) {
+        if(e.isCancelled()) return;
+        final Player p = e.getPlayer();
+
+        ItemStack stack = p.getInventory().getItemInMainHand();
+        Item item = ItemHandler.getItemFromStack(stack);
+        if(item != null) {
+            item.onItemUse(p, stack, e);
+        }
+    }
+
     @EventHandler
     public void onDamage(EntityDamageByEntityEvent e) {
         if(!(e.getDamager() instanceof Player damager))
             return;
 
         damager.sendTitle(Utils.format(e.getDamage()), e.getFinalDamage()+"", 5, 10, 10);
+
+        ItemStack stack = damager.getInventory().getItemInMainHand();
+        Item item = ItemHandler.getItemFromStack(stack);
+        if(item != null) {
+            item.onItemUse(damager, stack, e);
+        }
     }
 
 }

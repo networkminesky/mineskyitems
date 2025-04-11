@@ -5,12 +5,15 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.minesky.MineSkyItems;
+import net.minesky.events.DummyEvent;
 import net.minesky.gui.ItemBuilderMenu;
 import net.minesky.entities.item.Item;
 import net.minesky.entities.ItemBuilder;
 import net.minesky.entities.item.ItemHandler;
 import net.minesky.entities.categories.Category;
 import net.minesky.entities.categories.CategoryHandler;
+import net.minesky.gui.blacksmith.ItemRecyclerMenu;
+import net.minesky.gui.blacksmith.ItemRepairMenu;
 import net.minesky.scripts.ItemFrameGenerator;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
@@ -20,14 +23,15 @@ import org.bukkit.Sound;
 import org.bukkit.command.*;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
+import javax.swing.*;
 import java.util.*;
 
 public class ItemCommand implements TabExecutor {
 
-    public static final List<String> subCommands = Arrays.asList("criar", "editar", "give", "get", "reload", "achar", "deletar");
-
-    public static final
+    public static final List<String> subCommands = Arrays.asList("criar", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
+    public static final List<String> menu_subCommands = Arrays.asList("reparar", "destruir");
 
     void commandList(CommandSender s) {
         s.sendMessage(Utils.PURPLE_COLOR+Utils.c("&lMineSkyItems v"+MineSkyItems.getInstance().getDescription().getVersion()));
@@ -37,7 +41,9 @@ public class ItemCommand implements TabExecutor {
                         Utils.PURPLE_COLOR+"/item give <player> <nome> &8- &7Pega uma cópia do item a partir do nome para um jogador\n"+
                         Utils.PURPLE_COLOR+"/item deletar <nome> &8- &7Deleta um item existente\n"+
                         Utils.PURPLE_COLOR+"/item get <nome> &8- &7Pega uma cópia do item a partir do nome\n"+
+                        Utils.PURPLE_COLOR+"/item menu <menu> &8- &7Abre um menu de item, ex: menu de destruir itens para virar pó\n"+
                         Utils.PURPLE_COLOR+"/item reload &8- &7Recarregar o plugin (não recomendado)\n"+
+                        Utils.PURPLE_COLOR+"/item danificar <dano> &8- &7Danifica o item de sua mão na quantidade informada\n"+
                         Utils.PURPLE_COLOR+"/item achar [id, nome ou nada] &8- &7Procura um item pela parte do nome dele, ou pelo seu ID, ou pelo item em sua mão."
         ));
     }
@@ -60,6 +66,7 @@ public class ItemCommand implements TabExecutor {
 
         if(args[0].equalsIgnoreCase("reload")) {
             s.sendMessage("Recarregando...");
+            return true;
         }
 
         // give <player> <nome>
@@ -89,7 +96,7 @@ public class ItemCommand implements TabExecutor {
 
             // Comando possui input
             if(args.length >= 2) {
-                String itemSearch = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+                String itemSearch = String.join(" ", Arrays.copyOfRange(args, 1, args.length)).trim();
 
                 item = ItemHandler.getItem(itemSearch);
                 if(item != null) {
@@ -123,6 +130,25 @@ public class ItemCommand implements TabExecutor {
                 return true;
             }
 
+            if(args[0].equalsIgnoreCase("menu")) {
+                if(!s.hasPermission("mineskyitems.command.menu")) {
+                    s.sendMessage("§cVocê não tem permissão ou o comando não existe.");
+                    return true;
+                }
+
+                if(prompt.equalsIgnoreCase("destruir")) {
+
+                    ItemRecyclerMenu.openMainMenu(p);
+
+                } else {
+
+                    //ItemRepairMenu.openMainMenu(p);
+
+                }
+
+                return true;
+            }
+
             if(args[0].equalsIgnoreCase("deletar")) {
                 String itemName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
 
@@ -148,6 +174,26 @@ public class ItemCommand implements TabExecutor {
                 ItemFrameGenerator.generate(p.getLocation(), Material.getMaterial(args[1]), startingFrom);
                 return true;
 
+            }
+
+            if(args[0].equalsIgnoreCase("danificar")) {
+                int damage;
+
+                try {
+                    damage = Integer.parseInt(prompt);
+                } catch (Exception ex) {
+                    p.sendMessage("§cInforme um número válido de quantidade de dano para este item.");
+                    return true;
+                }
+
+                Item item = ItemHandler.getItemFromStack(p.getInventory().getItemInMainHand());
+                if(item == null) {
+                    p.sendMessage("§cVocê deve segurar um item válido em sua mão para alterar a durabilidade dele.");
+                    return true;
+                }
+
+                item.damageItem(p, p.getInventory().getItemInMainHand(), damage, new DummyEvent());
+                return true;
             }
 
             if(args[0].equalsIgnoreCase("criar")) {
@@ -189,7 +235,7 @@ public class ItemCommand implements TabExecutor {
         p.sendMessage("§6Nome: §e"+item.getMetadata().displayName());
         p.sendMessage("§6ID: §e"+item.getId());
         p.sendMessage("§6Level: §e"+item.getRequiredLevel());
-        p.sendMessage("§6Categoria: §e"+item.getCategory());
+        p.sendMessage("§6Categoria: §e"+item.getCategory().getName());
 
         Component component = Component.text("Clique aqui para editar esse item.")
                 .color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD)
@@ -218,14 +264,30 @@ public class ItemCommand implements TabExecutor {
             return subCommands;
         }
 
-        if(args[0].equalsIgnoreCase("criar")) {
-            return CategoryHandler.getCategoriesString();
+        if(args[0].equalsIgnoreCase("danificar")
+        || args[0].equalsIgnoreCase("reload")) {
+            return null;
+        }
+
+        if(args[0].equalsIgnoreCase("menu")) {
+            return menu_subCommands;
         }
 
         if(args[0].equalsIgnoreCase("achar")) {
             String[] args2 = Arrays.copyOfRange(args, 1, args.length);
 
             List<String> e = new ArrayList<>(ItemHandler.getItemsNamesAndIds());
+            String input = String.join(" ", args2);
+
+            reorganizeTabComplete(e, input, args2.length);
+
+            return e;
+        }
+
+        if(args[0].equalsIgnoreCase("criar")) {
+            String[] args2 = Arrays.copyOfRange(args, 1, args.length);
+
+            List<String> e = new ArrayList<>(CategoryHandler.getCategoriesString());
             String input = String.join(" ", args2);
 
             reorganizeTabComplete(e, input, args2.length);

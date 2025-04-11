@@ -1,7 +1,7 @@
 package net.minesky.entities.item;
 
 import net.minesky.MineSkyItems;
-import net.minesky.logics.LevelCurves;
+import net.minesky.logics.LevelCurvesLogic;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
@@ -34,8 +34,8 @@ public class ItemAttributes {
     }
 
     private void calculateBasedOnLevel() {
-        double damage = LevelCurves.calculateValue(item.getRequiredLevel(), Attribute.GENERIC_ATTACK_DAMAGE);
-        double speed = LevelCurves.calculateValue(item.getRequiredLevel(), Attribute.GENERIC_ATTACK_SPEED);
+        double damage = LevelCurvesLogic.calculateValue(item.getRequiredLevel(), Attribute.GENERIC_ATTACK_DAMAGE);
+        double speed = LevelCurvesLogic.calculateValue(item.getRequiredLevel(), Attribute.GENERIC_ATTACK_SPEED);
 
         this.damage = damage;
         this.speed = speed;
@@ -66,8 +66,6 @@ public class ItemAttributes {
         // this.getSpeed()-4
         itemMeta.addAttributeModifier(Attribute.GENERIC_ATTACK_SPEED,
                 new AttributeModifier(UUID.randomUUID(), namespaceName, this.getSpeed() - 4, defaultOperation, EquipmentSlot.HAND));
-
-        itemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
 
         itemStack.setItemMeta(itemMeta);
 

@@ -1,24 +1,21 @@
 package net.minesky.logics;
 
 import net.minesky.MineSkyItems;
-import org.bukkit.Bukkit;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.w3c.dom.Attr;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-public class LevelCurves {
+public class LevelCurvesLogic {
 
     // Level maximo que pode ser atingido,
     // hardcoded para evitar modificações desnecessárias.
     public static final int maxLevel = 100;
 
-    public static File file = new File(MineSkyItems.getInstance().getDataFolder(), "default-curve.yml");
+    public static File file = new File(MineSkyItems.getInstance().getDataFolder(), "default-curves.yml");
     public static YamlConfiguration configuration;
 
     public static void setupCurves() {
@@ -34,31 +31,45 @@ public class LevelCurves {
         return z.replace(".", "_").toUpperCase();
     }
 
-    protected static HashMap<Attribute, List<Double>> curves = new HashMap<>();
+    //   KEY (STRING or ATTRIBUTE) | DOUBLE CURVES
+    protected static HashMap<String, List<Double>> curves = new HashMap<>();
+
+    public static final String ITEM_DURABILITY_CURVE = "ITEM_DURABILITY";
+    public static final String ANOTHER_ONE = "idk";
+
     private static void cacheCurves() {
         for(Attribute attribute : Attribute.values()) {
-            List<Double> doubles = new ArrayList<>();
-
             final String translatedDots = translateDots(attribute.getKey().getKey());
-            MineSkyItems.l.info("| Caching a curva de nivel do atributo "+translatedDots);
-
-            for(String s : configuration.getStringList(translatedDots)) {
-                try {
-                    double d = Double.parseDouble(s);
-                    MineSkyItems.l.info("  | Curve: "+d);
-                    doubles.add(d);
-                } catch(Exception ignored) {}
-            }
-            curves.put(attribute, doubles);
+            registerCurve(translatedDots);
         }
+
+        registerCurve(ITEM_DURABILITY_CURVE);
     }
 
-    public static List<Double> getCurves(Attribute attribute) {
-        return curves.getOrDefault(attribute, List.of((double) 0));
+    private static void registerCurve(String key) {
+        List<Double> doubles = new ArrayList<>();
+
+        MineSkyItems.l.info("| Caching a curva de nivel de "+key);
+
+        for(String s : configuration.getStringList(key)) {
+            try {
+                double d = Double.parseDouble(s);
+                MineSkyItems.l.info("  | Curve: "+d);
+                doubles.add(d);
+            } catch(Exception ignored) {}
+        }
+        curves.put(key, doubles);
+    }
+
+    private static List<Double> getCurves(String key) {
+        return curves.getOrDefault(key, List.of((double) 0));
     }
 
     public static double calculateValue(int level, Attribute attribute) {
-        final List<Double> curves = getCurves(attribute);
+        return calculateValue(level, translateDots(attribute.getKey().getKey()));
+    }
+    public static double calculateValue(int level, String key) {
+        final List<Double> curves = getCurves(key);
 
         if (curves == null || curves.isEmpty()) {
             return 1.0;
@@ -85,7 +96,7 @@ public class LevelCurves {
     }
 
     public static void saveDefaultFile() {
-        final String fileName = "default-curve.yml";
+        final String fileName = "default-curves.yml";
         InputStream in = MineSkyItems.getInstance().getResource(fileName);
 
         if (in == null) {

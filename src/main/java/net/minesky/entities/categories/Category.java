@@ -6,6 +6,7 @@ import net.minesky.entities.tooltip.TooltipHandler;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,6 +47,19 @@ public class Category {
 
     public void removeItem(Item item) {
         itemList.remove(item);
+    }
+
+    public void playUseSounds(Player player) {
+        if(getCategoriesFileSection().contains("on-use")) {
+            String sound = getCategoriesFileSection().getString("on-use.sound", "");
+            float pitch = (float)getCategoriesFileSection().getDouble("on-use.pitch", 1);
+
+            player.playSound(player.getLocation(), sound, 0.8f, pitch);
+        }
+    }
+
+    public void forceAddItem(Item item) {
+        itemList.add(item);
     }
 
     public List<Item> getAllItems() {

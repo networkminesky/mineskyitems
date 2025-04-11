@@ -22,18 +22,18 @@ public class ItemHandler {
 
     public static Item getItemByName(String name) {
         return getAllItems().stream()
-                .filter(element -> element.getMetadata().displayName().toLowerCase().contains(ChatColor.stripColor(name).toLowerCase()))
+                .filter(element -> ChatColor.stripColor(element.getMetadata().displayName()).equalsIgnoreCase(name))
                 .findFirst().orElse(null);
     }
     public static Item getItemById(String id) {
         return getAllItems().stream()
-                .filter(element -> element.getId().equals(id))
+                .filter(element -> element.getId().equalsIgnoreCase(id))
                 .findFirst().orElse(null);
     }
     public static Item getItem(String nameOrId) {
         return getAllItems().stream()
-                .filter(item -> item.getId().equals(nameOrId) ||
-                        item.getMetadata().displayName().equalsIgnoreCase(ChatColor.stripColor(item.getMetadata().displayName())))
+                .filter(item -> nameOrId.equalsIgnoreCase(item.getId()) ||
+                        nameOrId.equalsIgnoreCase(ChatColor.stripColor(item.getMetadata().displayName())))
                 .findFirst().orElse(null);
     }
 

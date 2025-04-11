@@ -1,11 +1,19 @@
 default:
   - "%rarity%"
-  - "%vazio%"
+  - "%empty%"
   - " &#dcc190🛡 ⒸⓁⒶⓈⓈⒺ: &f%classes%"
   - " &#dcc190🛡 ⓇⒺⓆⓊⒺⓇ ⓃⒾⓋⒺⓁ: &f%level%"
-  - "%vazio%"
+  - "%empty%"
   - " &#b02121🗡 ⒹⒶⓃⓄ ⒷⒶⓈⒺ: &f%damage%" # Dano base
   - " &#c46e27⚔ ⒹⒺⓈⓉⓇⒺⓏⒶ: &f%speed%" # Velocidade de ataque
-  - "%vazio%"
+  - "%empty%"
   - "%lore%"
-  - "%vazio%"
+  - "%empty%"
+  - " &#e1f2ee❄ ⒹⓊⓇⒶⒷⒾⓁⒾⒹⒶⒹⒺ: &f%durability%"
+  - "%empty%"
+
+misc:
+  - "%rarity%"
+  - "%empty%"
+  - "%lore%"
+  - "%empty%"

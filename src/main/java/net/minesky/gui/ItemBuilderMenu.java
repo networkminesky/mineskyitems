@@ -13,7 +13,6 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -27,27 +26,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static net.minesky.gui.MenuUtils.simpleButton;
+
 public class ItemBuilderMenu implements Listener {
 
     public static HashMap<Player, ItemBuilder> builderHashMap = new HashMap<>();
     public static HashMap<Player, Inventory> inventories = new HashMap<>();
-
-    public static ItemStack simpleButton(Material m, String name, String... lore) {
-        return simpleButton(m, name, 1, lore);
-    }
-    public static ItemStack simpleButton(Material m, String name, int count, String... lore) {
-        ItemStack it = new ItemStack(m, count);
-        ItemMeta im = it.getItemMeta();
-
-        im.setDisplayName("§6§l"+name);
-
-        im.setLore(Arrays.stream(lore)
-                .map(a -> Utils.c("&7"+a))
-                .collect(Collectors.toList()));
-
-        it.setItemMeta(im);
-        return it;
-    }
 
     private static void reorganizeItems(ItemBuilder builder, Inventory inv) {
         ItemStack item = builder.build().buildStack();

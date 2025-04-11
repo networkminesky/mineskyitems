@@ -10,6 +10,7 @@ import net.minesky.entities.item.Item;
 import net.minesky.entities.item.ItemAttributes;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +30,7 @@ public class Tooltip {
         return id;
     }
 
-    public List<Component> getFormattedLore(Item item) {
+    public List<Component> getFormattedLore(Item item, ItemStack stack) {
         ItemAttributes attributes = item.getItemAttributes();
 
         List<Component> definitiveLore = new ArrayList<>();
@@ -38,7 +39,7 @@ public class Tooltip {
 
         int n = 0;
         for(String s : getRawFormat()) {
-            if(s.contains("%vazio%")) {
+            if(s.contains("%empty%") || s.contains("%vazio%")) {
                 try {
                     final int check = (n - 1);
                     if (!empty.equals(definitiveLore.get(check))) {
@@ -73,6 +74,8 @@ public class Tooltip {
 
             s = s.replace("%damage%", Utils.format(attributes.getDamage()));
             s = s.replace("%speed%", Utils.format(attributes.getSpeed()));
+
+            s = s.replace("%durability%", String.valueOf(item.getDurability(stack)));
 
             s = Utils.c(s);
 

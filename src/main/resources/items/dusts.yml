@@ -1,0 +1,20 @@
+dust:
+  metadata:
+    material: PAPER
+    displayname: "Pó de item"
+    model: 348
+    lore:
+      - "Você pode reparar outros itens"
+      - "utilizando esse resto de item."
+  required-level: 0
+
+epicdust:
+  metadata:
+    material: PAPER
+    displayname: "Pó de item épico"
+    model: 349
+    lore:
+      - "Você pode reparar outros itens"
+      - "utilizando esse resto de item."
+  force-rarity: epic
+  required-level: 0

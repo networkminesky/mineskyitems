@@ -15,6 +15,8 @@ import java.util.List;
 public class MineSkyItemsAPI {
 
     public static boolean isMineSkyItem(ItemStack itemStack) {
+        if(itemStack == null)
+            return false;
         if(!itemStack.hasItemMeta())
             return false;
         try {

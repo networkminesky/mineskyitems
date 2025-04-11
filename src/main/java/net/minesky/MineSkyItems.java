@@ -2,6 +2,7 @@ package net.minesky;
 
 import net.Indyuce.mmocore.api.MMOCoreAPI;
 import net.minesky.commands.ItemCommand;
+import net.minesky.entities.ItemDustHandler;
 import net.minesky.entities.rarities.RarityHandler;
 import net.minesky.events.InteractionEvents;
 import net.minesky.events.MiscEvents;
@@ -9,7 +10,8 @@ import net.minesky.gui.ItemBuilderMenu;
 import net.minesky.entities.categories.CategoryHandler;
 import net.minesky.entities.tooltip.TooltipHandler;
 import net.minesky.gui.ItemSkillsMenu;
-import net.minesky.logics.LevelCurves;
+import net.minesky.gui.blacksmith.ItemRecyclerMenu;
+import net.minesky.logics.LevelCurvesLogic;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -21,9 +23,11 @@ public final class MineSkyItems extends JavaPlugin {
 
     public static YamlConfiguration defaultCurveConfig;
 
-    public static final NamespacedKey NAMESPACED_KEY = NamespacedKey.fromString("mineskyitems");
+    public static NamespacedKey NAMESPACED_KEY = NamespacedKey.fromString("mineskyitems");
 
     public static MMOCoreAPI mmocoreAPI;
+
+    public static boolean MMOCORE_HOOK = false;
 
     public static Logger l;
 
@@ -42,7 +46,7 @@ public final class MineSkyItems extends JavaPlugin {
     }
 
     private void System() {
-        LevelCurves.setupCurves();
+        LevelCurvesLogic.setupCurves();
 
         l.info("Carregando rarities...");
         RarityHandler.setupRarities();
@@ -53,8 +57,12 @@ public final class MineSkyItems extends JavaPlugin {
         l.info("Carregando categorias...");
         CategoryHandler.setupCategories();
 
+        l.info("Carregando itens hardcoded...");
+        ItemDustHandler.registerDusts();
+
         if(Bukkit.getPluginManager().getPlugin("MMOCore") != null) {
             mmocoreAPI = new MMOCoreAPI(this);
+            MMOCORE_HOOK = true;
         }
 
         Bukkit.getPluginManager().registerEvents(new InteractionEvents(), this);
@@ -62,6 +70,7 @@ public final class MineSkyItems extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(new ItemBuilderMenu(), this);
         Bukkit.getPluginManager().registerEvents(new ItemSkillsMenu(), this);
+        Bukkit.getPluginManager().registerEvents(new ItemRecyclerMenu(), this);
 
         this.getCommand("item").setExecutor(new ItemCommand());
     }
