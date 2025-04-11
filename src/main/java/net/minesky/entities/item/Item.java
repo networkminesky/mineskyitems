@@ -259,8 +259,10 @@ public class Item {
 
     public ItemStack buildStack() {
         // Setar os atributos aqui
-        ItemStack itemStack = getItemAttributes().translateAndUpdate(new ItemStack(metadata.material()));
-        //Bukkit.broadcastMessage("speed: "+getItemAttributes().getSpeed() + " | damage: "+getItemAttributes().getDamage());
+        ItemStack itemStack = new ItemStack(metadata.material());
+
+        if(!getCategory().isNoAttributes())
+            itemStack = getItemAttributes().translateAndUpdate(new ItemStack(metadata.material()));
 
         ItemMeta im = itemStack.getItemMeta();
 

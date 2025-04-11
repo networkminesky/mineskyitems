@@ -1,10 +1,13 @@
 package net.minesky.events;
 
+import net.kyori.adventure.text.Component;
 import net.minesky.entities.item.ItemHandler;
 import org.bukkit.entity.Item;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerDropItemEvent;
+
+import java.awt.*;
 
 public class MiscEvents implements Listener {
 
@@ -21,7 +24,14 @@ public class MiscEvents implements Listener {
             drop.setGlowing(true);
 
         drop.setCustomNameVisible(true);
-        drop.customName(drop.getItemStack().displayName());
+
+        // paper por algum motivo adiciona [] mesmo nao sendo um array (????)
+        Component fixed = drop.getItemStack().displayName().replaceText(builder -> builder
+                .match("[\\[\\]]") // regex de []
+                .replacement("")
+        );
+
+        drop.customName(fixed);
 
     }
 

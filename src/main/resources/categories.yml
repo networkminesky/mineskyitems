@@ -73,6 +73,7 @@ dusts:
   name: Pós
   default-item: PAPER
   tooltip: misc
+  no-attributes: true
   on-use:
     sound: "item.brush.brushing.generic"
     pitch: 1.8

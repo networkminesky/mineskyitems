@@ -11,6 +11,7 @@ import net.minesky.entities.categories.CategoryHandler;
 import net.minesky.entities.tooltip.TooltipHandler;
 import net.minesky.gui.ItemSkillsMenu;
 import net.minesky.gui.blacksmith.ItemRecyclerMenu;
+import net.minesky.gui.blacksmith.ItemRepairMenu;
 import net.minesky.logics.LevelCurvesLogic;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
@@ -71,6 +72,7 @@ public final class MineSkyItems extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new ItemBuilderMenu(), this);
         Bukkit.getPluginManager().registerEvents(new ItemSkillsMenu(), this);
         Bukkit.getPluginManager().registerEvents(new ItemRecyclerMenu(), this);
+        Bukkit.getPluginManager().registerEvents(new ItemRepairMenu(), this);
 
         this.getCommand("item").setExecutor(new ItemCommand());
     }

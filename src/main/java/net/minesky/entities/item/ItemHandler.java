@@ -63,6 +63,8 @@ public class ItemHandler {
     }
 
     public static Item getItemFromStack(ItemStack itemStack) {
+        if(itemStack == null)
+            return null;
         if(!itemStack.hasItemMeta())
             return null;
 

@@ -38,14 +38,16 @@ import static net.minesky.gui.MenuUtils.simpleButton;
 
 public class ItemRecyclerMenu implements Listener {
     public static HashMap<Player, Inventory> inventories = new HashMap<>();
-    private static final List<Integer> inputSlots = List.of(0, 1, 2, 3, 9, 10, 11, 12, 18, 19, 20, 21);
+    private static final List<Integer> inputSlots = List.of(0, 1, 2, 9, 10, 11, 18, 19, 20);
+
+    private static final List<Integer> destroyButtonSlots = List.of(13, 14);
 
     private static void reorganizeItems(Inventory inv) {
-        inv.setItem(14, modelButton(
+        destroyButtonSlots.forEach(slot -> inv.setItem(slot, modelButton(
                 Material.PAPER, "Destruir", 2, "• Destrua seus itens antigos", " e receba pó de item.",
                 " ",
                 "&e➳ Clique esquerdo - Desmantelar o item"
-        ));
+        )));
     }
 
     private static final List<Integer> outputSlots = List.of(7, 8, 16, 17, 25, 26);
@@ -81,7 +83,9 @@ public class ItemRecyclerMenu implements Listener {
             im.lore(components);
             epicDust.setItemMeta(im);
 
-            inventory.setItem(outputSlots.get(slotIndex), epicDust);
+            try {
+                inventory.setItem(outputSlots.get(slotIndex), epicDust);
+            }catch (IndexOutOfBoundsException ignore) {}
         }
     }
 
@@ -102,29 +106,11 @@ public class ItemRecyclerMenu implements Listener {
         player.openInventory(inv);
     }
 
-    public static void reopenInventory(Player player) {
-        Inventory inv = inventories.get(player);
-        if(inv == null)
-            return;
-
-        reorganizeItems(inv);
-
-        player.closeInventory();
-        player.openInventory(inv);
-    }
-
     @EventHandler
     public void onDrag(InventoryDragEvent e) {
         if(!inventories.containsValue(e.getInventory())) return;
 
         e.setCancelled(true);
-
-        /*for (int slot : e.getRawSlots()) {
-            if (slot >= 0 && slot < 27 && !inputSlots.contains(slot)) {
-                e.setCancelled(true);
-                return;
-            }
-        }*/
     }
 
     @EventHandler
@@ -188,53 +174,52 @@ public class ItemRecyclerMenu implements Listener {
 
         p.playSound(p.getLocation(), Sound.ENTITY_CHICKEN_EGG, 0.5f, 1f);
 
-        switch(slot) {
-            case 14 -> {
-                switch(clickType) {
-                    case LEFT -> {
-
-                        if(p.getInventory().firstEmpty() == -1) {
-                            p.sendMessage(Utils.c("&cVocê deve ter pelo menos um slot vazio no inventário!"));
-                            return;
-                        }
-
-                        List<ItemStack> itemStacks = getInputItems(inventory);
-                        if (itemStacks.isEmpty()) {
-                            p.sendMessage(Utils.c("&cColoque ao menos um item para destruir!"));
-                            return;
-                        }
-
-                        final int totalDust = getTotalDust(itemStacks);
-                        final int totalEpicDust = getTotalEpicDust(itemStacks);
-
-                        itemStacks.forEach(inventory::removeItem);
-
-                        p.closeInventory();
-
-                        ItemStack dusts = ItemDustHandler.dustItem.buildStack().clone();
-                        dusts.setAmount(totalDust);
-
-                        p.getInventory().addItem(dusts);
-
-                        p.sendMessage(Utils.c("&aVocê recebeu x" + totalDust + " pó de item ao destruir o seu item!"));
-
-                        p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 1f, 0f);
-                        p.playSound(p.getLocation(), Sound.ENTITY_ILLUSIONER_MIRROR_MOVE, 1, 2f);
-
-                        if(totalEpicDust > 0 && new Random().nextBoolean()) {
-                            ItemStack epicDusts = ItemDustHandler.epicDustItem.buildStack().clone();
-                            epicDusts.setAmount(totalEpicDust);
-
-                            p.playSound(p.getLocation(), Sound.ITEM_TOTEM_USE, 2f, 1.2f);
-                            p.getInventory().addItem(epicDusts);
-
-                            p.sendMessage(Utils.c("&dVocê recebeu x" + totalEpicDust + " pó de item épico ao destruir o seu item!"));
-                        }
-
-                        p.spawnParticle(Particle.WAX_OFF, p.getLocation(), 30, 0.5, 0.5, 0.5);
-                    }
-                }
+        if(destroyButtonSlots.contains(slot)
+        && clickType == ClickType.LEFT) {
+            if(p.getInventory().firstEmpty() == -1) {
+                p.sendMessage(Utils.c("&cVocê deve ter pelo menos um slot vazio no inventário!"));
+                return;
             }
+
+            List<ItemStack> itemStacks = getInputItems(inventory);
+            if (itemStacks.isEmpty()) {
+                p.sendMessage(Utils.c("&cColoque ao menos um item para destruir!"));
+                return;
+            }
+
+            final int totalDust = getTotalDust(itemStacks);
+            final int totalEpicDust = getTotalEpicDust(itemStacks);
+
+            if((totalDust + totalEpicDust) >= 384) {
+                p.sendMessage(Utils.c("&cVocê está tentando destruir muitos itens de uma só vez!"));
+                return;
+            }
+
+            itemStacks.forEach(inventory::removeItem);
+
+            p.closeInventory();
+
+            ItemStack dusts = ItemDustHandler.dustItem.buildStack().clone();
+            dusts.setAmount(totalDust);
+
+            p.getInventory().addItem(dusts);
+
+            p.sendMessage(Utils.c("&aVocê recebeu x" + totalDust + " pó de item ao destruir o seu item!"));
+
+            p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_USE, 1f, 0f);
+            p.playSound(p.getLocation(), Sound.ENTITY_ILLUSIONER_MIRROR_MOVE, 1, 2f);
+
+            if(totalEpicDust > 0 && new Random().nextBoolean()) {
+                ItemStack epicDusts = ItemDustHandler.epicDustItem.buildStack().clone();
+                epicDusts.setAmount(totalEpicDust);
+
+                p.playSound(p.getLocation(), Sound.ITEM_TOTEM_USE, 2f, 1.2f);
+                p.getInventory().addItem(epicDusts);
+
+                p.sendMessage(Utils.c("&dVocê recebeu x" + totalEpicDust + " pó de item épico ao destruir o seu item!"));
+            }
+
+            p.spawnParticle(Particle.WAX_OFF, p.getLocation(), 30, 0.5, 0.5, 0.5);
         }
     }
 

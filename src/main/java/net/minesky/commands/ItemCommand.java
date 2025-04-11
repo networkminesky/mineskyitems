@@ -142,7 +142,7 @@ public class ItemCommand implements TabExecutor {
 
                 } else {
 
-                    //ItemRepairMenu.openMainMenu(p);
+                    ItemRepairMenu.openMainMenu(p);
 
                 }
 

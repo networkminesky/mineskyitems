@@ -25,25 +25,17 @@ public class ItemDustHandler {
     }
 
     public static int howManyEpicDustsForItem(Item item) {
-        final int level = item.getRequiredLevel();
+        if(item == null) return 0;
 
-        double calculatedValue = Math.floor(((double) level / 25) * 1);
-        int result = (int)Math.round(calculatedValue);
-
-        //result = result + new Random().nextInt(-2, 2);
-
-        return result;
+        return howManyDustsForItem(item) / 5;
     }
 
     public static int howManyDustsForItem(Item item) {
+        if(item == null) return 0;
+
         final int level = item.getRequiredLevel();
 
-        double calculatedValue = Math.floor(((double) level / 5) * 1);
-        int result = (int)Math.round(calculatedValue);
-
-        //result = result + new Random().nextInt(-2, 2);
-
-        return result;
+        return (int) Math.round(1 + Math.pow(level - 1, 1.2) * 0.2384);
     }
 
 }

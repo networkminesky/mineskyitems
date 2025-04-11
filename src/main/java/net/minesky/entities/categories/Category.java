@@ -24,6 +24,8 @@ public class Category {
     private final String name;
     private final Material defaultItem;
 
+    private final boolean noAttributes;
+
     private final Tooltip tooltip;
 
     private final List<Item> itemList = new ArrayList<>();
@@ -39,6 +41,12 @@ public class Category {
 
         this.name = categoriesSection.getString("name", id.toLowerCase());
         this.defaultItem = Material.getMaterial(categoriesSection.getString("default-item", "STONE"));
+
+        this.noAttributes = categoriesSection.getBoolean("no-attributes", false);
+    }
+
+    public boolean isNoAttributes() {
+        return noAttributes;
     }
 
     public Tooltip getTooltip() {
