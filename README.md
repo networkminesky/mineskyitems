@@ -25,6 +25,6 @@ To use MineSky Items as a dependency in your Maven project, add the following to
 <dependency>
   <groupId>com.github.networkminesky</groupId>
   <artifactId>mineskyitems</artifactId>
-  <version>1.0.5-BETA</version>
+  <version>1.0.5-ALPHA</version>
 </dependency>
 ```
