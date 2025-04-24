@@ -16,7 +16,7 @@ You can download the latest version from the [Releases](https://github.com/netwo
 
 ## Adding as a dependency
 To use MineSky Items as a dependency in your Maven project, add the following to your pom.xml:
-```
+```xml
 <repository>
   <id>jitpack.io</id>
   <url>https://jitpack.io</url>
@@ -25,6 +25,6 @@ To use MineSky Items as a dependency in your Maven project, add the following to
 <dependency>
   <groupId>com.github.networkminesky</groupId>
   <artifactId>mineskyitems</artifactId>
-  <version>VERSION-HERE</version>
+  <version>1.0.5-BETA</version>
 </dependency>
 ```
