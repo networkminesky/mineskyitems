@@ -3,20 +3,21 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-    <groupId>net.minesky</groupId>
-    <artifactId>MineSkyItems</artifactId>
-    <version>1.0.5-ALPHA</version>
     <packaging>jar</packaging>
-
-    <name>MineSkyItems</name>
-
     <properties>
         <java.version>21</java.version>
         <maven.compiler.target>21</maven.compiler.target>
         <maven.compiler.source>21</maven.compiler.source>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <groupId>net.minesky</groupId>
+    <artifactId>MineSkyItems</artifactId>
+    <version>1.0.5-ALPHA</version>
+
+    <name>MineSkyItems</name>
+    <description>Another Minecraft custom item plugin for RPG servers - Originally designed for minesky.com.br</description>
+    <url>https://github.com/networkminesky/mineskyitems</url>
 
     <repositories>
         <repository>
