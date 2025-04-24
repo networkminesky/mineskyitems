@@ -1,6 +1,7 @@
 package net.minesky.events;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.minesky.entities.item.ItemHandler;
 import org.bukkit.entity.Item;
 import org.bukkit.event.EventHandler;
@@ -26,12 +27,11 @@ public class MiscEvents implements Listener {
         drop.setCustomNameVisible(true);
 
         // paper por algum motivo adiciona [] mesmo nao sendo um array (????)
-        Component fixed = drop.getItemStack().displayName().replaceText(builder -> builder
-                .match("[\\[\\]]") // regex de []
-                .replacement("")
-        );
+        String semColchetes = LegacyComponentSerializer.legacySection().serialize(drop.getItemStack().displayName())
+                .replace("[", "").replace("]", "");
+        Component novoNome = LegacyComponentSerializer.legacySection().deserialize(semColchetes);
 
-        drop.customName(fixed);
+        drop.customName(novoNome);
 
     }
 

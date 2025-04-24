@@ -6,7 +6,7 @@
 
     <groupId>net.minesky</groupId>
     <artifactId>MineSkyItems</artifactId>
-    <version>1.0.4-ALPHA</version>
+    <version>1.0.5-ALPHA</version>
     <packaging>jar</packaging>
 
     <name>MineSkyItems</name>
@@ -27,11 +27,6 @@
         <repository>
             <id>sonatype</id>
             <url>https://oss.sonatype.org/content/groups/public/</url>
-        </repository>
-
-        <repository>
-            <id>mymavenrepo</id>
-            <url>https://mymavenrepo.com/repo/o4hUeICMGIYcAH3l8D3i/</url>
         </repository>
 
         <repository>
@@ -76,15 +71,4 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-
-    <distributionManagement>
-        <repository>
-            <id>myMavenRepo.write</id>
-            <url>${myMavenRepo.write.url}</url>
-        </repository>
-        <snapshotRepository>
-            <id>myMavenRepo.write</id>
-            <url>${myMavenRepo.write.url}</url>
-        </snapshotRepository>
-    </distributionManagement>
 </project>

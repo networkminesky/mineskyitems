@@ -1,5 +1,5 @@
 name: MineSkyItems
-version: '1.0.4-ALPHA'
+version: '1.0.5-ALPHA'
 main: net.minesky.MineSkyItems
 api-version: '1.20'
 softdepend:
