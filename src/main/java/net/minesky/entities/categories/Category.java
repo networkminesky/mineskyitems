@@ -65,12 +65,15 @@ public class Category {
         itemList.remove(item);
     }
 
-    public void playUseSounds(Player player) {
+    public void playUseSounds(Player player, boolean global) {
         if(getCategoriesFileSection().contains("on-use")) {
             String sound = getCategoriesFileSection().getString("on-use.sound", "");
             float pitch = (float)getCategoriesFileSection().getDouble("on-use.pitch", 1);
 
-            player.playSound(player.getLocation(), sound, 0.8f, pitch);
+            if(global)
+                player.getWorld().playSound(player.getLocation(), sound, 0.8f, pitch);
+            else
+                player.playSound(player.getLocation(), sound, 0.8f, pitch);
         }
     }
 

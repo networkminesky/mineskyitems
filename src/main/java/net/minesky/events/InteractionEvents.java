@@ -15,6 +15,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 public class InteractionEvents implements Listener {
@@ -31,7 +32,7 @@ public class InteractionEvents implements Listener {
         Item item = ItemHandler.getItemFromStack(itemStack);
 
         if (item != null)
-            item.onInteraction(p, itemStack, Utils.convertInteractionType(e.getAction()), e);
+            item.onInteraction(p, itemStack, Utils.convertInteractionType(e.getAction()), e, e.getHand());
     }
 
     // Key F
@@ -46,7 +47,7 @@ public class InteractionEvents implements Listener {
         Item item = ItemHandler.getItemFromStack(itemStack);
 
         if (item != null)
-            item.onInteraction(p, itemStack, InteractionType.KEY_F, e);
+            item.onInteraction(p, itemStack, InteractionType.KEY_F, e, EquipmentSlot.OFF_HAND);
     }
 
     // Key Q
@@ -58,7 +59,7 @@ public class InteractionEvents implements Listener {
         Item item = ItemHandler.getItemFromStack(itemStack);
 
         if (item != null)
-            item.onInteraction(p, itemStack, Utils.convertInteractionType(ClickType.DROP), e);
+            item.onInteraction(p, itemStack, Utils.convertInteractionType(ClickType.DROP), e, null);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

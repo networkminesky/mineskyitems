@@ -16,19 +16,20 @@ import net.minesky.utils.cooldown.CooldownManager;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Arrow;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.Cancellable;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.potion.PotionData;
 import org.bukkit.util.Vector;
 
+import javax.annotation.Nullable;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -157,7 +158,7 @@ public class Item {
     public static NamespacedKey ITEM_DURABILITY = NamespacedKey.fromString("item-durability");
     public void onItemUse(Player player, ItemStack itemStack, Cancellable event) {
         // Som de uso do item
-        getCategory().playUseSounds(player);
+        getCategory().playUseSounds(player, false);
 
         // Reduzir durabilidade do item
         if(player.getGameMode() == GameMode.CREATIVE)
@@ -179,7 +180,9 @@ public class Item {
         damageItem(player, itemStack, 1, event);
     }
 
-    public void onInteraction(Player player, ItemStack itemStack, InteractionType interactionType, Cancellable event) {
+    private final double FIXED_VELOCITY_MULTIPLIER = 2.8;
+
+    public void onInteraction(Player player, ItemStack itemStack, InteractionType interactionType, Cancellable event, @Nullable EquipmentSlot hand) {
         if(MineSkyItems.MMOCORE_HOOK) {
             PlayerData playerData = MineSkyItems.mmocoreAPI.getPlayerData(player);
             if (!player.hasPermission("mineskyitems.bypass.class-requirement") &&
@@ -198,19 +201,62 @@ public class Item {
         // Ranged system logic
         if(getCategory().getType().equalsIgnoreCase("ranged")
                 && interactionType == InteractionType.RIGHT_CLICK) {
-            ItemStack stack = Utils.getFirstArrowItem(player);
+            double damage = getItemAttributes().getDamage();
+            final double cooldownInSeconds = getItemAttributes().getSpeed();
 
-            final double damage = getItemAttributes().getDamage();
+            ItemStack stack = Utils.getFirstArrowItem(player);
+            if(stack == null) return;
+
+            if(CooldownManager.inItemCooldown(player, this))
+                return;
+
+            if(itemStack.containsEnchantment(Enchantment.ARROW_DAMAGE)) {
+                int level = stack.getEnchantmentLevel(Enchantment.ARROW_DAMAGE);
+                damage = (damage*0.25) * (level+1);
+            }
+
+            player.setCooldown(itemStack.getType(), (int)(cooldownInSeconds*20));
+            CooldownManager.createItemCooldown(player, this, (float) cooldownInSeconds);
+
+            if(!itemStack.containsEnchantment(Enchantment.ARROW_INFINITE)
+            && player.getGameMode() != GameMode.CREATIVE)
+                stack.setAmount(stack.getAmount()-1);
 
             Vector direction = player.getLocation().getDirection();
 
-            player.getWorld().spawn(player.getEyeLocation(), Arrow.class, arr -> {
-                arr.setShooter(player);
-                arr.setVelocity(direction.multiply(damage/2));
-                arr.setDamage(damage);
-            });
+            final double finalDamage = damage;
+            if(stack.getType() == Material.SPECTRAL_ARROW) {
+                player.getWorld().spawn(player.getEyeLocation(), SpectralArrow.class, arr -> {
+                    arr.setShooter(player);
+                    arr.setVelocity(direction.multiply(FIXED_VELOCITY_MULTIPLIER));
+                    arr.setDamage(finalDamage);
+                    arr.setKnockbackStrength(itemStack.getEnchantmentLevel(Enchantment.ARROW_KNOCKBACK)*3);
 
-            Bukkit.broadcastMessage("atirando flecha com dano "+damage+" - "+getItemAttributes().getSpeed());
+                    if(itemStack.containsEnchantment(Enchantment.ARROW_FIRE))
+                        arr.setFireTicks(999999);
+                });
+            } else {
+                player.getWorld().spawn(player.getEyeLocation(), Arrow.class, arr -> {
+                    arr.setShooter(player);
+                    arr.setVelocity(direction.multiply(FIXED_VELOCITY_MULTIPLIER));
+                    arr.setDamage(finalDamage);
+                    arr.setKnockbackStrength(itemStack.getEnchantmentLevel(Enchantment.ARROW_KNOCKBACK)*3);
+
+                    if(stack.getType() == Material.TIPPED_ARROW) {
+                        PotionMeta potionMeta = (PotionMeta) stack.getItemMeta();
+                        arr.setBasePotionData(potionMeta.getBasePotionData());
+                    }
+
+                    if(itemStack.containsEnchantment(Enchantment.ARROW_FIRE))
+                        arr.setFireTicks(999999);
+                });
+            }
+
+            if(hand != null)
+                player.swingHand(hand);
+
+            player.getWorld().spawnParticle(Particle.CLOUD, player.getEyeLocation(), 0, 0, 0, 0, 0);
+            getCategory().playUseSounds(player, true);
         }
 
         getItemSkills().stream()

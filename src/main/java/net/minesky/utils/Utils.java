@@ -3,6 +3,7 @@ package net.minesky.utils;
 import net.minesky.MineSkyItems;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,8 +13,10 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import javax.annotation.Nullable;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,16 +51,26 @@ public class Utils {
         return InteractionType.RIGHT_CLICK;
     }
 
+    @Nullable
     public static ItemStack getFirstArrowItem(Player player) {
-        // ordem para checar flecha
         //offhand
-        player.getInventory().getItemInOffHand();
+        final PlayerInventory inventory = player.getInventory();
+
+        if(isItemStackArrow(inventory.getItemInOffHand()))
+            return inventory.getItemInOffHand();
 
         // hotbar 
-        for(int i = 0; i < 10; i++) {
-
+        for(int i = 0; i < 36; i++) {
+            ItemStack item = inventory.getItem(i);
+            if(isItemStackArrow(item)) {
+                return item;
+            }
         }
-        player.getInventory().getExtraContents();
+        return null;
+    }
+
+    public static boolean isItemStackArrow(ItemStack itemStack) {
+        return itemStack != null && itemStack.getType().toString().contains("ARROW"); 
     }
 
     public static String format(double value) {
