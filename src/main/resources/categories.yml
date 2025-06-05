@@ -20,13 +20,15 @@ martelos:
 arcos:
   name: Arcos
   default-item: PAPER
+  type: "RANGED"
   tooltip: default
   on-use:
     sound: "entity.arrow.shoot"
 
 bestas:
-  name: Arcos
+  name: Bestas
   default-item: PAPER
+  type: "RANGED"
   tooltip: default
   on-use:
     sound: "item.crossbow.shoot"

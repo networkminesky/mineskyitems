@@ -11,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.logging.Level;
@@ -45,6 +46,18 @@ public class Utils {
             return InteractionType.KEY_F;
 
         return InteractionType.RIGHT_CLICK;
+    }
+
+    public static ItemStack getFirstArrowItem(Player player) {
+        // ordem para checar flecha
+        //offhand
+        player.getInventory().getItemInOffHand();
+
+        // hotbar 
+        for(int i = 0; i < 10; i++) {
+
+        }
+        player.getInventory().getExtraContents();
     }
 
     public static String format(double value) {

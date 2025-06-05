@@ -16,6 +16,7 @@ import net.minesky.utils.cooldown.CooldownManager;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -26,6 +27,7 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.util.Vector;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -178,7 +180,6 @@ public class Item {
     }
 
     public void onInteraction(Player player, ItemStack itemStack, InteractionType interactionType, Cancellable event) {
-
         if(MineSkyItems.MMOCORE_HOOK) {
             PlayerData playerData = MineSkyItems.mmocoreAPI.getPlayerData(player);
             if (!player.hasPermission("mineskyitems.bypass.class-requirement") &&
@@ -192,6 +193,24 @@ public class Item {
                 player.sendMessage("§cVocê ainda não possui o nível apropriado para usar esse item.");
                 return;
             }
+        }
+
+        // Ranged system logic
+        if(getCategory().getType().equalsIgnoreCase("ranged")
+                && interactionType == InteractionType.RIGHT_CLICK) {
+            ItemStack stack = Utils.getFirstArrowItem(player);
+
+            final double damage = getItemAttributes().getDamage();
+
+            Vector direction = player.getLocation().getDirection();
+
+            player.getWorld().spawn(player.getEyeLocation(), Arrow.class, arr -> {
+                arr.setShooter(player);
+                arr.setVelocity(direction.multiply(damage/2));
+                arr.setDamage(damage);
+            });
+
+            Bukkit.broadcastMessage("atirando flecha com dano "+damage+" - "+getItemAttributes().getSpeed());
         }
 
         getItemSkills().stream()

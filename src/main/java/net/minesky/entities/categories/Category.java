@@ -21,6 +21,9 @@ public class Category {
     private final File file;
     private YamlConfiguration config;
 
+    // Type can be: "MELEE" for melee physical weapons - "RANGED" for ranged attack weapons (e.g. Bows, Crossbows, ...)
+    private final String type;
+
     private final String name;
     private final Material defaultItem;
 
@@ -39,10 +42,15 @@ public class Category {
 
         this.tooltip = TooltipHandler.getTooltipById(categoriesSection.getString("tooltip", "default"));
 
+        this.type = categoriesSection.getString("type", "MELEE");
         this.name = categoriesSection.getString("name", id.toLowerCase());
         this.defaultItem = Material.getMaterial(categoriesSection.getString("default-item", "STONE"));
 
         this.noAttributes = categoriesSection.getBoolean("no-attributes", false);
+    }
+
+    public String getType() {
+        return type;
     }
 
     public boolean isNoAttributes() {
