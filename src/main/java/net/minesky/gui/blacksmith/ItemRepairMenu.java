@@ -5,11 +5,9 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import net.minesky.MineSkyItems;
-import net.minesky.api.MineSkyItemsAPI;
 import net.minesky.entities.ItemDustHandler;
 import net.minesky.entities.item.Item;
 import net.minesky.entities.item.ItemHandler;
-import net.minesky.gui.MenuUtils;
 import net.minesky.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -32,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static net.minesky.gui.MenuUtils.modelButton;
 import static net.minesky.gui.MenuUtils.simpleButton;
 
 public class ItemRepairMenu implements Listener {
