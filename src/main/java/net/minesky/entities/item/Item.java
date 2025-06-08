@@ -142,7 +142,8 @@ public class Item {
         int result = (getDurability(itemStack) - amount);
 
         if(result < 0) {
-            event.setCancelled(true);
+            if(event != null)
+                event.setCancelled(true);
             noDurability(player);
             return;
         }
@@ -160,6 +161,10 @@ public class Item {
         // Som de uso do item
         getCategory().playUseSounds(player, false);
 
+        naturalItemDamage(player, itemStack, event);
+    }
+
+    public void naturalItemDamage(Player player, ItemStack itemStack, Cancellable event) {
         // Reduzir durabilidade do item
         if(player.getGameMode() == GameMode.CREATIVE)
             return;
@@ -210,6 +215,11 @@ public class Item {
             if(CooldownManager.inItemCooldown(player, this))
                 return;
 
+            if (isItemBroken(itemStack)) {
+                noDurability(player);
+                return;
+            }
+
             if(itemStack.containsEnchantment(Enchantment.ARROW_DAMAGE)) {
                 int level = stack.getEnchantmentLevel(Enchantment.ARROW_DAMAGE);
                 damage = (damage*0.25) * (level+1);
@@ -222,38 +232,53 @@ public class Item {
             && player.getGameMode() != GameMode.CREATIVE)
                 stack.setAmount(stack.getAmount()-1);
 
-            Vector direction = player.getLocation().getDirection();
+            Vector baseDirection = player.getLocation().getDirection();
 
-            final double finalDamage = damage;
-            if(stack.getType() == Material.SPECTRAL_ARROW) {
-                player.getWorld().spawn(player.getEyeLocation(), SpectralArrow.class, arr -> {
+            Class<? extends AbstractArrow> arrowClass = (stack.getType() == Material.SPECTRAL_ARROW)
+                    ? SpectralArrow.class : Arrow.class;
+
+            boolean multishot = itemStack.containsEnchantment(Enchantment.MULTISHOT);
+            int shots = multishot ? (3 + itemStack.getEnchantmentLevel(Enchantment.MULTISHOT)) : 1;
+
+            double multdamage = damage;
+
+            for (int i = 0; i < shots; i++) {
+                Vector shotDirection = baseDirection.clone();
+
+                if (multishot) {
+                    double angle = 0;
+                    if (i == 0) {
+                        angle = -10;
+                        multdamage = damage/2;
+                    } else if (i == 2) {
+                        angle = 10;
+                        multdamage = damage/2;
+                    } else multdamage = damage;
+                    shotDirection.rotateAroundY(Math.toRadians(angle));
+                }
+
+                final double finalDamage = multdamage;
+                player.getWorld().spawn(player.getEyeLocation(), arrowClass, arr -> {
                     arr.setShooter(player);
-                    arr.setVelocity(direction.multiply(FIXED_VELOCITY_MULTIPLIER));
+                    arr.setVelocity(shotDirection.multiply(FIXED_VELOCITY_MULTIPLIER));
                     arr.setDamage(finalDamage);
-                    arr.setKnockbackStrength(itemStack.getEnchantmentLevel(Enchantment.ARROW_KNOCKBACK)*3);
+                    arr.setKnockbackStrength(itemStack.getEnchantmentLevel(Enchantment.ARROW_KNOCKBACK) * 3);
 
-                    if(itemStack.containsEnchantment(Enchantment.ARROW_FIRE))
-                        arr.setFireTicks(999999);
-                });
-            } else {
-                player.getWorld().spawn(player.getEyeLocation(), Arrow.class, arr -> {
-                    arr.setShooter(player);
-                    arr.setVelocity(direction.multiply(FIXED_VELOCITY_MULTIPLIER));
-                    arr.setDamage(finalDamage);
-                    arr.setKnockbackStrength(itemStack.getEnchantmentLevel(Enchantment.ARROW_KNOCKBACK)*3);
-
-                    if(stack.getType() == Material.TIPPED_ARROW) {
+                    if (stack.getType() == Material.TIPPED_ARROW && arr instanceof Arrow) {
                         PotionMeta potionMeta = (PotionMeta) stack.getItemMeta();
-                        arr.setBasePotionData(potionMeta.getBasePotionData());
+                        ((Arrow) arr).setBasePotionData(potionMeta.getBasePotionData());
                     }
 
-                    if(itemStack.containsEnchantment(Enchantment.ARROW_FIRE))
+                    if (itemStack.containsEnchantment(Enchantment.ARROW_FIRE)) {
                         arr.setFireTicks(999999);
+                    }
                 });
             }
 
             if(hand != null)
                 player.swingHand(hand);
+
+            naturalItemDamage(player, itemStack, event);
 
             player.getWorld().spawnParticle(Particle.CLOUD, player.getEyeLocation(), 0, 0, 0, 0, 0);
             getCategory().playUseSounds(player, true);
