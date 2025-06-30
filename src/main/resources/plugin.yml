@@ -1,6 +1,6 @@
 name: MineSkyItems
-version: '1.0.6-ALPHA'
-main: net.minesky.MineSkyItems
+version: '1.0.7-ALPHA'
+main: net.mineskyitems.MineSkyItems
 api-version: '1.20'
 softdepend:
   - MMOCore
