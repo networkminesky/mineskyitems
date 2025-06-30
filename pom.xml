@@ -13,7 +13,7 @@
 
     <groupId>net.minesky</groupId>
     <artifactId>MineSkyItems</artifactId>
-    <version>1.0.6-ALPHA</version>
+    <version>1.0.7-ALPHA</version>
 
     <name>MineSkyItems</name>
     <description>Another Minecraft custom item plugin for RPG servers - Originally designed for minesky.com.br</description>
