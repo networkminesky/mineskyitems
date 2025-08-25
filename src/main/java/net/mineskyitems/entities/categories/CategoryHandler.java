@@ -34,7 +34,7 @@ public class CategoryHandler {
                 .findFirst().orElse(null);
     }
 
-    public static List<String> getCategoriesString() {
+    public static List<String> getCategoriesNames() {
         return categories.stream()
                 .map(Category::getName)
                 .collect(Collectors.toList());

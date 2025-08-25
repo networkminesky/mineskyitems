@@ -1,5 +1,8 @@
 package net.mineskyitems.scripts;
 
+import net.kyori.adventure.text.Component;
+import net.mineskyitems.entities.categories.Category;
+import net.mineskyitems.entities.item.Item;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Rotation;
@@ -8,9 +11,39 @@ import org.bukkit.entity.ItemFrame;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
 public class ItemFrameGenerator {
 
-    public static void generate(Location location, Material material, final int initialStartingModel) {
+    public static void generateCategory(final Location location, Category category) {
+        int actualColumn = 0;
+        int actualRow = 0;
+
+        List<Item> items = new ArrayList<>(category.getAllItems());
+        items.sort(Comparator.comparingInt(a -> a.getMetadata().modelData()));
+
+        for(Item item : items) {
+            if(actualRow >= 4) {
+                actualColumn++;
+                actualRow = 0;
+            }
+
+            Location loc = location.clone().add(actualRow, 0, -actualColumn);
+
+            location.getWorld().spawn(loc, ItemFrame.class, a -> {
+                a.setFixed(true);
+                a.setRotation(Rotation.NONE);
+                a.setFacingDirection(BlockFace.UP);
+                a.setItem(item.buildStack());
+            });
+
+            actualRow++;
+        }
+    }
+
+    public static void generateEmpty(Location location, Material material, final int initialStartingModel) {
 
         // Valores fixos
         final int columnAmount = 4;
@@ -35,7 +68,7 @@ public class ItemFrameGenerator {
 
     }
 
-    private static void createItem(Location location, Material material, int modelData) {
+    public static void createItem(Location location, Material material, int modelData) {
         ItemStack itemStack = new ItemStack(material);
         ItemMeta im = itemStack.getItemMeta();
 

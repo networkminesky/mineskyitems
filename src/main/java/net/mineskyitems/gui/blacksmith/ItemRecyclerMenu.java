@@ -86,14 +86,8 @@ public class ItemRecyclerMenu implements Listener {
     }
 
     public static void openMainMenu(Player player) {
-        Component name = Component.text("VWX")
-                .font(Key.key("guis"))
-                .color(NamedTextColor.WHITE)
-                .append(Component.text("Destruir itens")
-                        .font(Style.DEFAULT_FONT)
-                        .color(NamedTextColor.DARK_GRAY));
-
-        Inventory inv = Bukkit.createInventory(null, 27, name);
+        Inventory inv = Bukkit.createInventory(null, 27,
+                "[{\"text\":\"VWX\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\"Destruindo itens\",\"font\":\"default\",\"color\":\"black\"}]");
 
         inventories.put(player, inv);
 

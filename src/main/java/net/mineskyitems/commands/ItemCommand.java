@@ -27,8 +27,9 @@ import java.util.*;
 
 public class ItemCommand implements TabExecutor {
 
-    public static final List<String> subCommands = Arrays.asList("criar", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
+    public static final List<String> subCommands = Arrays.asList("criar", "script", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
     public static final List<String> menu_subCommands = Arrays.asList("reparar", "destruir");
+    public static final List<String> scripts = Arrays.asList("empty", "category", "single");
 
     void commandList(CommandSender s) {
         s.sendMessage(Utils.PURPLE_COLOR+Utils.c("&lMineSkyItems v"+MineSkyItems.getInstance().getDescription().getVersion()));
@@ -69,6 +70,11 @@ public class ItemCommand implements TabExecutor {
         // give <player> <nome>
         if(args.length >= 3) {
             if(args[0].equalsIgnoreCase("give")) {
+                if(!s.hasPermission("mineskyitems.command.give")) {
+                    s.sendMessage("§cVocê não tem permissão ou o comando não existe.");
+                    return true;
+                }
+
                 Player player = Bukkit.getPlayer(args[1]);
                 if(player == null) {
                     s.sendMessage(Utils.c("&cNinguém encontrado com esse nick. Você pode usar /item get (nome) para dar o item a você mesmo."));
@@ -89,6 +95,11 @@ public class ItemCommand implements TabExecutor {
         }
 
         if(args[0].equalsIgnoreCase("achar")) {
+            if(!s.hasPermission("mineskyitems.command.achar")) {
+                s.sendMessage("§cVocê não tem permissão ou o comando não existe.");
+                return true;
+            }
+
             Item item;
 
             // Comando possui input
@@ -115,9 +126,14 @@ public class ItemCommand implements TabExecutor {
             return true;
         }
 
-        // criar, achar, get, editar
+        // criar, achar, get, editar, deletar, menu, script
         if(args.length >= 2) {
             final String prompt = args[1];
+
+            if(!s.hasPermission("mineskyitems.command."+args[0])) {
+                s.sendMessage("§cVocê não tem permissão ou o comando não existe.");
+                return true;
+            }
 
             if(args[0].equalsIgnoreCase("get")) {
                 String itemName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
@@ -128,11 +144,6 @@ public class ItemCommand implements TabExecutor {
             }
 
             if(args[0].equalsIgnoreCase("menu")) {
-                if(!s.hasPermission("mineskyitems.command.menu")) {
-                    s.sendMessage("§cVocê não tem permissão ou o comando não existe.");
-                    return true;
-                }
-
                 if(prompt.equalsIgnoreCase("destruir")) {
 
                     ItemRecyclerMenu.openMainMenu(p);
@@ -163,14 +174,37 @@ public class ItemCommand implements TabExecutor {
 
             if(args[0].equalsIgnoreCase("script")) {
 
-                int startingFrom = 0;
-                if(args.length >= 3) {
-                    startingFrom = Integer.parseInt(args[2]);
+                if(args.length == 2) {
+                    s.sendMessage("§cVocê deve indicar um argumento após o comando de script, no caso de 'empty', indique o material base e se possível o modelo inicial. No caso de 'single', indique o material e depois indique o número do modelo. No caso de 'category' insira apenas o nome da categoria.");
+                    return true;
                 }
 
-                ItemFrameGenerator.generate(p.getLocation(), Material.getMaterial(args[1]), startingFrom);
-                return true;
+                if(args[1].equalsIgnoreCase("empty")) {
+                    int startingFrom = 0;
+                    if(args.length >= 4) {
+                        startingFrom = Integer.parseInt(args[3]);
+                    }
 
+                    ItemFrameGenerator.generateEmpty(p.getLocation(), Material.getMaterial(args[2]), startingFrom);
+                    return true;
+                }
+
+                if(args[1].equalsIgnoreCase("single")) {
+                    int model = 0;
+                    if(args.length >= 4) {
+                        model = Integer.parseInt(args[3]);
+                    }
+
+                    ItemFrameGenerator.createItem(p.getLocation(), Material.getMaterial(args[2]), model);
+                    return true;
+                }
+
+                if(args[1].equalsIgnoreCase("category")) {
+                    ItemFrameGenerator.generateCategory(p.getLocation(), CategoryHandler.getCategory(args[2]));
+                    return true;
+                }
+
+                return true;
             }
 
             if(args[0].equalsIgnoreCase("danificar")) {
@@ -266,6 +300,14 @@ public class ItemCommand implements TabExecutor {
             return null;
         }
 
+        if(args[0].equalsIgnoreCase("script")) {
+            if(args.length == 2) {
+                return scripts;
+            } else if(args[1].equalsIgnoreCase("category")) {
+                return CategoryHandler.getCategoriesNames();
+            }
+        }
+
         if(args[0].equalsIgnoreCase("menu")) {
             return menu_subCommands;
         }
@@ -284,7 +326,7 @@ public class ItemCommand implements TabExecutor {
         if(args[0].equalsIgnoreCase("criar")) {
             String[] args2 = Arrays.copyOfRange(args, 1, args.length);
 
-            List<String> e = new ArrayList<>(CategoryHandler.getCategoriesString());
+            List<String> e = new ArrayList<>(CategoryHandler.getCategoriesNames());
             String input = String.join(" ", args2);
 
             reorganizeTabComplete(e, input, args2.length);

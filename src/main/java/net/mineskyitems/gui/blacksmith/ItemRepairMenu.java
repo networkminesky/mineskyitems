@@ -4,6 +4,7 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.ItemDustHandler;
 import net.mineskyitems.entities.item.Item;
@@ -73,15 +74,13 @@ public class ItemRepairMenu implements Listener {
         repairButtonSlots.forEach(slot -> inv.setItem(slot, button));
     }
 
-    public static void openMainMenu(Player player) {
-        Component name = Component.text("VYX")
-                .font(Key.key("guis"))
-                .color(NamedTextColor.WHITE)
-                .append(Component.text("Reparar itens")
-                        .font(Style.DEFAULT_FONT)
-                        .color(NamedTextColor.DARK_GRAY));
+    public static final Key KEY = Key.key(Key.MINECRAFT_NAMESPACE, "guis");
 
-        Inventory inv = Bukkit.createInventory(null, 27, name);
+    public static void openMainMenu(Player player) {
+        // raw implementation because fuck you kyori
+        // thank you mineskycore
+        Inventory inv = Bukkit.createInventory(null, 27,
+        "[{\"text\":\"VYX\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\"Reparando itens\",\"font\":\"default\",\"color\":\"black\"}]");
 
         inventories.put(player, inv);
 

@@ -148,6 +148,6 @@ public class Utils {
         Bukkit.getServer().getPluginManager().registerEvents(listener, MineSkyItems.getInstance());
     }
 
-    public static final String PURPLE_COLOR = net.md_5.bungee.api.ChatColor.of("#7147da")+"";
+    public static final String PURPLE_COLOR = net.md_5.bungee.api.ChatColor.of("#9a4bfa")+"";
 
 }
