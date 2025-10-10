@@ -22,6 +22,8 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -48,22 +50,24 @@ public class ItemCommand implements TabExecutor {
 
     @Override
     public boolean onCommand(CommandSender s, Command cmd, String label, String[] args) {
-        if (!s.hasPermission("mineskyitems.item")) {
-            s.sendMessage("§cVocê não tem permissão ou o comando não existe.");
-            return true;
-        }
-
         if(s instanceof Player p) {
             p.playSound(p.getLocation(), Sound.ENTITY_CHICKEN_EGG, 0.5f, 1);
         }
 
         if(args.length == 0) {
-            commandList(s);
+            if(!s.hasPermission("mineskyitems.command.help"))
+                s.sendMessage("§cVocê não tem permissão ou o comando não existe.");
+            else commandList(s);
+            return true;
+        }
+
+        if (!s.hasPermission("mineskyitems.command."+args[0].toLowerCase())) {
+            s.sendMessage("§cVocê não tem permissão ou o comando não existe.");
             return true;
         }
 
         if(args[0].equalsIgnoreCase("reload")) {
-            s.sendMessage("Recarregando...");
+            s.sendMessage("Reload não é suportado no momento.");
             return true;
         }
 
@@ -286,7 +290,8 @@ public class ItemCommand implements TabExecutor {
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender s, Command cmd, String label, String[] args) {
+    @Nullable
+    public List<String> onTabComplete(@NotNull CommandSender s, @NotNull Command cmd, @NotNull String label, String[] args) {
         if(s instanceof Player p) {
             p.playSound(p.getLocation(), Sound.ENTITY_CHICKEN_EGG, 1, 1);
         }
@@ -350,7 +355,7 @@ public class ItemCommand implements TabExecutor {
                 return null;
             }
 
-            String[] args2 = Arrays.copyOfRange(args, 2, args.length);
+            String[] args2 = Arrays.copyOfRange(args, 3, args.length);
 
             List<String> e = new ArrayList<>(ItemHandler.getItemsNames());
             String input = String.join(" ", args2);

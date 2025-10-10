@@ -9,6 +9,8 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.text.Normalizer;
 import java.util.ArrayList;
@@ -46,8 +48,14 @@ public class ItemBuilder {
         this.category = item.getCategory();
     }
 
+    public boolean hasInvalidName() {
+        return displayName == null || displayName.isBlank();
+    }
+    public boolean isStub() {
+        return hasInvalidName() && customModel == 0;
+    }
     public String generateId() {
-        return displayName == null || displayName.isEmpty() ? "" : Normalizer.normalize(displayName, Normalizer.Form.NFD)
+        return hasInvalidName() ? UUID.randomUUID().toString() : Normalizer.normalize(displayName, Normalizer.Form.NFD)
                 .replaceAll("[^\\p{ASCII}]", "")
                 .replaceAll("[^a-zA-Z0-9]+", "_")
                 .replaceAll("_+", "_")
@@ -129,19 +137,6 @@ public class ItemBuilder {
         return this;
     }
 
-    public ItemStack getItemStack() {
-
-        ItemStack it = new ItemStack(material);
-        ItemMeta im = it.getItemMeta();
-
-        im.setCustomModelData(getCustomModel());
-        im.setDisplayName(Utils.c(getDisplayName()));
-
-        it.setItemMeta(im);
-        return it;
-
-    }
-
     private ConfigurationSection setInsideCategory() {
         YamlConfiguration config = getCategory().getConfig();
         final String id = generateId();
@@ -172,8 +167,37 @@ public class ItemBuilder {
         return config.getConfigurationSection(id);
     }
 
+    @NotNull
+    public ItemStack getItemStack() {
+        // tests if it is a item stub (the id is still a UUID, item with no name)
+        if(isStub()) {
+            // stub
+            return rawStack();
+        }
+
+        return build().buildStack();
+    }
+
+    private ItemStack rawStack() {
+        ItemStack it = new ItemStack(material);
+        ItemMeta im = it.getItemMeta();
+
+        im.setCustomModelData(getCustomModel());
+        im.setDisplayName(Utils.c(getDisplayName()));
+
+        im.setLore(getLore());
+
+        it.setItemMeta(im);
+        return it;
+    }
+
+    @Nullable
     public Item build() {
         final String generatedId = generateId();
+
+        if(isStub()) {
+            return null;
+        }
 
         ConfigurationSection section = setInsideCategory();
 

@@ -34,7 +34,7 @@ public class ItemBuilderMenu implements Listener {
     public static HashMap<Player, Inventory> inventories = new HashMap<>();
 
     private static void reorganizeItems(ItemBuilder builder, Inventory inv) {
-        ItemStack item = builder.build().buildStack();
+        ItemStack item = builder.getItemStack();
         ItemMeta im = item.getItemMeta();
         List<Component> lore = im.lore();
 
@@ -170,6 +170,11 @@ public class ItemBuilderMenu implements Listener {
                 switch(clickType) {
                     case RIGHT:
                     case LEFT: {
+                        if(builder.isStub()) {
+                            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 1);
+                            return;
+                        }
+
                         ItemStack stack = builder.build().buildStack();
                         p.getInventory().addItem(stack);
                         break;
