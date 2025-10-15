@@ -33,7 +33,7 @@ public class ItemDustHandler {
 
         final int level = item.getRequiredLevel();
 
-        return (int) Math.round(1 + Math.pow(level - 1, 1.2) * 0.2384);
+        return (int) Math.round(1 + Math.pow(level - 1, 1.3) * 0.2384);
     }
 
 }

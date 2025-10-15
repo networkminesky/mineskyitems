@@ -25,7 +25,7 @@ public class RarityHandler {
         return rarities.stream()
                 .filter(rarity -> level <= rarity.getMaxLevel())
                 .min(Comparator.comparingInt(ItemRarity::getMaxLevel))
-                .orElse(null);
+                .orElse(RarityHandler.rarities.getLast());
     }
 
     public static void setupRarities() {

@@ -3,6 +3,7 @@ common:
     font: "rarity"
     char: "A"
   name: "Comum"
+  tooltip: "comum"
   color: "#9ba399"
   max-level: 15
 
@@ -11,6 +12,7 @@ uncommon:
     font: "rarity"
     char: "B"
   name: "Incomum"
+  tooltip: "incomum"
   color: "#5aba16"
   max-level: 30
 
@@ -19,6 +21,7 @@ rare:
     font: "rarity"
     char: "C"
   name: "Raro"
+  tooltip: "raro"
   color: "#12b09d"
   max-level: 60
 
@@ -28,6 +31,7 @@ epic:
     char: "D"
   name: "Épico"
   color: "#a220ab"
+  tooltip: "epico"
   max-level: 85
   glowing: true
 
@@ -37,6 +41,7 @@ legendary:
     char: "E"
   name: "Lendário"
   color: "#f77300"
+  tooltip: "lendario"
   max-level: 100
   glowing: true
 
@@ -46,5 +51,6 @@ special:
     char: "F"
   name: "Especial"
   color: "#e5383b"
+  tooltip: "especial"
   max-level: 120
   glowing: true

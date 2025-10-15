@@ -3,6 +3,7 @@ package net.mineskyitems;
 import net.Indyuce.mmocore.api.MMOCoreAPI;
 import net.mineskyitems.commands.ItemCommand;
 import net.mineskyitems.entities.ItemDustHandler;
+import net.mineskyitems.entities.curves.CurveHandler;
 import net.mineskyitems.entities.rarities.RarityHandler;
 import net.mineskyitems.events.InteractionEvents;
 import net.mineskyitems.events.MiscEvents;
@@ -12,7 +13,6 @@ import net.mineskyitems.entities.tooltip.TooltipHandler;
 import net.mineskyitems.gui.ItemSkillsMenu;
 import net.mineskyitems.gui.blacksmith.ItemRecyclerMenu;
 import net.mineskyitems.gui.blacksmith.ItemRepairMenu;
-import net.mineskyitems.logics.LevelCurvesLogic;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -47,7 +47,8 @@ public final class MineSkyItems extends JavaPlugin {
     }
 
     private void System() {
-        LevelCurvesLogic.setupCurves();
+        l.info("Carregando item curves...");
+        CurveHandler.setupCurves();
 
         l.info("Carregando rarities...");
         RarityHandler.setupRarities();

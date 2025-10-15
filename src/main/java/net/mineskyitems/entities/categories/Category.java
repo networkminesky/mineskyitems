@@ -1,5 +1,7 @@
 package net.mineskyitems.entities.categories;
 
+import net.mineskyitems.entities.curves.CurveHandler;
+import net.mineskyitems.entities.curves.ItemCurve;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.tooltip.Tooltip;
 import net.mineskyitems.entities.tooltip.TooltipHandler;
@@ -27,6 +29,8 @@ public class Category {
     private final String name;
     private final Material defaultItem;
 
+    private final ItemCurve curve;
+
     private final boolean noAttributes;
 
     private final Tooltip tooltip;
@@ -42,11 +46,16 @@ public class Category {
 
         this.tooltip = TooltipHandler.getTooltipById(categoriesSection.getString("tooltip", "default"));
 
+        this.curve = CurveHandler.getById(categoriesSection.getString("curve", "default-curves.yml"));
         this.type = categoriesSection.getString("type", "MELEE");
         this.name = categoriesSection.getString("name", id.toLowerCase());
         this.defaultItem = Material.getMaterial(categoriesSection.getString("default-item", "STONE"));
 
         this.noAttributes = categoriesSection.getBoolean("no-attributes", false);
+    }
+
+    public ItemCurve getCurve() {
+        return curve;
     }
 
     public String getType() {

@@ -2,14 +2,15 @@ package net.mineskyitems.entities.item;
 
 import io.lumine.mythic.bukkit.MythicBukkit;
 import io.lumine.mythic.core.utils.MythicUtil;
+import io.papermc.paper.datacomponent.DataComponentType;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.categories.Category;
+import net.mineskyitems.entities.curves.CurveHandler;
 import net.mineskyitems.entities.rarities.ItemRarity;
 import net.mineskyitems.entities.rarities.RarityHandler;
-import net.mineskyitems.logics.LevelCurvesLogic;
 import net.mineskyitems.utils.InteractionType;
 import net.mineskyitems.utils.Utils;
 import net.mineskyitems.utils.cooldown.CooldownManager;
@@ -26,8 +27,8 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -115,7 +116,7 @@ public class Item {
     }
 
     public int getMaxDurability() {
-        return (int)Math.round(LevelCurvesLogic.calculateValue(getRequiredLevel(), LevelCurvesLogic.ITEM_DURABILITY_CURVE));
+        return (int)Math.round(getCategory().getCurve().calculateValue(getRequiredLevel(), CurveHandler.ITEM_DURABILITY_CURVE));
     }
     public int getDurability(ItemStack itemStack) {
         PersistentDataContainer container = itemStack.getItemMeta().getPersistentDataContainer();
@@ -167,8 +168,8 @@ public class Item {
             return;
 
         // Checando encantamento de durabilidade
-        if(itemStack.getEnchantments().containsKey(Enchantment.DURABILITY)) {
-            int level = itemStack.getEnchantmentLevel(Enchantment.DURABILITY);
+        if(itemStack.getEnchantments().containsKey(Enchantment.UNBREAKING)) {
+            int level = itemStack.getEnchantmentLevel(Enchantment.UNBREAKING);
 
             double chance = 100.0 / (level + 1); // Fórmula vanilla de durabilidade do Minecraft
             double roll = Math.random() * 100.0;
@@ -217,15 +218,15 @@ public class Item {
                 return;
             }
 
-            if(itemStack.containsEnchantment(Enchantment.ARROW_DAMAGE)) {
-                int level = stack.getEnchantmentLevel(Enchantment.ARROW_DAMAGE);
+            if(itemStack.containsEnchantment(Enchantment.POWER)) {
+                int level = stack.getEnchantmentLevel(Enchantment.POWER);
                 damage = (damage*0.25) * (level+1);
             }
 
             player.setCooldown(itemStack.getType(), (int)(cooldownInSeconds*20));
             CooldownManager.createItemCooldown(player, this, (float) cooldownInSeconds);
 
-            if(!itemStack.containsEnchantment(Enchantment.ARROW_INFINITE)
+            if(!itemStack.containsEnchantment(Enchantment.INFINITY)
             && player.getGameMode() != GameMode.CREATIVE)
                 stack.setAmount(stack.getAmount()-1);
 
@@ -259,14 +260,17 @@ public class Item {
                     arr.setShooter(player);
                     arr.setVelocity(shotDirection.multiply(FIXED_VELOCITY_MULTIPLIER));
                     arr.setDamage(finalDamage);
-                    arr.setKnockbackStrength(itemStack.getEnchantmentLevel(Enchantment.ARROW_KNOCKBACK) * 3);
+                    //arr.setKnockbackStrength(itemStack.getEnchantmentLevel(Enchantment.PUNCH) * 3);
 
                     if (stack.getType() == Material.TIPPED_ARROW && arr instanceof Arrow) {
                         PotionMeta potionMeta = (PotionMeta) stack.getItemMeta();
-                        ((Arrow) arr).setBasePotionData(potionMeta.getBasePotionData());
+                        ((Arrow) arr).setBasePotionType(potionMeta.getBasePotionType());
+                        potionMeta.getCustomEffects().forEach(potionEffect -> {
+                            ((Arrow) arr).addCustomEffect(potionEffect, true);
+                        });
                     }
 
-                    if (itemStack.containsEnchantment(Enchantment.ARROW_FIRE)) {
+                    if (itemStack.containsEnchantment(Enchantment.FLAME)) {
                         arr.setFireTicks(999999);
                     }
                 });
@@ -354,7 +358,11 @@ public class Item {
         ItemMeta im = itemStack.getItemMeta();
 
         im.setUnbreakable(true);
-        im.addItemFlags(ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ATTRIBUTES);
+        im.addItemFlags(ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+
+        if(getItemRarity().hasTooltip()) {
+            im.setTooltipStyle(NamespacedKey.minecraft(getItemRarity().getTooltip()));
+        }
 
         PersistentDataContainer container = im.getPersistentDataContainer();
         container.set(MineSkyItems.NAMESPACED_KEY, PersistentDataType.STRING, getId());

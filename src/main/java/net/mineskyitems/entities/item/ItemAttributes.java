@@ -1,15 +1,14 @@
 package net.mineskyitems.entities.item;
 
 import net.mineskyitems.MineSkyItems;
-import net.mineskyitems.logics.LevelCurvesLogic;
+import net.mineskyitems.entities.curves.ItemCurve;
+import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.UUID;
 
 public class ItemAttributes {
 
@@ -33,8 +32,10 @@ public class ItemAttributes {
     }
 
     private void calculateBasedOnLevel() {
-        double damage = LevelCurvesLogic.calculateValue(item.getRequiredLevel(), Attribute.GENERIC_ATTACK_DAMAGE);
-        double speed = LevelCurvesLogic.calculateValue(item.getRequiredLevel(), Attribute.GENERIC_ATTACK_SPEED);
+        final ItemCurve curve = getItem().getCategory().getCurve();
+
+        double damage = curve.calculateValue(item.getRequiredLevel(), Attribute.ATTACK_DAMAGE);
+        double speed = curve.calculateValue(item.getRequiredLevel(), Attribute.ATTACK_SPEED);
 
         this.damage = damage;
         this.speed = speed;
@@ -51,20 +52,20 @@ public class ItemAttributes {
         return item;
     }
 
-    public static final String namespaceName = MineSkyItems.getInstance().getDescription().getName();
+    public static final NamespacedKey namespace = new NamespacedKey(MineSkyItems.getInstance(), "attr");
     public static final AttributeModifier.Operation defaultOperation = AttributeModifier.Operation.ADD_NUMBER;
 
     public ItemStack translateAndUpdate(ItemStack itemStack) {
         ItemMeta itemMeta = itemStack.getItemMeta();
 
         // Damage
-        itemMeta.addAttributeModifier(Attribute.GENERIC_ATTACK_DAMAGE,
-                new AttributeModifier(UUID.randomUUID(), namespaceName, this.getDamage()-1, defaultOperation, EquipmentSlot.HAND));
+        itemMeta.addAttributeModifier(Attribute.ATTACK_DAMAGE,
+                new AttributeModifier(namespace, this.getDamage() -1, defaultOperation, EquipmentSlotGroup.HAND));
 
         // Speed
         // this.getSpeed()-4
-        itemMeta.addAttributeModifier(Attribute.GENERIC_ATTACK_SPEED,
-                new AttributeModifier(UUID.randomUUID(), namespaceName, this.getSpeed() - 4, defaultOperation, EquipmentSlot.HAND));
+        itemMeta.addAttributeModifier(Attribute.ATTACK_SPEED,
+                new AttributeModifier(namespace, this.getSpeed() -4, defaultOperation, EquipmentSlotGroup.HAND));
 
         itemStack.setItemMeta(itemMeta);
 

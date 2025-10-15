@@ -62,6 +62,14 @@ public class ItemHandler {
         category.reloadFile();
     }
 
+    public static void deleteItem(Item item) {
+        final Category category = item.getCategory();
+
+        category.getConfig().set(item.getId(), null);
+        category.reloadFile();
+        category.reloadCategory();
+    }
+
     public static Item getItemFromStack(ItemStack itemStack) {
         if(itemStack == null)
             return null;

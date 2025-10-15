@@ -7,6 +7,7 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.Nullable;
 
 public class ItemRarity {
 
@@ -16,6 +17,8 @@ public class ItemRarity {
     private final int maxLevel;
 
     private final boolean customFont;
+
+    private String tooltip;
 
     private final ConfigurationSection config;
 
@@ -31,7 +34,18 @@ public class ItemRarity {
         this.customFont = config.contains("custom-font", false);
         this.color = config.getString("color", "#ffffff");
 
+        this.tooltip = config.getString("tooltip", null);
+
         this.maxLevel = config.getInt("max-level", 15);
+    }
+
+    @Nullable
+    public String getTooltip() {
+        return tooltip;
+    }
+
+    public boolean hasTooltip() {
+        return tooltip != null && !tooltip.isBlank();
     }
 
     public int getMaxLevel() {

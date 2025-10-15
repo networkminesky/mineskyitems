@@ -29,7 +29,7 @@ import java.util.*;
 
 public class ItemCommand implements TabExecutor {
 
-    public static final List<String> subCommands = Arrays.asList("criar", "script", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
+    public static final List<String> subCommands = Arrays.asList("criar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
     public static final List<String> menu_subCommands = Arrays.asList("reparar", "destruir");
     public static final List<String> scripts = Arrays.asList("empty", "category", "single");
 
@@ -40,6 +40,9 @@ public class ItemCommand implements TabExecutor {
                         Utils.PURPLE_COLOR+"/item editar <nome> &8- &7Edita um item já criado a partir do nome\n"+
                         Utils.PURPLE_COLOR+"/item give <player> <nome> &8- &7Pega uma cópia do item a partir do nome para um jogador\n"+
                         Utils.PURPLE_COLOR+"/item deletar <nome> &8- &7Deleta um item existente\n"+
+                        Utils.PURPLE_COLOR+"/item get <nome> &8- &7Pega uma cópia do item a partir do nome\n"+
+                        Utils.PURPLE_COLOR+"/item get-all <categoria> &8- &7Pega uma cópia de todos os itens de uma categoria\n"+
+                        Utils.PURPLE_COLOR+"/item category <categoria> &8- &7Lista a categoria com seus devidos itens\n"+
                         Utils.PURPLE_COLOR+"/item get <nome> &8- &7Pega uma cópia do item a partir do nome\n"+
                         Utils.PURPLE_COLOR+"/item menu <menu> &8- &7Abre um menu de item, ex: menu de destruir itens para virar pó\n"+
                         Utils.PURPLE_COLOR+"/item reload &8- &7Recarregar o plugin (não recomendado)\n"+
@@ -139,6 +142,40 @@ public class ItemCommand implements TabExecutor {
                 return true;
             }
 
+            if(args[0].equalsIgnoreCase("category")) {
+                final Category category = CategoryHandler.getCategoryByName(args[1]);
+
+                if (category == null) {
+                    s.sendMessage("§cEssa categoria não existe!");
+                    return true;
+                }
+
+                s.sendMessage("§6Nome: §f"+category.getName());
+                s.sendMessage("§6ID: §f"+category.getId());
+                s.sendMessage("§6Tipo: §f"+category.getType());
+                s.sendMessage("§fListando todos os §e"+category.getAllItems().size()+" §fitens...");
+                category.getAllItems().forEach(item -> {
+                    s.sendMessage("§6• §e"+item.getMetadata().displayName()+"§f- Modelo: §a"+item.getMetadata().modelData()+"§f, Level: §d"+item.getRequiredLevel());
+                });
+
+                return true;
+            }
+
+            if(args[0].equalsIgnoreCase("get-all")) {
+                final Category category = CategoryHandler.getCategoryByName(args[1]);
+
+                if (category == null) {
+                    s.sendMessage("§cEssa categoria não existe!");
+                    return true;
+                }
+
+                category.getAllItems().forEach(item -> {
+                    p.getInventory().addItem(item.buildStack());
+                });
+
+                return true;
+            }
+
             if(args[0].equalsIgnoreCase("get")) {
                 String itemName = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
 
@@ -166,8 +203,9 @@ public class ItemCommand implements TabExecutor {
 
                 Item item = ItemHandler.getItemByName(itemName);
                 if(item != null) {
+                    ItemHandler.deleteItem(item);
+
                     s.sendMessage("§aItem deletado com sucesso!");
-                    ItemHandler.deleteItemEntry(item.getCategory(), item.getId());
                     return true;
                 }
 
@@ -302,6 +340,12 @@ public class ItemCommand implements TabExecutor {
 
         if(args[0].equalsIgnoreCase("danificar")
         || args[0].equalsIgnoreCase("reload")) {
+            s.sendMessage("§7Recarregando arquivos...");
+            CategoryHandler.categories.forEach(category -> {
+                category.reloadFile();
+                category.reloadCategory();
+            });
+            s.sendMessage("§aCategorias recarregadas! "+ItemHandler.getItemsNames().size()+" itens ativos.");
             return null;
         }
 
@@ -328,7 +372,9 @@ public class ItemCommand implements TabExecutor {
             return e;
         }
 
-        if(args[0].equalsIgnoreCase("criar")) {
+        if(args[0].equalsIgnoreCase("criar")
+        || args[0].equalsIgnoreCase("get-all")
+        || args[0].equalsIgnoreCase("category")) {
             String[] args2 = Arrays.copyOfRange(args, 1, args.length);
 
             List<String> e = new ArrayList<>(CategoryHandler.getCategoriesNames());
