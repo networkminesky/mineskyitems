@@ -70,7 +70,12 @@ public class ItemCommand implements TabExecutor {
         }
 
         if(args[0].equalsIgnoreCase("reload")) {
-            s.sendMessage("Reload não é suportado no momento.");
+            s.sendMessage("§7Recarregando arquivos...");
+            CategoryHandler.categories.forEach(category -> {
+                category.reloadFile();
+                category.reloadCategory();
+            });
+            s.sendMessage("§aCategorias recarregadas! "+ItemHandler.getItemsNames().size()+" itens ativos.");
             return true;
         }
 
@@ -340,12 +345,6 @@ public class ItemCommand implements TabExecutor {
 
         if(args[0].equalsIgnoreCase("danificar")
         || args[0].equalsIgnoreCase("reload")) {
-            s.sendMessage("§7Recarregando arquivos...");
-            CategoryHandler.categories.forEach(category -> {
-                category.reloadFile();
-                category.reloadCategory();
-            });
-            s.sendMessage("§aCategorias recarregadas! "+ItemHandler.getItemsNames().size()+" itens ativos.");
             return null;
         }
 
