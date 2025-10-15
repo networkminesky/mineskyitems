@@ -174,7 +174,8 @@ public class ItemCommand implements TabExecutor {
                     return true;
                 }
 
-                category.getAllItems().forEach(item -> {
+                category.getAllItems().stream().sorted(Comparator.comparingInt(Item::getRequiredLevel))
+                        .forEach(item -> {
                     p.getInventory().addItem(item.buildStack());
                 });
 
