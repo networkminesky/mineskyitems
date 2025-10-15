@@ -159,7 +159,8 @@ public class ItemCommand implements TabExecutor {
                 s.sendMessage("§6ID: §f"+category.getId());
                 s.sendMessage("§6Tipo: §f"+category.getType());
                 s.sendMessage("§fListando todos os §e"+category.getAllItems().size()+" §fitens...");
-                category.getAllItems().forEach(item -> {
+                category.getAllItems().stream().sorted(Comparator.comparingInt(Item::getRequiredLevel))
+                        .forEach(item -> {
                     s.sendMessage("§6• §e"+item.getMetadata().displayName()+"§f- Modelo: §a"+item.getMetadata().modelData()+"§f, Level: §d"+item.getRequiredLevel());
                 });
 
