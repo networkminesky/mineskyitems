@@ -17,10 +17,8 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.*;
+import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -170,6 +168,20 @@ public class ItemRepairMenu implements Listener {
         final int slot = e.getSlot();
         final ClickType clickType = e.getClick();
         final Inventory inventory = e.getInventory();
+
+        // idiot-proof
+        if(inventory.getType() == InventoryType.ANVIL) {
+            AnvilInventory inv = (AnvilInventory)e.getInventory();
+            if(Utils.isMineSkyItem(inv.getFirstItem())
+                    && (inv.getSecondItem() != null || (e.getCurrentItem() != null && slot == 1))) {
+                p.closeInventory();
+                p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
+                p.sendMessage(Utils.c("&cTentando reparar seu item? Para reparar, você deve utilizar um forjador ou um ferreiro, você pode os encontrar logo na entrada de Edragon (spawn)."));
+
+                p.updateInventory();
+            }
+            return;
+        }
 
         if (!inventories.containsValue(inventory))
             return;

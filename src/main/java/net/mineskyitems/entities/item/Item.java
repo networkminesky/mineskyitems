@@ -1,5 +1,6 @@
 package net.mineskyitems.entities.item;
 
+import com.google.common.primitives.Floats;
 import io.lumine.mythic.bukkit.MythicBukkit;
 import io.lumine.mythic.core.utils.MythicUtil;
 import io.papermc.paper.datacomponent.DataComponentType;
@@ -24,6 +25,8 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.inventory.meta.components.CustomModelDataComponent;
+import org.bukkit.inventory.meta.components.EquippableComponent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
@@ -376,6 +379,16 @@ public class Item {
         im.lore(getCategory().getTooltip().getFormattedLore(this, itemStack));
 
         im.setCustomModelData(metadata.modelData());
+
+        // Armor Type Category
+        if(getCategory().getType().equalsIgnoreCase("armor")) {
+            EquippableComponent equippableComponent = im.getEquippable();
+
+            equippableComponent.setModel(NamespacedKey.minecraft("part_"+metadata.modelData));
+            equippableComponent.setSlot(metadata.material().getEquipmentSlot());
+
+            im.setEquippable(equippableComponent);
+        }
 
         itemStack.setItemMeta(im);
 
