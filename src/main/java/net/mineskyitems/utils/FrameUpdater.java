@@ -30,7 +30,8 @@ então é preciso fazer um workaround meio bruto para fazer essa mecânica
  */
 public class FrameUpdater {
 
-    public static Map<UUID, Material> lastItem = new ConcurrentHashMap<>();
+    //             PLAYER | ITEMSTACK TOSTRING
+    public static Map<UUID, String> lastItem = new ConcurrentHashMap<>();
 
     public static void runnable() {
         new BukkitRunnable() {
@@ -43,8 +44,8 @@ public class FrameUpdater {
                     final ItemStack mainHand = player.getInventory().getItemInMainHand();
 
                     // Pegou um item novo na mão
-                    if(!lastItem.getOrDefault(player.getUniqueId(), Material.AIR)
-                            .equals(mainHand.getType())) {
+                    if(!lastItem.getOrDefault(player.getUniqueId(), "")
+                            .equalsIgnoreCase(mainHand.toString())) {
                         final RayTraceResult result = player.rayTraceEntities(5);
 
                         if(result != null && result.getHitEntity() != null) {
@@ -72,7 +73,7 @@ public class FrameUpdater {
                         }
                     }
 
-                    lastItem.put(player.getUniqueId(), mainHand.getType());
+                    lastItem.put(player.getUniqueId(), mainHand.toString());
                 }
             }
         }.runTaskTimerAsynchronously(MineSkyItems.getInstance(), 60, 2);
