@@ -16,6 +16,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataType;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.regex.Matcher;
@@ -46,6 +47,19 @@ public class Utils {
             return itemStack.getItemMeta().getPersistentDataContainer().has(MineSkyItems.NAMESPACED_KEY, PersistentDataType.STRING);
         } catch(Exception ignored) {}
         return false;
+    }
+
+    @NotNull
+    public static String getItemIdFromStack(ItemStack itemStack) {
+        if(itemStack == null)
+            return "";
+        if(!itemStack.hasItemMeta())
+            return "";
+        try {
+            return itemStack.getItemMeta().getPersistentDataContainer().has(MineSkyItems.NAMESPACED_KEY, PersistentDataType.STRING)
+                    ? itemStack.getItemMeta().getPersistentDataContainer().get(MineSkyItems.NAMESPACED_KEY, PersistentDataType.STRING) : "";
+        } catch(Exception ignored) {}
+        return "";
     }
 
     public static InteractionType convertInteractionType(ClickType clickType) {

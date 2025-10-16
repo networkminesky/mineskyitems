@@ -1,19 +1,21 @@
 package net.mineskyitems.events;
 
+import io.papermc.paper.event.player.PlayerItemFrameChangeEvent;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemHandler;
 import net.mineskyitems.utils.InteractionType;
 import net.mineskyitems.utils.Utils;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.inventory.ClickType;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.event.entity.EntityEvent;
+import org.bukkit.event.inventory.*;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 

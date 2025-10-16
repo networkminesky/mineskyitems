@@ -1,6 +1,7 @@
 package net.mineskyitems.scripts;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.mineskyitems.entities.categories.Category;
 import net.mineskyitems.entities.item.Item;
 import org.bukkit.Location;
@@ -22,7 +23,7 @@ public class ItemFrameGenerator {
         int actualRow = 0;
 
         List<Item> items = new ArrayList<>(category.getAllItems());
-        items.sort(Comparator.comparingInt(a -> a.getMetadata().modelData()));
+        items.sort(Comparator.comparingInt(Item::getRequiredLevel));
 
         for(Item item : items) {
             if(actualRow >= 4) {
@@ -30,13 +31,23 @@ public class ItemFrameGenerator {
                 actualRow = 0;
             }
 
+            final ItemStack stack = item.buildStack();
+            Component name = stack.effectiveName()
+                    .append(Component.text(" - Lvl: "+item.getRequiredLevel()+"," +
+                            " Modelo: "+item.getMetadata().modelData()).color(NamedTextColor.YELLOW));
+
+            ItemMeta im = stack.getItemMeta();
+            im.displayName(name);
+
+            stack.setItemMeta(im);
+
             Location loc = location.clone().add(actualRow, 0, -actualColumn);
 
             location.getWorld().spawn(loc, ItemFrame.class, a -> {
                 a.setFixed(true);
                 a.setRotation(Rotation.NONE);
                 a.setFacingDirection(BlockFace.UP);
-                a.setItem(item.buildStack());
+                a.setItem(stack);
             });
 
             actualRow++;

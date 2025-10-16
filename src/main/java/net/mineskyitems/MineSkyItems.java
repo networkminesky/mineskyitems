@@ -13,6 +13,7 @@ import net.mineskyitems.entities.tooltip.TooltipHandler;
 import net.mineskyitems.gui.ItemSkillsMenu;
 import net.mineskyitems.gui.blacksmith.ItemRecyclerMenu;
 import net.mineskyitems.gui.blacksmith.ItemRepairMenu;
+import net.mineskyitems.utils.FrameUpdater;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -61,6 +62,8 @@ public final class MineSkyItems extends JavaPlugin {
 
         l.info("Carregando itens hardcoded...");
         ItemDustHandler.registerDusts();
+
+        FrameUpdater.runnable();
 
         if(Bukkit.getPluginManager().getPlugin("MMOCore") != null) {
             mmocoreAPI = new MMOCoreAPI(this);
