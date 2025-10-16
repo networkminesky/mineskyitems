@@ -9,6 +9,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.w3c.dom.Attr;
 
 public class ItemAttributes {
 
@@ -17,6 +18,11 @@ public class ItemAttributes {
 
     private double damage = 1.0;
     private double speed = 1.0;
+
+    private double maxHealth = 0;
+    private double attackRange = 1;
+
+    private double attackKnockback = 1;
 
     public ItemAttributes(Item item) {
         this.item = item;
@@ -34,11 +40,13 @@ public class ItemAttributes {
     private void calculateBasedOnLevel() {
         final ItemCurve curve = getItem().getCategory().getCurve();
 
-        double damage = curve.calculateValue(item.getRequiredLevel(), Attribute.ATTACK_DAMAGE);
-        double speed = curve.calculateValue(item.getRequiredLevel(), Attribute.ATTACK_SPEED);
+        this.damage = curve.calculateValue(item.getRequiredLevel(), Attribute.ATTACK_DAMAGE);
+        this.speed = curve.calculateValue(item.getRequiredLevel(), Attribute.ATTACK_SPEED);
 
-        this.damage = damage;
-        this.speed = speed;
+        this.maxHealth = curve.calculateValue(item.getRequiredLevel(), Attribute.MAX_HEALTH);
+        this.attackRange = curve.calculateValue(item.getRequiredLevel(), Attribute.ENTITY_INTERACTION_RANGE);
+
+        this.attackKnockback = curve.calculateValue(item.getRequiredLevel(), Attribute.ATTACK_KNOCKBACK);
     }
 
     public ConfigurationSection getAttributesSection() {
@@ -47,6 +55,8 @@ public class ItemAttributes {
 
     public double getSpeed() {return this.speed;}
     public double getDamage() {return this.damage;}
+
+    public double getMaxHealth() {return this.maxHealth;}
 
     public Item getItem() {
         return item;
@@ -59,13 +69,36 @@ public class ItemAttributes {
         ItemMeta itemMeta = itemStack.getItemMeta();
 
         // Damage
-        itemMeta.addAttributeModifier(Attribute.ATTACK_DAMAGE,
-                new AttributeModifier(namespace, this.getDamage() -1, defaultOperation, EquipmentSlotGroup.HAND));
+        if(this.damage != 0.0) {
+            itemMeta.addAttributeModifier(Attribute.ATTACK_DAMAGE,
+                    new AttributeModifier(namespace, this.damage -1, defaultOperation, EquipmentSlotGroup.HAND));
+        }
 
         // Speed
         // this.getSpeed()-4
-        itemMeta.addAttributeModifier(Attribute.ATTACK_SPEED,
-                new AttributeModifier(namespace, this.getSpeed() -4, defaultOperation, EquipmentSlotGroup.HAND));
+        if(this.speed != 0.0) {
+            itemMeta.addAttributeModifier(Attribute.ATTACK_SPEED,
+                    new AttributeModifier(namespace, this.speed -4, defaultOperation, EquipmentSlotGroup.HAND));
+        }
+
+        // Max Health
+        if(this.maxHealth != 0.0) {
+            itemMeta.addAttributeModifier(Attribute.MAX_HEALTH,
+                    new AttributeModifier(namespace, this.maxHealth, defaultOperation, EquipmentSlotGroup.HAND));
+        }
+
+        // Attack Range
+        if(this.attackRange != 0.0) {
+            itemMeta.addAttributeModifier(Attribute.ENTITY_INTERACTION_RANGE,
+                    new AttributeModifier(namespace, this.attackRange, defaultOperation, EquipmentSlotGroup.HAND));
+        }
+
+        // Attack Knockback
+        if(this.attackKnockback != 0.0) {
+            itemMeta.addAttributeModifier(Attribute.ATTACK_KNOCKBACK,
+                    new AttributeModifier(namespace, this.attackKnockback, defaultOperation, EquipmentSlotGroup.HAND));
+
+        }
 
         itemStack.setItemMeta(itemMeta);
 

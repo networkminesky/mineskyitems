@@ -72,6 +72,8 @@ public class Tooltip {
             s = s.replace("%damage%", Utils.format(attributes.getDamage()));
             s = s.replace("%speed%", Utils.format(attributes.getSpeed()));
 
+            s = s.replace("%health%", "+"+Utils.format(attributes.getMaxHealth()));
+
             final int durability = item.getDurability(stack);
             final int maxDurability = item.getMaxDurability();
             final String durString = (maxDurability == durability) ? durability+"" : durability+"/"+maxDurability;

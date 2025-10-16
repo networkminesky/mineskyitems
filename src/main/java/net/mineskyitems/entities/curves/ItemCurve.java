@@ -1,5 +1,6 @@
 package net.mineskyitems.entities.curves;
 
+import io.lumine.mythic.lib.version.Attributes;
 import net.mineskyitems.MineSkyItems;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -24,14 +25,18 @@ public class ItemCurve {
         return this.id;
     }
 
+    public HashMap<String, List<Double>> getAllCurves() {
+        return curves;
+    }
+
     public double calculateValue(int level, Attribute attribute) {
         return calculateValue(level, CurveHandler.translateDots(attribute.getKey().getKey()));
     }
     public double calculateValue(int level, String key) {
-        final List<Double> curves = getCurves(key);
+        final List<Double> curves = getCurve(key);
 
         if (curves == null || curves.isEmpty()) {
-            return 1.0;
+            return 0.0;
         }
 
         int size = curves.size();
@@ -69,7 +74,7 @@ public class ItemCurve {
 
         this.configuration = YamlConfiguration.loadConfiguration(file);
 
-        for(Attribute attribute : Attribute.values()) {
+        for(Attribute attribute : Attributes.getAll()) {
             final String translatedDots = CurveHandler.translateDots(attribute.getKey().getKey());
             registerCurve(translatedDots);
         }
@@ -78,7 +83,7 @@ public class ItemCurve {
         registerCurve(CurveHandler.ITEM_DURABILITY_CURVE);
     }
 
-    public List<Double> getCurves(String key) {
+    public List<Double> getCurve(String key) {
         return curves.getOrDefault(key, List.of((double) 0));
     }
 

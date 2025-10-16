@@ -370,9 +370,8 @@ public class Item {
         itemStack.setItemMeta(im);
 
         Component itemName = Component.text(metadata.displayName())
-                .color(getItemRarity().getTextColor())
-                .decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE);
-        im.displayName(itemName);
+                .color(getItemRarity().getTextColor());
+        im.itemName(itemName);
 
         im.lore(getCategory().getTooltip().getFormattedLore(this, itemStack));
 

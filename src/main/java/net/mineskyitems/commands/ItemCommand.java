@@ -14,6 +14,7 @@ import net.mineskyitems.entities.categories.Category;
 import net.mineskyitems.entities.categories.CategoryHandler;
 import net.mineskyitems.gui.blacksmith.ItemRecyclerMenu;
 import net.mineskyitems.gui.blacksmith.ItemRepairMenu;
+import net.mineskyitems.scripts.ArmorStandScript;
 import net.mineskyitems.scripts.ItemFrameGenerator;
 import net.mineskyitems.utils.Utils;
 import org.bukkit.Bukkit;
@@ -31,7 +32,7 @@ public class ItemCommand implements TabExecutor {
 
     public static final List<String> subCommands = Arrays.asList("criar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
     public static final List<String> menu_subCommands = Arrays.asList("reparar", "destruir");
-    public static final List<String> scripts = Arrays.asList("empty", "category", "single");
+    public static final List<String> scripts = Arrays.asList("empty", "category", "single", "armor");
 
     void commandList(CommandSender s) {
         s.sendMessage(Utils.PURPLE_COLOR+Utils.c("&lMineSkyItems v"+MineSkyItems.getInstance().getDescription().getVersion()));
@@ -222,35 +223,30 @@ public class ItemCommand implements TabExecutor {
             }
 
             if(args[0].equalsIgnoreCase("script")) {
+                final String scriptArgs = args.length > 2 ? args[2] : "";
+                final String script = args[1].toLowerCase();
 
-                if(args.length == 2) {
-                    s.sendMessage("§cVocê deve indicar um argumento após o comando de script, no caso de 'empty', indique o material base e se possível o modelo inicial. No caso de 'single', indique o material e depois indique o número do modelo. No caso de 'category' insira apenas o nome da categoria.");
-                    return true;
-                }
+                switch(script) {
+                    case "empty" -> {
+                        int startingFrom = 0;
+                        if(args.length >= 4) {
+                            startingFrom = Integer.parseInt(args[3]);
+                        }
 
-                if(args[1].equalsIgnoreCase("empty")) {
-                    int startingFrom = 0;
-                    if(args.length >= 4) {
-                        startingFrom = Integer.parseInt(args[3]);
+                        ItemFrameGenerator.generateEmpty(p.getLocation(), Material.getMaterial(scriptArgs), startingFrom);
                     }
+                    case "single" -> {
+                        int model = 0;
+                        if(args.length >= 4) {
+                            model = Integer.parseInt(args[3]);
+                        }
 
-                    ItemFrameGenerator.generateEmpty(p.getLocation(), Material.getMaterial(args[2]), startingFrom);
-                    return true;
-                }
-
-                if(args[1].equalsIgnoreCase("single")) {
-                    int model = 0;
-                    if(args.length >= 4) {
-                        model = Integer.parseInt(args[3]);
+                        ItemFrameGenerator.createItem(p.getLocation(), Material.getMaterial(scriptArgs), model);
                     }
+                    case "category" -> ItemFrameGenerator.generateCategory(p.getLocation(), CategoryHandler.getCategory(scriptArgs));
+                    case "armor" -> ArmorStandScript.generate(p.getLocation(), scriptArgs);
 
-                    ItemFrameGenerator.createItem(p.getLocation(), Material.getMaterial(args[2]), model);
-                    return true;
-                }
-
-                if(args[1].equalsIgnoreCase("category")) {
-                    ItemFrameGenerator.generateCategory(p.getLocation(), CategoryHandler.getCategory(args[2]));
-                    return true;
+                    default -> p.sendMessage("Script não encontrado, scripts existentes: "+scripts);
                 }
 
                 return true;
