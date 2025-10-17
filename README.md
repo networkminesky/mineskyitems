@@ -10,12 +10,14 @@ Another Minecraft custom item plugin for RPG servers - Originally designed for m
 - Rarity system with custom font support
 
 ## Installing
-This plugin is compatible with any PaperMC (or fork) server running Minecraft 1.20 or newer.
+This plugin is compatible with any PaperMC (or fork) server running Minecraft 1.21.4 or newer.
 
 You can download the latest version from the [Releases](https://github.com/networkminesky/mineskyitems/releases) tab of this repository.
 
 ## Adding as a dependency
-To use MineSky Items as a dependency in your Maven project, add the following to your pom.xml:
+You can use the default static classes (ItemHandler, CategoryHandler and so on) directly from the plugin to use it as a API.
+
+To use this repository as a dependency in your Maven project:
 ```xml
 <repository>
   <id>jitpack.io</id>
@@ -25,6 +27,17 @@ To use MineSky Items as a dependency in your Maven project, add the following to
 <dependency>
   <groupId>com.github.networkminesky</groupId>
   <artifactId>mineskyitems</artifactId>
-  <version>1.0.5-ALPHA</version>
+  <version>1.0.8-ALPHA</version>
 </dependency>
 ```
+
+Or if you are using Gradle:
+```.gradle
+repositories {
+  maven { url "https://jitpack.io"  }
+}
+dependencies {
+  compileOnly("com.github.networkminesky:mineskyitems:1.0.8-ALPHA")
+}
+```
+
