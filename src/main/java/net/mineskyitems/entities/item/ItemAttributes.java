@@ -57,6 +57,9 @@ public class ItemAttributes {
     public double getDamage() {return this.damage;}
 
     public double getMaxHealth() {return this.maxHealth;}
+    public double getAttackRange() {return this.attackRange;}
+
+    public double getAttackKnockback() {return this.attackKnockback;}
 
     public Item getItem() {
         return item;
@@ -84,7 +87,8 @@ public class ItemAttributes {
         // Max Health
         if(this.maxHealth != 0.0) {
             itemMeta.addAttributeModifier(Attribute.MAX_HEALTH,
-                    new AttributeModifier(namespace, this.maxHealth, defaultOperation, EquipmentSlotGroup.HAND));
+                    new AttributeModifier(namespace, this.maxHealth, defaultOperation,
+                            getItem().getMetadata().material().getEquipmentSlot().getGroup()));
         }
 
         // Attack Range
@@ -97,7 +101,6 @@ public class ItemAttributes {
         if(this.attackKnockback != 0.0) {
             itemMeta.addAttributeModifier(Attribute.ATTACK_KNOCKBACK,
                     new AttributeModifier(namespace, this.attackKnockback, defaultOperation, EquipmentSlotGroup.HAND));
-
         }
 
         itemStack.setItemMeta(itemMeta);

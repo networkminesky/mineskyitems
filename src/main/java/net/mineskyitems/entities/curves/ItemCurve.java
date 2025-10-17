@@ -89,13 +89,9 @@ public class ItemCurve {
 
     public void registerCurve(String key) {
         List<Double> doubles = new ArrayList<>();
-
-        MineSkyItems.l.info("| Caching a curva de nivel de "+key);
-
         for(String s : configuration.getStringList(key)) {
             try {
                 double d = Double.parseDouble(s);
-                MineSkyItems.l.info("  | Curve: "+d);
                 doubles.add(d);
             } catch(Exception ignored) {}
         }

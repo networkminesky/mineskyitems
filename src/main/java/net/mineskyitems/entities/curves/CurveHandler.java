@@ -30,7 +30,11 @@ public class CurveHandler {
         for(File file : Objects.requireNonNull(folder.listFiles())) {
             final String id = file.getName();
 
+            MineSkyItems.l.info("| Carregando curva "+id);
+
             ItemCurve curve = new ItemCurve(id);
+
+            MineSkyItems.l.info("   | Carregado com sucesso! Total curves: "+curve.getAllCurves().size());
 
             curves.add(curve);
         }
