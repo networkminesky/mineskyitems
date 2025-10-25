@@ -16,6 +16,7 @@ public class CurveHandler {
     public static final int maxLevel = 100;
 
     public static final String ITEM_DURABILITY_CURVE = "ITEM_DURABILITY";
+    public static final String ARROW_DAMAGE_CURVE = "ARROW_DAMAGE";
 
     public static Set<ItemCurve> curves = new HashSet<>();
 

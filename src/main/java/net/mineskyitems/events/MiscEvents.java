@@ -2,15 +2,16 @@ package net.mineskyitems.events;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.item.ItemHandler;
 import org.bukkit.damage.DamageSource;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Arrays;
 
@@ -39,6 +40,26 @@ public class MiscEvents implements Listener {
     }
 
     @EventHandler
+    public void onHit(ProjectileHitEvent e) {
+        final Projectile projectile = e.getEntity();
+        final Entity entity = e.getHitEntity();
+
+        if(entity == null
+        || !projectile.getPersistentDataContainer().has(MineSkyItems.NAMESPACED_KEY,
+                PersistentDataType.DOUBLE))
+            return;
+
+        double damage = projectile.getPersistentDataContainer()
+                .getOrDefault(MineSkyItems.NAMESPACED_KEY, PersistentDataType.DOUBLE, 1.0);
+
+        if(entity instanceof Damageable damageable) {
+            damageable.damage(damage, projectile);
+            e.setCancelled(true);
+            projectile.remove();
+        }
+    }
+
+    @EventHandler
     public void onDamage(EntityDamageEvent e) {
         if(e.getEntity().getType() != EntityType.PLAYER) return;
 
@@ -56,5 +77,4 @@ public class MiscEvents implements Listener {
             }
         });
     }
-
 }

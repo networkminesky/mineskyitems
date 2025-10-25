@@ -51,8 +51,10 @@ public class Item {
     private final int levelRequirement;
     private final List<String> requiredClasses;
 
-    private ItemAttributes itemAttributes;
-    private ItemRarity itemRarity;
+    private final ItemAttributes itemAttributes;
+    private final ItemRarity itemRarity;
+
+    private final boolean noAutoArmor;
 
     public ConfigurationSection getConfig() {
         return itemSection;
@@ -68,6 +70,8 @@ public class Item {
         List<String> lore = new ArrayList<>();
         if(metadataSec.contains("lore"))
             lore = metadataSec.getStringList("lore");
+
+        this.noAutoArmor = itemSection.getBoolean("no-auto-armor", false);
 
         this.metadata = new ItemMetadata(
                 Material.getMaterial(metadataSec.getString("material", getCategory().getDefaultItem().name())),
@@ -110,6 +114,10 @@ public class Item {
             this.itemRarity = RarityHandler.calculateRarityByLevel(levelRequirement);
     }
 
+    public boolean isNoAutoArmor() {
+        return this.noAutoArmor;
+    }
+
     public ItemRarity getItemRarity() {
         return itemRarity;
     }
@@ -134,7 +142,7 @@ public class Item {
         return getDurability(itemStack) <= 0;
     }
 
-    private void noDurability(Player player) {
+    private void noDurability(Player player, final ItemStack itemStack) {
         player.sendMessage("§cSeu item está quebrado, você deve repará-lo urgentemente em um ferreiro ou forjador.");
         player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1, 1.2f);
     }
@@ -145,8 +153,10 @@ public class Item {
         if(result < 0) {
             if(event != null)
                 event.setCancelled(true);
-            noDurability(player);
+            noDurability(player, itemStack);
             return;
+        } else if(result <= 30) {
+            player.sendMessage("§cSeu item "+getMetadata().displayName+" está quase quebrado! Ele possui mais "+result+" usos.");
         }
 
         ItemMeta im = itemStack.getItemMeta();
@@ -207,7 +217,7 @@ public class Item {
         // Ranged system logic
         if(getCategory().getType().equalsIgnoreCase("ranged")
                 && interactionType == InteractionType.RIGHT_CLICK) {
-            double damage = getItemAttributes().getDamage();
+            double damage = getItemAttributes().getArrowDamage();
             final double cooldownInSeconds = getItemAttributes().getSpeed();
 
             ItemStack stack = Utils.getFirstArrowItem(player);
@@ -217,7 +227,7 @@ public class Item {
                 return;
 
             if (isItemBroken(itemStack)) {
-                noDurability(player);
+                noDurability(player, itemStack);
                 return;
             }
 
@@ -226,11 +236,11 @@ public class Item {
                 damage = (damage*0.25) * (level+1);
             }
 
-            player.setCooldown(itemStack.getType(), (int)(cooldownInSeconds*20));
-            CooldownManager.createItemCooldown(player, this, (float) cooldownInSeconds);
+            player.setCooldown(itemStack.getType(), (int)(20/cooldownInSeconds));
+            CooldownManager.createItemCooldown(player, this, (float) (20/cooldownInSeconds));
 
             if(!itemStack.containsEnchantment(Enchantment.INFINITY)
-            && player.getGameMode() != GameMode.CREATIVE)
+                    && player.getGameMode() != GameMode.CREATIVE)
                 stack.setAmount(stack.getAmount()-1);
 
             Vector baseDirection = player.getLocation().getDirection();
@@ -262,10 +272,12 @@ public class Item {
                 player.getWorld().spawn(player.getEyeLocation(), arrowClass, arr -> {
                     arr.setShooter(player);
                     arr.setVelocity(shotDirection.multiply(FIXED_VELOCITY_MULTIPLIER));
-                    arr.setDamage(finalDamage);
+                    arr.setDamage(0);
+                    arr.getPersistentDataContainer().set(MineSkyItems.NAMESPACED_KEY, PersistentDataType.DOUBLE, finalDamage);
                     //arr.setKnockbackStrength(itemStack.getEnchantmentLevel(Enchantment.PUNCH) * 3);
 
-                    if (stack.getType() == Material.TIPPED_ARROW && arr instanceof Arrow) {
+                    if (stack.getType() == Material.TIPPED_ARROW
+                            && arr instanceof Arrow) {
                         PotionMeta potionMeta = (PotionMeta) stack.getItemMeta();
                         ((Arrow) arr).setBasePotionType(potionMeta.getBasePotionType());
                         potionMeta.getCustomEffects().forEach(potionEffect -> {
@@ -293,7 +305,7 @@ public class Item {
                 .findFirst()
                 .ifPresent(skill -> {
                     if(isItemBroken(itemStack)) {
-                        noDurability(player);
+                        noDurability(player, itemStack);
                         event.setCancelled(true);
                         return;
                     }
@@ -381,7 +393,8 @@ public class Item {
         im.setCustomModelData(metadata.modelData());
 
         // Armor Type Category
-        if(getCategory().getType().equalsIgnoreCase("armor")) {
+        if(getCategory().getType().equalsIgnoreCase("armor")
+        && !isNoAutoArmor()) {
             EquippableComponent equippableComponent = im.getEquippable();
 
             equippableComponent.setModel(NamespacedKey.minecraft("part_"+metadata.modelData));

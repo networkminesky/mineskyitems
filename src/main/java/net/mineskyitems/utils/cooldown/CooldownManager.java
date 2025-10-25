@@ -37,7 +37,7 @@ public class CooldownManager {
     }
 
     public static void createItemCooldown(Player player, Item item, float cooldown) {
-        long cooldownInTicks = (long)(cooldown * 20);
+        long cooldownInTicks = (long)(cooldown);
 
         UUID uuid = player.getUniqueId();
         itemCooldowns.putIfAbsent(uuid, new HashMap<>());

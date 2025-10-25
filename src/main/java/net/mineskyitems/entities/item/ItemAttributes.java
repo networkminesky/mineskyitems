@@ -1,6 +1,7 @@
 package net.mineskyitems.entities.item;
 
 import net.mineskyitems.MineSkyItems;
+import net.mineskyitems.entities.curves.CurveHandler;
 import net.mineskyitems.entities.curves.ItemCurve;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
@@ -11,12 +12,15 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.w3c.dom.Attr;
 
+import java.util.UUID;
+
 public class ItemAttributes {
 
     private final Item item;
     private final ConfigurationSection section;
 
     private double damage = 1.0;
+    private double arrowDamage = 1.0;
     private double speed = 1.0;
 
     private double maxHealth = 0;
@@ -47,11 +51,15 @@ public class ItemAttributes {
         this.attackRange = curve.calculateValue(item.getRequiredLevel(), Attribute.ENTITY_INTERACTION_RANGE);
 
         this.attackKnockback = curve.calculateValue(item.getRequiredLevel(), Attribute.ATTACK_KNOCKBACK);
+
+        this.arrowDamage = curve.calculateValue(item.getRequiredLevel(), CurveHandler.ARROW_DAMAGE_CURVE);
     }
 
     public ConfigurationSection getAttributesSection() {
         return section;
     }
+
+    public double getArrowDamage() { return this.arrowDamage; }
 
     public double getSpeed() {return this.speed;}
     public double getDamage() {return this.damage;}
@@ -87,7 +95,7 @@ public class ItemAttributes {
         // Max Health
         if(this.maxHealth != 0.0) {
             itemMeta.addAttributeModifier(Attribute.MAX_HEALTH,
-                    new AttributeModifier(namespace, this.maxHealth, defaultOperation,
+                    new AttributeModifier(new NamespacedKey(MineSkyItems.getInstance(), UUID.randomUUID().toString()), this.maxHealth, defaultOperation,
                             getItem().getMetadata().material().getEquipmentSlot().getGroup()));
         }
 

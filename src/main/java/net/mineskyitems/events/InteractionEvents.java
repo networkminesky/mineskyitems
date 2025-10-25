@@ -80,8 +80,6 @@ public class InteractionEvents implements Listener {
         if(!(e.getDamager() instanceof Player damager))
             return;
 
-        damager.sendTitle(Utils.format(e.getDamage()), e.getFinalDamage()+"", 5, 10, 10);
-
         ItemStack stack = damager.getInventory().getItemInMainHand();
         Item item = ItemHandler.getItemFromStack(stack);
         if(item != null) {

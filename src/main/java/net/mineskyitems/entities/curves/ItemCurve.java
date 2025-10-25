@@ -81,6 +81,7 @@ public class ItemCurve {
 
         // Specific Plugin Curves
         registerCurve(CurveHandler.ITEM_DURABILITY_CURVE);
+        registerCurve(CurveHandler.ARROW_DAMAGE_CURVE);
     }
 
     public List<Double> getCurve(String key) {

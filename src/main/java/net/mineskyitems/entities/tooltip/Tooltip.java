@@ -69,7 +69,10 @@ public class Tooltip {
             s = s.replace("%classes%", classes.substring(1, classes.length() - 1));
             s = s.replace("%level%", item.getRequiredLevel()+"");
 
-            s = s.replace("%damage%", Utils.format(attributes.getDamage()));
+            final double damage = item.getCategory().getType().equalsIgnoreCase("ranged")
+                    ? attributes.getArrowDamage() : attributes.getDamage();
+
+            s = s.replace("%damage%", Utils.format(damage));
             s = s.replace("%speed%", Utils.format(attributes.getSpeed()));
 
             s = s.replace("%health%", "+"+Utils.format(attributes.getMaxHealth()));
