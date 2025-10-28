@@ -53,9 +53,11 @@ public class MiscEvents implements Listener {
                 .getOrDefault(MineSkyItems.NAMESPACED_KEY, PersistentDataType.DOUBLE, 1.0);
 
         if(entity instanceof Damageable damageable) {
-            damageable.damage(damage, projectile);
-            e.setCancelled(true);
-            projectile.remove();
+            if(projectile.getShooter() instanceof Entity damager) {
+                damageable.damage(damage, damager);
+                e.setCancelled(true);
+                projectile.remove();
+            }
         }
     }
 
@@ -73,7 +75,8 @@ public class MiscEvents implements Listener {
             net.mineskyitems.entities.item.Item item = ItemHandler.getItemFromStack(stack);
 
             if(item != null) {
-                item.damageItem(player, stack, 1, e);
+                item.damageItem(player, stack, 1, null);
+                item.removeHealthIfBroken(player, stack);
             }
         });
     }

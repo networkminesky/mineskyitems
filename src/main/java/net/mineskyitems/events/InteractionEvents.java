@@ -13,6 +13,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
@@ -77,6 +78,8 @@ public class InteractionEvents implements Listener {
 
     @EventHandler
     public void onDamage(EntityDamageByEntityEvent e) {
+        if(e.getCause() != EntityDamageEvent.DamageCause.ENTITY_ATTACK)
+            return;
         if(!(e.getDamager() instanceof Player damager))
             return;
 

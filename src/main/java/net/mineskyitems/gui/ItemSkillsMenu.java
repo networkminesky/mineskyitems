@@ -20,6 +20,7 @@ import org.bukkit.inventory.Inventory;
 import java.util.HashMap;
 import java.util.List;
 
+import static net.mineskyitems.gui.MenuUtils.modelButton;
 import static net.mineskyitems.gui.MenuUtils.simpleButton;
 
 public class ItemSkillsMenu implements Listener {
@@ -47,7 +48,7 @@ public class ItemSkillsMenu implements Listener {
     }
 
     private static void reorganizeItems(ItemSkill skill, Inventory inv) {
-        inv.setItem(4, simpleButton(Material.BARRIER, "Voltar", "• Clique para voltar ou cancelar, caso você", " tenha editado uma skill, clique", " que a skill será salvada automaticamente."));
+        inv.setItem(4, modelButton(Material.PAPER, "Voltar", 22, "• Clique para voltar ou cancelar, caso você", " tenha editado uma skill, clique", " que a skill será salvada automaticamente."));
 
         inv.setItem(11, simpleButton(
                 Material.ENDER_EYE, "Nome da skill mythic", "• Aqui você deve setar o nome da", " skill do plugin MythicMobs.",

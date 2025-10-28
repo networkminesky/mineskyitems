@@ -4,8 +4,10 @@ import com.google.common.primitives.Floats;
 import io.lumine.mythic.bukkit.MythicBukkit;
 import io.lumine.mythic.core.utils.MythicUtil;
 import io.papermc.paper.datacomponent.DataComponentType;
+import net.Indyuce.mmocore.api.MMOCoreAPI;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.categories.Category;
@@ -16,6 +18,7 @@ import net.mineskyitems.utils.InteractionType;
 import net.mineskyitems.utils.Utils;
 import net.mineskyitems.utils.cooldown.CooldownManager;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -35,6 +38,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class Item {
@@ -147,23 +151,48 @@ public class Item {
         player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1, 1.2f);
     }
 
-    public void damageItem(Player player, ItemStack itemStack, int amount, Cancellable event) {
+    public void removeHealthIfBroken(final Player player, final ItemStack itemStack) {
+        ItemMeta im = itemStack.getItemMeta();
+
+        if(isItemBroken(itemStack)) {
+            im.removeAttributeModifier(Attribute.MAX_HEALTH);
+            /*for(Attribute attribute : im.getAttributeModifiers().keySet()) {
+                if(attribute == Attribute.MAX_HEALTH) {
+                    im.removeAttributeModifier(attribute);
+                }
+            }*/
+
+            itemStack.setItemMeta(im);
+        } else if(im.getAttributeModifiers(Attribute.MAX_HEALTH) == null) {
+            //Bukkit.broadcastMessage("botano coiso");
+            getItemAttributes().translateAndUpdate(itemStack);
+        }
+    }
+
+    public void damageItem(Player player, ItemStack itemStack, int amount, @Nullable Cancellable event) {
         int result = (getDurability(itemStack) - amount);
 
         if(result < 0) {
-            if(event != null)
-                event.setCancelled(true);
+            if(event != null) event.setCancelled(true);
+
             noDurability(player, itemStack);
+
             return;
         } else if(result <= 30) {
             player.sendMessage("§cSeu item "+getMetadata().displayName+" está quase quebrado! Ele possui mais "+result+" usos.");
         }
 
+        if(result == 0) {
+            if(getCategory().isDisappearWhenBroken()) {
+                player.getInventory().removeItem(itemStack);
+                return;
+            }
+        }
+
         ItemMeta im = itemStack.getItemMeta();
         im.getPersistentDataContainer().set(ITEM_DURABILITY, PersistentDataType.INTEGER, result);
-        itemStack.setItemMeta(im);
-
         im.lore(getCategory().getTooltip().getFormattedLore(this, itemStack));
+
         itemStack.setItemMeta(im);
     }
 
@@ -198,7 +227,8 @@ public class Item {
 
     private final double FIXED_VELOCITY_MULTIPLIER = 2.8;
 
-    public void onInteraction(Player player, ItemStack itemStack, InteractionType interactionType, Cancellable event, @Nullable EquipmentSlot hand) {
+    public void onInteraction(Player player, ItemStack itemStack, InteractionType interactionType,
+                              Cancellable event, @Nullable EquipmentSlot hand) {
         if(MineSkyItems.MMOCORE_HOOK) {
             PlayerData playerData = MineSkyItems.mmocoreAPI.getPlayerData(player);
             if (!player.hasPermission("mineskyitems.bypass.class-requirement") &&
@@ -236,8 +266,10 @@ public class Item {
                 damage = (damage*0.25) * (level+1);
             }
 
-            player.setCooldown(itemStack.getType(), (int)(20/cooldownInSeconds));
-            CooldownManager.createItemCooldown(player, this, (float) (20/cooldownInSeconds));
+            if(cooldownInSeconds != 0.0) {
+                player.setCooldown(itemStack, (int)(20/cooldownInSeconds));
+                CooldownManager.createItemCooldown(player, this, (float) (20/cooldownInSeconds));
+            }
 
             if(!itemStack.containsEnchantment(Enchantment.INFINITY)
                     && player.getGameMode() != GameMode.CREATIVE)
@@ -311,14 +343,22 @@ public class Item {
                     }
 
                     // Key feedback
-                    player.playSound(player, Sound.UI_BUTTON_CLICK, 0.5f, 1.2f);
+                    player.playSound(player, Sound.UI_BUTTON_CLICK, 0.3f, 1.2f);
                     event.setCancelled(true);
 
                     if (CooldownManager.inCooldown(player, skill)) {
-                        player.sendMessage("§cEssa magia está em cooldown, aguarde mais "+CooldownManager.getRemainingCooldown(player, skill)+" segundo(s)!");
+                        final String message =
+                                "Habilidade em recarga, aguarde mais "+CooldownManager.getRemainingCooldown(player, skill)+" segundo(s)!";
+                        if(MineSkyItems.MMOCORE_HOOK) {
+                            MineSkyItems.mmocoreAPI.getPlayerData(player).displayActionBar("§c"+message);
+                        } else {
+                            player.sendActionBar(Component.text(message).color(NamedTextColor.RED));
+                        }
                         return;
                     }
                     CooldownManager.createCooldown(player, skill, skill.getCooldown());
+
+                    damageItem(player, itemStack, 1, null);
 
                     List<Entity> targets = new ArrayList();
                     Entity casterEntity = player;
@@ -371,6 +411,10 @@ public class Item {
             itemStack = getItemAttributes().translateAndUpdate(new ItemStack(metadata.material()));
 
         ItemMeta im = itemStack.getItemMeta();
+
+        if(getCategory().isDoNotStack())
+            im.getPersistentDataContainer().set(NamespacedKey.minecraft("unique"),
+                    PersistentDataType.STRING, UUID.randomUUID().toString());
 
         im.setUnbreakable(true);
         im.addItemFlags(ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);

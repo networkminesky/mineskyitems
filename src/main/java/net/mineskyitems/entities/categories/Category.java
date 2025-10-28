@@ -32,6 +32,8 @@ public class Category {
     private final ItemCurve curve;
 
     private final boolean noAttributes;
+    private final boolean doNotStack;
+    private final boolean disappearWhenBroken;
 
     private final Tooltip tooltip;
 
@@ -52,6 +54,8 @@ public class Category {
         this.defaultItem = Material.getMaterial(categoriesSection.getString("default-item", "STONE"));
 
         this.noAttributes = categoriesSection.getBoolean("no-attributes", false);
+        this.doNotStack = categoriesSection.getBoolean("do-not-stack", false);
+        this.disappearWhenBroken = categoriesSection.getBoolean("disappear-when-broken", false);
     }
 
     public ItemCurve getCurve() {
@@ -62,8 +66,16 @@ public class Category {
         return type;
     }
 
+    public boolean isDoNotStack() {
+        return doNotStack;
+    }
+
     public boolean isNoAttributes() {
         return noAttributes;
+    }
+
+    public boolean isDisappearWhenBroken() {
+        return disappearWhenBroken;
     }
 
     public Tooltip getTooltip() {
