@@ -1,4 +1,4 @@
-package net.mineskyitems.gui;
+package net.mineskyitems.gui.editor;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;

@@ -1,4 +1,4 @@
-package net.mineskyitems.gui;
+package net.mineskyitems.gui.editor;
 
 import net.mineskyitems.entities.ItemBuilder;
 import net.mineskyitems.entities.item.ItemSkill;

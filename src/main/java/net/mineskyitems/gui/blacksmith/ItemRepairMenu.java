@@ -174,6 +174,13 @@ public class ItemRepairMenu implements Listener {
             AnvilInventory inv = (AnvilInventory)e.getInventory();
             if(Utils.isMineSkyItem(inv.getFirstItem())
                     && (inv.getSecondItem() != null || (e.getCurrentItem() != null && slot == 1))) {
+                if(inv.getSecondItem() != null
+                && inv.getSecondItem().getType() == Material.ENCHANTED_BOOK)
+                    return;
+                if(e.getCurrentItem() != null
+                        && e.getCurrentItem().getType() == Material.ENCHANTED_BOOK)
+                    return;
+
                 p.closeInventory();
                 p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
                 p.sendMessage(Utils.c("&cTentando reparar seu item? Para reparar, você deve utilizar um forjador ou um ferreiro, você pode os encontrar logo na entrada de Edragon (spawn)."));

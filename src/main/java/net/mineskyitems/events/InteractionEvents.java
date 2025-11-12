@@ -1,6 +1,8 @@
 package net.mineskyitems.events;
 
+import io.papermc.paper.event.entity.EntityEquipmentChangedEvent;
 import io.papermc.paper.event.player.PlayerItemFrameChangeEvent;
+import net.Indyuce.mmocore.api.player.PlayerData;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemHandler;
 import net.mineskyitems.utils.InteractionType;
@@ -82,10 +84,23 @@ public class InteractionEvents implements Listener {
             return;
         if(!(e.getDamager() instanceof Player damager))
             return;
+        if(e.isCancelled())
+            return;
+
+        final int playerLevel = PlayerData.get(damager).getLevel();
 
         ItemStack stack = damager.getInventory().getItemInMainHand();
         Item item = ItemHandler.getItemFromStack(stack);
-        if(item != null) {
+
+        if(item == null)
+            return;
+
+        if(item.getRequiredLevel() > playerLevel) {
+            e.setCancelled(true);
+            return;
+        }
+
+        if(item.getCategory().getType().equalsIgnoreCase("melee")) {
             item.onItemUse(damager, stack, e);
         }
     }

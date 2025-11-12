@@ -6,7 +6,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.events.DummyEvent;
-import net.mineskyitems.gui.ItemBuilderMenu;
+import net.mineskyitems.gui.editor.ItemBuilderMenu;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.ItemBuilder;
 import net.mineskyitems.entities.item.ItemHandler;
@@ -14,6 +14,8 @@ import net.mineskyitems.entities.categories.Category;
 import net.mineskyitems.entities.categories.CategoryHandler;
 import net.mineskyitems.gui.blacksmith.ItemRecyclerMenu;
 import net.mineskyitems.gui.blacksmith.ItemRepairMenu;
+import net.mineskyitems.gui.rotatingshop.RotatingItemsGUI;
+import net.mineskyitems.gui.rotatingshop.armors.RotatingArmorsGUI;
 import net.mineskyitems.scripts.ArmorStandScript;
 import net.mineskyitems.scripts.ItemFrameGenerator;
 import net.mineskyitems.utils.Utils;
@@ -31,7 +33,7 @@ import java.util.*;
 public class ItemCommand implements TabExecutor {
 
     public static final List<String> subCommands = Arrays.asList("criar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
-    public static final List<String> menu_subCommands = Arrays.asList("reparar", "destruir");
+    public static final List<String> menu_subCommands = Arrays.asList("reparar", "destruir", "shop");
     public static final List<String> scripts = Arrays.asList("empty", "category", "single", "armor");
 
     void commandList(CommandSender s) {
@@ -105,6 +107,29 @@ public class ItemCommand implements TabExecutor {
         if(!(s instanceof Player p)) {
             s.sendMessage("§cApenas jogadores in-game podem utilizar esse comando.");
             return true;
+        }
+
+        if(args[0].equalsIgnoreCase("classe")) {
+            final Map<String, List<Item>> classes = new HashMap<>();
+
+            ItemHandler.getAllItems()
+                    .forEach(item -> {
+                        for(String classe : item.getRequiredClasses()) {
+                            List<Item> ps = classes.getOrDefault(classe, new ArrayList<>());
+                            ps.add(item);
+                            classes.put(classe, ps);
+                        }
+                    });
+
+            for(String classe : classes.keySet()) {
+                s.sendMessage(classe+" -> "+classes.get(classe).stream().map(Item::getId).toList());
+            }
+
+            s.sendMessage("----------- TOTAL: -----------");
+
+            for(String classe : classes.keySet()) {
+                s.sendMessage(classe+": "+classes.get(classe).size());
+            }
         }
 
         if(args[0].equalsIgnoreCase("achar")) {
@@ -193,14 +218,29 @@ public class ItemCommand implements TabExecutor {
             }
 
             if(args[0].equalsIgnoreCase("menu")) {
+                if(prompt.equalsIgnoreCase("shop")) {
+                    if(args.length == 2) {
+                        s.sendMessage("Insira uma das classes: "+ RotatingItemsGUI.inventoryMap.keySet());
+                        return true;
+                    }
+
+                    RotatingItemsGUI.openShop(p, args[2]);
+                    return true;
+                }
+                if(prompt.equalsIgnoreCase("armors")) {
+                    if(args.length == 2) {
+                        s.sendMessage("Insira uma das classes: "+ RotatingItemsGUI.inventoryMap.keySet());
+                        return true;
+                    }
+
+                    RotatingArmorsGUI.openShop(p, args[2]);
+                    return true;
+                }
+
                 if(prompt.equalsIgnoreCase("destruir")) {
-
                     ItemRecyclerMenu.openMainMenu(p);
-
                 } else {
-
                     ItemRepairMenu.openMainMenu(p);
-
                 }
 
                 return true;

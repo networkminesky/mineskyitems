@@ -2,17 +2,23 @@ espadas:
   name: Espadas
   default-item: IRON_SWORD
   tooltip: default
+  curve: "espadas.yml"
+  type: "MELEE"
   on-use:
     sound: "minesky.effects.sword_swing"
 
 machados:
   name: Machados
   default-item: IRON_AXE
+  type: "MELEE"
   tooltip: default
+  curve: "machados.yml"
 
 martelos:
   name: Martelos
   default-item: IRON_AXE
+  curve: "martelos.yml"
+  type: "MELEE"
   tooltip: default
   on-use:
     sound: "block.anvil.land"
@@ -21,6 +27,7 @@ arcos:
   name: Arcos
   default-item: PAPER
   type: "RANGED"
+  curve: "arcos.yml"
   tooltip: default
   on-use:
     sound: "entity.arrow.shoot"
@@ -29,19 +36,25 @@ bestas:
   name: Bestas
   default-item: PAPER
   type: "RANGED"
+  curve: "bestas.yml"
   tooltip: default
   on-use:
     sound: "item.crossbow.shoot"
+    pitch: 0.7
 
 luvas:
   name: Luvas
   default-item: PAPER
+  type: "MELEE"
   tooltip: default
+  curve: "luvas.yml"
 
 katanas:
   name: Katanas
   default-item: IRON_SWORD
   tooltip: default
+  type: "MELEE"
+  curve: "katanas.yml"
   on-use:
     sound: "minesky.effects.sword_swing"
 
@@ -49,11 +62,18 @@ lancas:
   name: Lanças
   default-item: IRON_SWORD
   tooltip: default
+  type: "MELEE"
+  curve: "lancas.yml"
+  on-use:
+    sound: "minesky.effects.sword_swing"
+    pitch: 0.5
 
 foices:
   name: Foices
   default-item: IRON_SWORD
   tooltip: default
+  type: "MELEE"
+  curve: "foices.yml"
   on-use:
     sound: "minesky.effects.sword_swing"
     pitch: 0.7
@@ -62,11 +82,26 @@ cajados:
   name: Cajados
   default-item: IRON_SWORD
   tooltip: default
+  curve: "cajados.yml"
+  on-use:
+    sound: "block.respawn_anchor.deplete"
+    pitch: 1.7
+
+varinhas:
+  name: Varinhas
+  default-item: IRON_SWORD
+  tooltip: default
+  curve: "varinhas.yml"
+  on-use:
+    sound: "block.respawn_anchor.deplete"
+    pitch: 2
 
 adagas:
   name: Adagas
   default-item: IRON_SWORD
   tooltip: default
+  type: "MELEE"
+  curve: "adagas.yml"
   on-use:
     sound: "minesky.effects.sword_swing"
     pitch: 2
@@ -79,3 +114,52 @@ dusts:
   on-use:
     sound: "item.brush.brushing.generic"
     pitch: 1.8
+
+misc:
+  name: Itens
+  default-item: PAPER
+  tooltip: misc
+  no-attributes: true
+  on-use:
+    sound: "item.dye.use"
+    pitch: 1
+
+capacetes:
+  name: "Capacetes"
+  default-item: IRON_HELMET
+  curve: "armors.yml"
+  tooltip: "armors"
+  type: "ARMOR"
+
+peitorais:
+  name: "Peitorais"
+  default-item: IRON_CHESTPLATE
+  curve: "armors.yml"
+  tooltip: "armors"
+  type: "ARMOR"
+
+pocoes:
+  name: "Poções"
+  default-item: PAPER
+  no-attributes: true
+  disappear-when-broken: true
+  do-not-stack: true
+  curve: "pocoes.yml"
+  tooltip: "armors"
+  on-use:
+    sound: "item.honey_bottle.drink"
+    pitch: 1
+
+calcas:
+  name: "Calças"
+  default-item: IRON_LEGGINGS
+  curve: "armors.yml"
+  tooltip: "armors"
+  type: "ARMOR"
+
+botas:
+  name: "Botas"
+  default-item: IRON_BOOTS
+  curve: "armors.yml"
+  tooltip: "armors"
+  type: "ARMOR"

@@ -179,7 +179,8 @@ public class Item {
 
             return;
         } else if(result <= 30) {
-            player.sendMessage("§cSeu item "+getMetadata().displayName+" está quase quebrado! Ele possui mais "+result+" usos.");
+            if(getCategory().shouldShowAlmostBroken())
+                player.sendMessage("§cSeu item "+getMetadata().displayName+" está quase quebrado! Ele possui mais "+result+" usos.");
         }
 
         if(result == 0) {
@@ -191,6 +192,8 @@ public class Item {
 
         ItemMeta im = itemStack.getItemMeta();
         im.getPersistentDataContainer().set(ITEM_DURABILITY, PersistentDataType.INTEGER, result);
+        itemStack.setItemMeta(im);
+
         im.lore(getCategory().getTooltip().getFormattedLore(this, itemStack));
 
         itemStack.setItemMeta(im);
@@ -233,12 +236,14 @@ public class Item {
             PlayerData playerData = MineSkyItems.mmocoreAPI.getPlayerData(player);
             if (!player.hasPermission("mineskyitems.bypass.class-requirement") &&
                     !hasClassRequirement(playerData.getProfess().getName())) {
+                //event.setCancelled(true);
                 player.sendMessage("§cSua classe não possui conhecimento de como usar esse item.");
                 return;
             }
 
             if (!player.hasPermission("mineskyitems.bypass.level-requirement") &&
                     !hasLevelRequirement(playerData.getLevel())) {
+                //event.setCancelled(true);
                 player.sendMessage("§cVocê ainda não possui o nível apropriado para usar esse item.");
                 return;
             }
@@ -411,6 +416,11 @@ public class Item {
             itemStack = getItemAttributes().translateAndUpdate(new ItemStack(metadata.material()));
 
         ItemMeta im = itemStack.getItemMeta();
+
+        im.getPersistentDataContainer().set(ItemHandler.LEVEL_NAMESPACE, PersistentDataType.INTEGER,
+                this.levelRequirement);
+        im.getPersistentDataContainer().set(ItemHandler.CLASS_NAMESPACE, PersistentDataType.LIST.strings(),
+                this.requiredClasses);
 
         if(getCategory().isDoNotStack())
             im.getPersistentDataContainer().set(NamespacedKey.minecraft("unique"),

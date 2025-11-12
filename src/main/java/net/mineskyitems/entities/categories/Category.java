@@ -34,6 +34,7 @@ public class Category {
     private final boolean noAttributes;
     private final boolean doNotStack;
     private final boolean disappearWhenBroken;
+    private final boolean showAlmostBroken;
 
     private final Tooltip tooltip;
 
@@ -56,6 +57,11 @@ public class Category {
         this.noAttributes = categoriesSection.getBoolean("no-attributes", false);
         this.doNotStack = categoriesSection.getBoolean("do-not-stack", false);
         this.disappearWhenBroken = categoriesSection.getBoolean("disappear-when-broken", false);
+        this.showAlmostBroken = categoriesSection.getBoolean("show-almost-broken", true);
+    }
+
+    public boolean shouldShowAlmostBroken() {
+        return showAlmostBroken;
     }
 
     public ItemCurve getCurve() {

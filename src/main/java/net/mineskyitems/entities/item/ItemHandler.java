@@ -4,7 +4,9 @@ import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.categories.Category;
 import net.mineskyitems.entities.categories.CategoryHandler;
 import org.bukkit.ChatColor;
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
@@ -14,7 +16,33 @@ import java.util.stream.Collectors;
 
 public class ItemHandler {
 
-    private static List<Item> getAllItems() {
+    public static NamespacedKey LEVEL_NAMESPACE = NamespacedKey.fromString("item_level");
+    public static NamespacedKey CLASS_NAMESPACE = NamespacedKey.fromString("classes");
+
+    public static int getStaticRequiredLevel(final ItemStack itemStack) {
+        if(itemStack == null) return 0;
+        if(!itemStack.hasItemMeta()) return 0;
+
+        final ItemMeta itemMeta = itemStack.getItemMeta();
+        if(!itemMeta.getPersistentDataContainer().has(MineSkyItems.NAMESPACED_KEY))
+            return 0;
+
+        return itemMeta.getPersistentDataContainer().getOrDefault(LEVEL_NAMESPACE, PersistentDataType.INTEGER, 0);
+    }
+
+    public static List<String> getStaticClasses(final ItemStack itemStack) {
+        if(itemStack == null) return List.of();
+        if(!itemStack.hasItemMeta()) return List.of();
+
+        final ItemMeta itemMeta = itemStack.getItemMeta();
+        if(!itemMeta.getPersistentDataContainer().has(MineSkyItems.NAMESPACED_KEY))
+            return List.of();
+
+        return itemMeta.getPersistentDataContainer().getOrDefault(CLASS_NAMESPACE,
+                PersistentDataType.LIST.strings(), getItemFromStack(itemStack).getRequiredClasses());
+    }
+
+    public static List<Item> getAllItems() {
         return CategoryHandler.categories.stream()
                 .flatMap(category -> category.getAllItems().stream())
                 .collect(Collectors.toList());
