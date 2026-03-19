@@ -5,6 +5,7 @@ Another Minecraft custom item plugin for RPG servers - Originally designed for m
 - Custom and intuitive menus for creating and editing items in-game
 - Support for multiple triggers and integration with MythicMobs skills
 - Custom Model Data support — you can use your own resource pack models
+- Rotating shop system to sell random items by category
 - Automatic attribute scaling (e.g., damage, attack speed) based on item level using curve formulas
 - Support for multiple item lore for rich item descriptions
 - Rarity system with custom font support
