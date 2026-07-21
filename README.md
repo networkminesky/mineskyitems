@@ -10,7 +10,7 @@ Another Minecraft custom item plugin for RPG servers - Originally designed for m
 - Rarity system with custom font support
 
 ## Installing
-This plugin is compatible with any PaperMC (or fork) server running Minecraft 1.21.4 or newer.
+This plugin is compatible with any Folia (CanvasMC) server running Minecraft 26.1 or newer.
 
 You can download the latest version from the [Releases](https://github.com/networkminesky/mineskyitems/releases) tab of this repository.
 
