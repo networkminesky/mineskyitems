@@ -13,4 +13,5 @@ commands:
   item:
     description: Comando principal para o plugin de criação e edição de itens
     aliases:
+      - mineskyitems
       - msit
