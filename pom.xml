@@ -43,19 +43,20 @@
         </repository>
 
         <repository>
-            <id>phoenix</id>
-            <url>https://nexus.phoenixdevt.fr/repository/maven-public/</url>
-        </repository>
-
-        <repository>
             <id>nexus</id>
             <name>Lumine Releases</name>
             <url>https://mvn.lumine.io/repository/maven-public/</url>
         </repository>
+
+        <!-- MMOCore no longer used
+        <repository>
+            <id>phoenix</id>
+            <url>https://nexus.phoenixdevt.fr/repository/maven-public/</url>
+        </repository>-->
     </repositories>
 
     <dependencies>
-        <!-- Folia API -->
+<!-- Folia API -->
         <dependency>
             <groupId>dev.folia</groupId>
             <artifactId>folia-api</artifactId>
@@ -63,20 +64,20 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- MMOCore no longer used
         <dependency>
             <groupId>net.Indyuce</groupId>
             <artifactId>MMOCore-API</artifactId>
-            <version>1.12.1-SNAPSHOT</version>
+            <version>1.13.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>io.lumine</groupId>
             <artifactId>MythicLib-dist</artifactId>
             <version>1.7.1-SNAPSHOT</version>
             <scope>provided</scope>
             <optional>true</optional>
-        </dependency>
+        </dependency> -->
 
         <dependency>
             <groupId>net.milkbowl.vault</groupId>

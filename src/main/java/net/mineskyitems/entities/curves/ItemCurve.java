@@ -1,8 +1,7 @@
 package net.mineskyitems.entities.curves;
 
-import io.lumine.mythic.lib.version.Attributes;
-import net.mineskyitems.MineSkyItems;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
@@ -74,7 +73,8 @@ public class ItemCurve {
 
         this.configuration = YamlConfiguration.loadConfiguration(file);
 
-        for(Attribute attribute : Attributes.getAll()) {
+
+        for(Attribute attribute : Attribute.values()) {
             final String translatedDots = CurveHandler.translateDots(attribute.getKey().getKey());
             registerCurve(translatedDots);
         }

@@ -1,22 +1,16 @@
 package net.mineskyitems.events;
 
-import io.papermc.paper.event.entity.EntityEquipmentChangedEvent;
-import io.papermc.paper.event.player.PlayerItemFrameChangeEvent;
-import net.Indyuce.mmocore.api.player.PlayerData;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemHandler;
 import net.mineskyitems.utils.InteractionType;
 import net.mineskyitems.utils.Utils;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
@@ -87,7 +81,8 @@ public class InteractionEvents implements Listener {
         if(e.isCancelled())
             return;
 
-        final int playerLevel = PlayerData.get(damager).getLevel();
+        //final int playerLevel = PlayerData.get(damager).getLevel();
+        final int playerLevel = 1;
 
         ItemStack stack = damager.getInventory().getItemInMainHand();
         Item item = ItemHandler.getItemFromStack(stack);

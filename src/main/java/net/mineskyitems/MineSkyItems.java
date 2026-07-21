@@ -1,6 +1,5 @@
 package net.mineskyitems;
 
-import net.Indyuce.mmocore.api.MMOCoreAPI;
 import net.milkbowl.vault.economy.Economy;
 import net.mineskyitems.commands.ItemCommand;
 import net.mineskyitems.entities.ItemDustHandler;
@@ -33,7 +32,6 @@ public final class MineSkyItems extends JavaPlugin {
 
     public static NamespacedKey NAMESPACED_KEY = NamespacedKey.fromString("mineskyitems");
 
-    public static MMOCoreAPI mmocoreAPI;
     public static Economy economy = null;
 
     public static boolean MMOCORE_HOOK = false;
@@ -79,11 +77,6 @@ public final class MineSkyItems extends JavaPlugin {
         FrameUpdater.runnable();
 
         Runnables.equipmentChecker();
-
-        if(Bukkit.getPluginManager().getPlugin("MMOCore") != null) {
-            mmocoreAPI = new MMOCoreAPI(this);
-            MMOCORE_HOOK = true;
-        }
 
         RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp != null) {

@@ -1,14 +1,9 @@
 package net.mineskyitems.entities.item;
 
-import com.google.common.primitives.Floats;
 import io.lumine.mythic.bukkit.MythicBukkit;
 import io.lumine.mythic.core.utils.MythicUtil;
-import io.papermc.paper.datacomponent.DataComponentType;
-import net.Indyuce.mmocore.api.MMOCoreAPI;
-import net.Indyuce.mmocore.api.player.PlayerData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.categories.Category;
 import net.mineskyitems.entities.curves.CurveHandler;
@@ -233,6 +228,7 @@ public class Item {
     public void onInteraction(Player player, ItemStack itemStack, InteractionType interactionType,
                               Cancellable event, @Nullable EquipmentSlot hand) {
         if(MineSkyItems.MMOCORE_HOOK) {
+            /*
             PlayerData playerData = MineSkyItems.mmocoreAPI.getPlayerData(player);
             if (!player.hasPermission("mineskyitems.bypass.class-requirement") &&
                     !hasClassRequirement(playerData.getProfess().getName())) {
@@ -246,7 +242,7 @@ public class Item {
                 //event.setCancelled(true);
                 player.sendMessage("§cVocê ainda não possui o nível apropriado para usar esse item.");
                 return;
-            }
+            }*/
         }
 
         // Ranged system logic
@@ -354,11 +350,11 @@ public class Item {
                     if (CooldownManager.inCooldown(player, skill)) {
                         final String message =
                                 "Habilidade em recarga, aguarde mais "+CooldownManager.getRemainingCooldown(player, skill)+" segundo(s)!";
-                        if(MineSkyItems.MMOCORE_HOOK) {
-                            MineSkyItems.mmocoreAPI.getPlayerData(player).displayActionBar("§c"+message);
-                        } else {
+                        //if(MineSkyItems.MMOCORE_HOOK) {
+                        //    MineSkyItems.mmocoreAPI.getPlayerData(player).displayActionBar("§c"+message);
+                        //} else {
                             player.sendActionBar(Component.text(message).color(NamedTextColor.RED));
-                        }
+                        //}
                         return;
                     }
                     CooldownManager.createCooldown(player, skill, skill.getCooldown());

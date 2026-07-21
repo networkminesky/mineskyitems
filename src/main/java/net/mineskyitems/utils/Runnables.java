@@ -1,6 +1,5 @@
 package net.mineskyitems.utils;
 
-import net.Indyuce.mmocore.api.player.PlayerData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.mineskyitems.MineSkyItems;
@@ -18,7 +17,7 @@ import java.util.List;
 public class Runnables {
 
     public static void equipmentChecker() {
-        Bukkit.getGlobalRegionScheduler().runAtFixedRate(MineSkyItems.getInstance(), (task) -> {
+        /*Bukkit.getGlobalRegionScheduler().runAtFixedRate(MineSkyItems.getInstance(), (task) -> {
             for(Player player : Bukkit.getOnlinePlayers()) {
                 if(player.hasPermission("mineskyitems.bypassrequirements"))
                     continue;
@@ -36,12 +35,7 @@ public class Runnables {
                     checkArmorPiece(level, className, player, inventory.getBoots(), EquipmentSlot.FEET);
                 }, null);
             }
-        }, 20, 5);
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-            }
-        }.runTaskTimerAsynchronously(MineSkyItems.getInstance(), 20, 5);
+        }, 20, 5);*/
     }
 
     public static void checkArmorPiece(final int playerLevel, final String className, final Player player,

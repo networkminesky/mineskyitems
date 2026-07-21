@@ -5,9 +5,6 @@ api-version: 26.1
 
 folia-supported: true
 
-softdepend:
-  - MMOCore
-
 authors:
   - "zBrunoC (Bruno C.)"
   - "Drawn (Giovane D.)"
