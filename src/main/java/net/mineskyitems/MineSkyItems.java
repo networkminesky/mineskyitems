@@ -101,7 +101,7 @@ public final class MineSkyItems extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(new RotatingItemsGUI(), this);
 
-        Bukkit.getScheduler().runTaskLater(this, RotatingShop::initializeShop, 20);
+        Bukkit.getGlobalRegionScheduler().runDelayed(this, (_) -> RotatingShop.initializeShop(), 20);
 
         this.getCommand("item").setExecutor(new ItemCommand());
     }

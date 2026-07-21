@@ -25,7 +25,7 @@ public class CooldownManager {
         cooldowns.get(uuid).put(item, cooldownEnd);
 
         // Agendando a remoção automática do cooldown
-        Bukkit.getScheduler().runTaskLaterAsynchronously(MineSkyItems.getInstance(), () -> {
+        Bukkit.getGlobalRegionScheduler().runDelayed(MineSkyItems.getInstance(), (task) -> {
             Map<ItemSkill, Long> playerCooldowns = cooldowns.get(uuid);
             if (playerCooldowns != null) {
                 playerCooldowns.remove(item);
@@ -46,7 +46,7 @@ public class CooldownManager {
         itemCooldowns.get(uuid).put(item, cooldownEnd);
 
         // Agendando a remoção automática do cooldown
-        Bukkit.getScheduler().runTaskLaterAsynchronously(MineSkyItems.getInstance(), () -> {
+        Bukkit.getGlobalRegionScheduler().runDelayed(MineSkyItems.getInstance(), (task) -> {
             Map<Item, Long> playerCooldowns = itemCooldowns.get(uuid);
             if (playerCooldowns != null) {
                 playerCooldowns.remove(item);

@@ -130,8 +130,7 @@ public class Utils {
         Listener listener = new Listener() {
             @EventHandler(ignoreCancelled = false, priority = EventPriority.LOWEST)
             public void onChat(AsyncPlayerChatEvent e) {
-
-                Bukkit.getScheduler().runTask(MineSkyItems.getInstance(), () -> {
+                Bukkit.getGlobalRegionScheduler().run(MineSkyItems.getInstance(), (task) -> {
                     if(!e.getPlayer().equals(player))
                         return;
 

@@ -18,13 +18,12 @@ import java.util.List;
 public class Runnables {
 
     public static void equipmentChecker() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for(Player player : Bukkit.getOnlinePlayers()) {
-                    if(player.hasPermission("mineskyitems.bypassrequirements"))
-                        continue;
+        Bukkit.getGlobalRegionScheduler().runAtFixedRate(MineSkyItems.getInstance(), (task) -> {
+            for(Player player : Bukkit.getOnlinePlayers()) {
+                if(player.hasPermission("mineskyitems.bypassrequirements"))
+                    continue;
 
+                player.getScheduler().run(MineSkyItems.getInstance(), (playerTask) -> {
                     final PlayerInventory inventory = player.getInventory();
                     final PlayerData data = PlayerData.get(player);
 
@@ -35,7 +34,12 @@ public class Runnables {
                     checkArmorPiece(level, className, player, inventory.getChestplate(), EquipmentSlot.CHEST);
                     checkArmorPiece(level, className, player, inventory.getLeggings(), EquipmentSlot.LEGS);
                     checkArmorPiece(level, className, player, inventory.getBoots(), EquipmentSlot.FEET);
-                }
+                }, null);
+            }
+        }, 20, 5);
+        new BukkitRunnable() {
+            @Override
+            public void run() {
             }
         }.runTaskTimerAsynchronously(MineSkyItems.getInstance(), 20, 5);
     }
@@ -53,7 +57,7 @@ public class Runnables {
         final List<String> classes = ItemHandler.getStaticClasses(itemStack);
 
         if(level > playerLevel
-        || !classes.contains(className)) {
+        || (!classes.isEmpty() && !classes.contains(className))) {
             player.getInventory().setItem(slot, null);
 
             if(player.getInventory().firstEmpty() == -1) {

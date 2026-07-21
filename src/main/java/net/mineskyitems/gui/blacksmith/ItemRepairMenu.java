@@ -223,7 +223,7 @@ public class ItemRepairMenu implements Listener {
         } else
             e.setCancelled(true);
 
-        Bukkit.getScheduler().runTaskLater(MineSkyItems.getInstance(), a -> {
+        Bukkit.getGlobalRegionScheduler().runDelayed(MineSkyItems.getInstance(), a -> {
             setOutputItem(p, inventory);
         }, 2);
 

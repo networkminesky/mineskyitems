@@ -34,13 +34,12 @@ public class FrameUpdater {
     public static Map<UUID, String> lastItem = new ConcurrentHashMap<>();
 
     public static void runnable() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for(Player player : Bukkit.getOnlinePlayers()) {
-                    if(!(player.hasPermission("mineskyitems.itemeditor"))) continue;
-                    if(player.getGameMode() != GameMode.CREATIVE) continue;
+        Bukkit.getGlobalRegionScheduler().runAtFixedRate(MineSkyItems.getInstance(), (task) -> {
+            for(Player player : Bukkit.getOnlinePlayers()) {
+                if(!(player.hasPermission("mineskyitems.itemeditor"))) continue;
+                if(player.getGameMode() != GameMode.CREATIVE) continue;
 
+                player.getScheduler().run(MineSkyItems.getInstance(), (playerTask) -> {
                     final ItemStack mainHand = player.getInventory().getItemInMainHand();
 
                     // Pegou um item novo na mão
@@ -50,7 +49,7 @@ public class FrameUpdater {
 
                         if(result != null && result.getHitEntity() != null) {
                             if(result.getHitEntity().getType() == EntityType.ITEM_FRAME
-                                || result.getHitEntity().getType() == EntityType.GLOW_ITEM_FRAME) {
+                                    || result.getHitEntity().getType() == EntityType.GLOW_ITEM_FRAME) {
                                 ItemFrame frame = (ItemFrame) result.getHitEntity();
 
                                 final String frameItemId = Utils.getItemIdFromStack(frame.getItem());
@@ -74,9 +73,9 @@ public class FrameUpdater {
                     }
 
                     lastItem.put(player.getUniqueId(), mainHand.toString());
-                }
+                }, null);
             }
-        }.runTaskTimerAsynchronously(MineSkyItems.getInstance(), 60, 2);
+        }, 60, 5);
     }
 
 }

@@ -158,7 +158,7 @@ public class ItemRecyclerMenu implements Listener {
 
         }
 
-        Bukkit.getScheduler().runTaskLater(MineSkyItems.getInstance(), a -> {
+        Bukkit.getGlobalRegionScheduler().runDelayed(MineSkyItems.getInstance(), (task) -> {
             setOutputItems(inventory);
         }, 2);
 
