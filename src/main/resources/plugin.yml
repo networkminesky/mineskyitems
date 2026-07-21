@@ -1,7 +1,10 @@
 name: MineSkyItems
-version: '1.0.8-ALPHA'
+version: '1.0.0-BETA'
 main: net.mineskyitems.MineSkyItems
-api-version: '1.20'
+api-version: 26.1
+
+folia-supported: true
+
 softdepend:
   - MMOCore
 authors: [zBrunoC (Bruno C.), Drawn (Giovane D.)]
