@@ -7,7 +7,10 @@ folia-supported: true
 
 softdepend:
   - MMOCore
-authors: [zBrunoC (Bruno C.), Drawn (Giovane D.)]
+
+authors:
+  - "zBrunoC (Bruno C.)"
+  - "Drawn (Giovane D.)"
 
 commands:
   item:
