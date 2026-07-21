@@ -32,7 +32,7 @@ import java.util.*;
 
 public class ItemCommand implements TabExecutor {
 
-    public static final List<String> subCommands = Arrays.asList("criar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
+    public static final List<String> subCommands = Arrays.asList("criar", "contar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
     public static final List<String> menu_subCommands = Arrays.asList("reparar", "destruir", "shop");
     public static final List<String> scripts = Arrays.asList("empty", "category", "single", "armor");
 
@@ -288,6 +288,22 @@ public class ItemCommand implements TabExecutor {
 
                     default -> p.sendMessage("Script não encontrado, scripts existentes: "+scripts);
                 }
+
+                return true;
+            }
+
+            if (args[0].equalsIgnoreCase("contar")) {
+                p.sendMessage("Contando todos os itens...");
+
+                int n = 0;
+                for(Category category : CategoryHandler.categories) {
+                    int size = category.getAllItems().size();
+                    p.sendMessage(category.getName()+": "+size);
+
+                    n = n + size;
+                }
+
+                p.sendMessage("Total de itens custom registrados: "+n);
 
                 return true;
             }
