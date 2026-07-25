@@ -82,7 +82,6 @@ public class InteractionEvents implements Listener {
             return;
 
         //final int playerLevel = PlayerData.get(damager).getLevel();
-        final int playerLevel = 1;
 
         ItemStack stack = damager.getInventory().getItemInMainHand();
         Item item = ItemHandler.getItemFromStack(stack);
@@ -90,10 +89,6 @@ public class InteractionEvents implements Listener {
         if(item == null)
             return;
 
-        if(item.getRequiredLevel() > playerLevel) {
-            e.setCancelled(true);
-            return;
-        }
 
         if(item.getCategory().getType().equalsIgnoreCase("melee")) {
             item.onItemUse(damager, stack, e);

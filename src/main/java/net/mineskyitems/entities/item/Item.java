@@ -79,7 +79,7 @@ public class Item {
                 lore
         );
 
-        this.requiredClasses = itemSection.getStringList("required-class");
+        this.requiredClasses = List.of();
         this.levelRequirement = itemSection.getInt("required-level", 0);
 
         ConfigurationSection skillsSection = itemSection.getConfigurationSection("skills");
