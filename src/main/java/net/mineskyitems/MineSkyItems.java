@@ -14,6 +14,7 @@ import net.mineskyitems.gui.editor.ItemSkillsMenu;
 import net.mineskyitems.gui.blacksmith.ItemRecyclerMenu;
 import net.mineskyitems.gui.blacksmith.ItemRepairMenu;
 import net.mineskyitems.gui.rotatingshop.RotatingItemsGUI;
+import net.mineskyitems.gui.tinkering.TinkeringGUI;
 import net.mineskyitems.utils.FrameUpdater;
 import net.mineskyitems.utils.RotatingShop;
 import net.mineskyitems.utils.Runnables;
@@ -90,6 +91,7 @@ public final class MineSkyItems extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new ItemBuilderMenu(), this);
         Bukkit.getPluginManager().registerEvents(new ItemSkillsMenu(), this);
         Bukkit.getPluginManager().registerEvents(new ItemRecyclerMenu(), this);
+        Bukkit.getPluginManager().registerEvents(new TinkeringGUI(), this);
         Bukkit.getPluginManager().registerEvents(new ItemRepairMenu(), this);
 
         Bukkit.getPluginManager().registerEvents(new RotatingItemsGUI(), this);

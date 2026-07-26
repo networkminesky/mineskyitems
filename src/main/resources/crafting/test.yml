@@ -1,0 +1,17 @@
+keys:
+  A:
+    type: "MINESKYITEM"
+    id: "id"
+  I:
+    type: "MINESKYITEM"
+    id: "id"
+shape:
+  - "AAAAA"
+  - "AIIIA"
+  - "AIAIA"
+  - "AIIIA"
+  - "AAAAA"
+
+result:
+  type: "MINESKYITEM"
+  id: "id"

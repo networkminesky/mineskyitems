@@ -292,6 +292,10 @@ public class ItemCommand implements TabExecutor {
                 return true;
             }
 
+            if(args[0].equalsIgnoreCase("craft")) {
+                return true;
+            }
+
             if (args[0].equalsIgnoreCase("contar")) {
                 p.sendMessage("Contando todos os itens...");
 
