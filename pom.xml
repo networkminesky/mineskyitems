@@ -15,7 +15,7 @@
 
     <groupId>net.minesky</groupId>
     <artifactId>MineSkyItems</artifactId>
-    <version>1.0.0-BETA</version>
+    <version>1.0.2-BETA</version>
 
     <name>MineSkyItems</name>
     <description>Another Minecraft custom item plugin for RPG servers - Originally designed for minesky.com.br</description>
