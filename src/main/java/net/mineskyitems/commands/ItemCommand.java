@@ -16,6 +16,8 @@ import net.mineskyitems.gui.blacksmith.ItemRecyclerMenu;
 import net.mineskyitems.gui.blacksmith.ItemRepairMenu;
 import net.mineskyitems.gui.rotatingshop.RotatingItemsGUI;
 import net.mineskyitems.gui.rotatingshop.armors.RotatingArmorsGUI;
+import net.mineskyitems.gui.tinkering.TinkeringGUI;
+import net.mineskyitems.gui.tinkering.recipe.RecipeManager;
 import net.mineskyitems.scripts.ArmorStandScript;
 import net.mineskyitems.scripts.ItemFrameGenerator;
 import net.mineskyitems.utils.Utils;
@@ -33,7 +35,7 @@ import java.util.*;
 public class ItemCommand implements TabExecutor {
 
     public static final List<String> subCommands = Arrays.asList("criar", "contar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
-    public static final List<String> menu_subCommands = Arrays.asList("reparar", "destruir", "shop");
+    public static final List<String> menu_subCommands = Arrays.asList("reparar", "destruir", "shop", "tinkering");
     public static final List<String> scripts = Arrays.asList("empty", "category", "single", "armor");
 
     void commandList(CommandSender s) {
@@ -78,6 +80,9 @@ public class ItemCommand implements TabExecutor {
                 category.reloadFile();
                 category.reloadCategory();
             });
+
+            RecipeManager.registerAllFromFile();
+
             s.sendMessage("§aCategorias recarregadas! "+ItemHandler.getItemsNames().size()+" itens ativos.");
             return true;
         }
@@ -218,6 +223,11 @@ public class ItemCommand implements TabExecutor {
             }
 
             if(args[0].equalsIgnoreCase("menu")) {
+                if(prompt.equalsIgnoreCase("tinkering")) {
+                    TinkeringGUI.openGUI(p, null);
+                    return true;
+                }
+
                 if(prompt.equalsIgnoreCase("shop")) {
                     if(args.length == 2) {
                         s.sendMessage("Insira uma das classes: "+ RotatingItemsGUI.inventoryMap.keySet());

@@ -15,6 +15,7 @@ import net.mineskyitems.gui.blacksmith.ItemRecyclerMenu;
 import net.mineskyitems.gui.blacksmith.ItemRepairMenu;
 import net.mineskyitems.gui.rotatingshop.RotatingItemsGUI;
 import net.mineskyitems.gui.tinkering.TinkeringGUI;
+import net.mineskyitems.gui.tinkering.recipe.RecipeManager;
 import net.mineskyitems.utils.FrameUpdater;
 import net.mineskyitems.utils.RotatingShop;
 import net.mineskyitems.utils.Runnables;
@@ -97,6 +98,10 @@ public final class MineSkyItems extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new RotatingItemsGUI(), this);
 
         Bukkit.getGlobalRegionScheduler().runDelayed(this, (_) -> RotatingShop.initializeShop(), 20);
+
+        l.info("Carregando recipes 5x5...");
+        RecipeManager.registerAllFromFile();
+        l.info("Novos craftings registrados: "+RecipeManager.amount()+"!");
 
         this.getCommand("item").setExecutor(new ItemCommand());
     }

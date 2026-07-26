@@ -36,17 +36,17 @@ public class TinkeringGUI implements Listener {
             36, 37, 38, 39, 40
     );
 
-    // Slot destinado para o resultado do craft (Ex: Linha 3, Coluna 7)
     private static final int RESULT_SLOT = 25;
 
     public static void openGUI(Player player, Block origin) {
         Inventory inventory = Bukkit.createInventory(null, 54,
-                Component.text("VZ").font(Key.key("guis")));
+                "[{\"text\":\"VZ\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\"Inventando\",\"font\":\"default\",\"color\":\"black\"}]");
 
-        // Preenche espaços vazios com vidro cinza (opcional para ficar visualmente limpo)
-        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemStack filler = new ItemStack(Material.PAPER);
         ItemMeta meta = filler.getItemMeta();
         if (meta != null) {
+            meta.setHideTooltip(true);
+            meta.setCustomModelData(2);
             meta.displayName(Component.empty());
             filler.setItemMeta(meta);
         }
@@ -63,7 +63,26 @@ public class TinkeringGUI implements Listener {
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent e) {
-        inventories.remove(e.getInventory());
+        Inventory inventory = e.getInventory();
+        if (!inventories.contains(inventory)) {
+            return;
+        }
+
+        Player player = (Player) e.getPlayer();
+
+        for (int slot : INPUT_SLOTS) {
+            ItemStack item = inventory.getItem(slot);
+            if (item != null && !item.getType().isAir()) {
+                Map<Integer, ItemStack> leftovers = player.getInventory().addItem(item);
+                for (ItemStack leftover : leftovers.values()) {
+                    player.getWorld().dropItemNaturally(player.getLocation(), leftover);
+                }
+                inventory.setItem(slot, null);
+            }
+        }
+
+        inventory.setItem(RESULT_SLOT, null);
+        inventories.remove(inventory);
     }
 
     @EventHandler
@@ -71,9 +90,8 @@ public class TinkeringGUI implements Listener {
         if (!inventories.contains(e.getInventory()))
             return;
 
-        int slot = e.getSlot();
+        final int slot = e.getSlot();
 
-        // Evita ações de movimentação em slots de decoração/bloqueados
         if (e.getClickedInventory() == e.getView().getTopInventory()) {
             if (!INPUT_SLOTS.contains(slot) && slot != RESULT_SLOT) {
                 e.setCancelled(true);
@@ -81,7 +99,6 @@ public class TinkeringGUI implements Listener {
             }
         }
 
-        // Lógica de Shift-Click do inventário do player para a GUI
         if (e.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
             if (e.getClickedInventory() == e.getView().getBottomInventory()) {
                 e.setCancelled(true);
@@ -96,9 +113,8 @@ public class TinkeringGUI implements Listener {
             }
         }
 
-        // Eventos no slot de resultado (Crafting)
         if (slot == RESULT_SLOT && e.getClickedInventory() == e.getView().getTopInventory()) {
-            e.setCancelled(true); // Tratamos o evento manualmente por segurança
+            e.setCancelled(true);
             ItemStack result = e.getCurrentItem();
             if (result == null || result.getType().isAir()) {
                 return;
@@ -113,7 +129,6 @@ public class TinkeringGUI implements Listener {
             return;
         }
 
-        // Se clicou no grid de input, atualiza o resultado após a alteração terminar de processar
         scheduleUpdate(e.getInventory());
     }
 
@@ -131,8 +146,12 @@ public class TinkeringGUI implements Listener {
     }
 
     private void scheduleUpdate(Inventory inventory) {
-        // Agendamos para o próximo tick para que os itens já tenham sido posicionados no inventário
-        Bukkit.getScheduler().runTask(MineSkyItems.getInstance(), () -> updateCrafting(inventory));
+        if (inventory.getViewers().isEmpty()) return;
+
+        // Em servidores que utilizam Folia/Paper regionalizado,
+        // tarefas que manipulam inventários precisam rodar no Region Scheduler do jogador.
+        Player player = (Player) inventory.getViewers().getFirst();
+        player.getScheduler().run(MineSkyItems.getInstance(), (task) -> updateCrafting(inventory), null);
     }
 
     private void updateCrafting(Inventory inventory) {
@@ -148,7 +167,9 @@ public class TinkeringGUI implements Listener {
                 try {
                     Material mat = Material.valueOf(entry.getId());
                     itemStack = new ItemStack(mat);
-                } catch (Exception ex) {}
+                } catch (Exception ex) {
+                    ex.fillInStackTrace();
+                }
             } else {
                 Item item = ItemHandler.getItem(entry.getId());
                 if(item != null) {
@@ -198,11 +219,9 @@ public class TinkeringGUI implements Listener {
         ItemStack result = inventory.getItem(RESULT_SLOT);
         if (result == null || result.getType().isAir()) return;
 
-        // Loop para craftar o máximo de itens possíveis enquanto houver espaço e ingredientes
         while (result != null && !result.getType().isAir()) {
             HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(result.clone());
             if (!leftover.isEmpty()) {
-                // Inventário do player está cheio
                 break;
             }
             deductIngredients(inventory);
