@@ -1,0 +1,4 @@
+category-id:
+  itemid:
+    type:
+      - "crafting" # crafting (crafting table), loot (copper chest), upgrade (smithing), mob_drop (netherrack)

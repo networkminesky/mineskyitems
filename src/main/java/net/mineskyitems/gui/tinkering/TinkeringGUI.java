@@ -8,7 +8,9 @@ import net.mineskyitems.entities.item.ItemHandler;
 import net.mineskyitems.gui.tinkering.recipe.RecipeManager;
 import net.mineskyitems.gui.tinkering.recipe.TinkeringRecipe;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -20,11 +22,13 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.Plugin;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TinkeringGUI implements Listener {
+
+    public static final Map<UUID, Block> tinkeringBlocks = new HashMap<>();
 
     public static final Set<Inventory> inventories = Collections.synchronizedSet(new HashSet<>());
 
@@ -40,7 +44,7 @@ public class TinkeringGUI implements Listener {
 
     public static void openGUI(Player player, Block origin) {
         Inventory inventory = Bukkit.createInventory(null, 54,
-                "[{\"text\":\"VZ\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\"Inventando\",\"font\":\"default\",\"color\":\"black\"}]");
+                "[{\"text\":\"VZX\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\"Inventando\",\"font\":\"default\",\"color\":\"black\"}]");
 
         ItemStack filler = new ItemStack(Material.PAPER);
         ItemMeta meta = filler.getItemMeta();
@@ -59,6 +63,10 @@ public class TinkeringGUI implements Listener {
 
         inventories.add(inventory);
         player.openInventory(inventory);
+
+        if(origin != null) {
+            tinkeringBlocks.put(player.getUniqueId(), origin);
+        }
     }
 
     @EventHandler
@@ -67,6 +75,8 @@ public class TinkeringGUI implements Listener {
         if (!inventories.contains(inventory)) {
             return;
         }
+
+        tinkeringBlocks.remove(e.getPlayer().getUniqueId());
 
         Player player = (Player) e.getPlayer();
 
@@ -120,6 +130,19 @@ public class TinkeringGUI implements Listener {
                 return;
             }
 
+            if(tinkeringBlocks.containsKey(e.getWhoClicked().getUniqueId())) {
+                final Block block = tinkeringBlocks.get(e.getWhoClicked().getUniqueId());
+                final Location location = block.getLocation().clone().add(0,0.5,0);
+                AtomicInteger n = new AtomicInteger(0);
+                Bukkit.getRegionScheduler().runAtFixedRate(MineSkyItems.getInstance(), location, (task) -> {
+                    if(n.getAndIncrement() >= 10) {
+                        task.cancel();
+                        return;
+                    }
+                    block.getWorld().spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, location, 0, 0, 1, 0, 0.05);
+                }, 1, 5);
+            }
+
             Player player = (Player) e.getWhoClicked();
             if (e.isShiftClick()) {
                 craftShift(player, e.getInventory());
@@ -148,8 +171,6 @@ public class TinkeringGUI implements Listener {
     private void scheduleUpdate(Inventory inventory) {
         if (inventory.getViewers().isEmpty()) return;
 
-        // Em servidores que utilizam Folia/Paper regionalizado,
-        // tarefas que manipulam inventários precisam rodar no Region Scheduler do jogador.
         Player player = (Player) inventory.getViewers().getFirst();
         player.getScheduler().run(MineSkyItems.getInstance(), (task) -> updateCrafting(inventory), null);
     }

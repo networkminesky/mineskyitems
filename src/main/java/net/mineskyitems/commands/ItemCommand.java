@@ -21,22 +21,26 @@ import net.mineskyitems.gui.tinkering.recipe.RecipeManager;
 import net.mineskyitems.scripts.ArmorStandScript;
 import net.mineskyitems.scripts.ItemFrameGenerator;
 import net.mineskyitems.utils.Utils;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.command.*;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ItemCommand implements TabExecutor {
 
     public static final List<String> subCommands = Arrays.asList("criar", "contar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
     public static final List<String> menu_subCommands = Arrays.asList("reparar", "destruir", "shop", "tinkering");
-    public static final List<String> scripts = Arrays.asList("empty", "category", "single", "armor");
+    public static final List<String> scripts = Arrays.asList("empty", "category", "convert", "single", "armor");
 
     void commandList(CommandSender s) {
         s.sendMessage(Utils.PURPLE_COLOR+Utils.c("&lMineSkyItems v"+MineSkyItems.getInstance().getDescription().getVersion()));
@@ -114,29 +118,6 @@ public class ItemCommand implements TabExecutor {
             return true;
         }
 
-        if(args[0].equalsIgnoreCase("classe")) {
-            final Map<String, List<Item>> classes = new HashMap<>();
-
-            ItemHandler.getAllItems()
-                    .forEach(item -> {
-                        for(String classe : item.getRequiredClasses()) {
-                            List<Item> ps = classes.getOrDefault(classe, new ArrayList<>());
-                            ps.add(item);
-                            classes.put(classe, ps);
-                        }
-                    });
-
-            for(String classe : classes.keySet()) {
-                s.sendMessage(classe+" -> "+classes.get(classe).stream().map(Item::getId).toList());
-            }
-
-            s.sendMessage("----------- TOTAL: -----------");
-
-            for(String classe : classes.keySet()) {
-                s.sendMessage(classe+": "+classes.get(classe).size());
-            }
-        }
-
         if(args[0].equalsIgnoreCase("achar")) {
             if(!s.hasPermission("mineskyitems.command.achar")) {
                 s.sendMessage("§cVocê não tem permissão ou o comando não existe.");
@@ -208,8 +189,15 @@ public class ItemCommand implements TabExecutor {
 
                 category.getAllItems().stream().sorted(Comparator.comparingInt(Item::getRequiredLevel))
                         .forEach(item -> {
-                    p.getInventory().addItem(item.buildStack());
-                });
+                            if (p.getInventory().firstEmpty() != -1) {
+                                p.getInventory().addItem(item.buildStack());
+                            } else {
+                                p.getWorld().spawn(p.getLocation(), org.bukkit.entity.Item.class, it -> {
+                                    it.setPickupDelay(15);
+                                    it.setItemStack(item.buildStack());
+                                });
+                            }
+                        });
 
                 return true;
             }
@@ -284,6 +272,97 @@ public class ItemCommand implements TabExecutor {
                         }
 
                         ItemFrameGenerator.generateEmpty(p.getLocation(), Material.getMaterial(scriptArgs), startingFrom);
+                    }
+                    case "convert" -> {
+                        final Location origin = p.getLocation().getBlock().getLocation().add(0.5,0,0.5);
+
+                        File converting = new File(MineSkyItems.getInstance().getDataFolder(), "converting.yml");
+                        if(!converting.exists()) {
+                            try {
+                                converting.createNewFile();
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+
+                        YamlConfiguration config = YamlConfiguration.loadConfiguration(converting);
+
+                        AtomicInteger disableds = new AtomicInteger(0);
+                        AtomicInteger converted = new AtomicInteger(0);
+                        AtomicInteger alreadySet = new AtomicInteger(0);
+                        for(int row = 0; row < 30; row++) {
+                            for(int column = 0; column < 4; column++) {
+                                final Location now = origin.clone().add(column,0, -(row));
+
+                                final boolean isDisabled = now.getWorld().getType(now.clone().add(0,-1,0)) == Material.REDSTONE_BLOCK;
+                                if(!isDisabled) {
+
+                                    Bukkit.getRegionScheduler().run(MineSkyItems.getInstance(), now, (task) -> {
+                                        Entity entity = now.getNearbyEntities(0.25, 0.5, 0.25).iterator().next();
+
+                                        if (entity instanceof ItemFrame frame) {
+                                            final ItemStack stack = frame.getItem();
+                                            final Item item = ItemHandler.getItemFromStack(stack);
+
+                                            if (item != null) {
+                                                // good things here
+                                                final String id = item.getId();
+                                                final String categoryId = item.getCategory().getId();
+                                                final String path = categoryId + "." + id;
+
+                                                if(config.isSet(path)) {
+                                                    alreadySet.getAndIncrement();
+                                                    return;
+                                                }
+
+                                                final Material suggested = now.getWorld().getType(now.clone().add(0, 3, 0));
+                                                if (!suggested.isAir()) {
+                                                    config.set(path + ".suggested-material", suggested.name());
+                                                }
+
+                                                // types
+                                                List<String> types = new ArrayList<>();
+                                                for (int i = 0; i < 5; i++) {
+                                                    final String type = now.getWorld().getType(now.clone().add(0, (5 + i), 0)).name();
+
+                                                    if (type.contains("CHEST"))
+                                                        types.add("loot");
+
+                                                    if (type.contains("CRAFTING"))
+                                                        types.add("crafting");
+
+                                                    if (type.contains("SMITHING"))
+                                                        types.add("upgrade");
+
+                                                    if (type.contains("NETHERRACK"))
+                                                        types.add("mob_drops");
+                                                }
+
+                                                p.sendMessage("Registering " + categoryId + ": " + id + ", types: " + types);
+                                                converted.incrementAndGet();
+
+                                                config.set(path + ".type", types);
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    disableds.getAndIncrement();
+                                }
+                            }
+                        }
+
+                        p.sendMessage("Salvando arquivos...");
+                        Bukkit.getGlobalRegionScheduler().runDelayed(MineSkyItems.getInstance(), (task) -> {
+                            try {
+                                config.save(converting);
+                                p.sendMessage("Salvo.");
+                                p.sendMessage("Itens desativados: "+disableds.get());
+                                p.sendMessage("Itens duplicados (pulados): "+alreadySet.get());
+                                p.sendMessage("Itens convertidos: "+converted.get());
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }, 40);
                     }
                     case "single" -> {
                         int model = 0;

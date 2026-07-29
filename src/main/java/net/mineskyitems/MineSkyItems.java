@@ -7,6 +7,7 @@ import net.mineskyitems.entities.curves.CurveHandler;
 import net.mineskyitems.entities.rarities.RarityHandler;
 import net.mineskyitems.events.InteractionEvents;
 import net.mineskyitems.events.MiscEvents;
+import net.mineskyitems.events.OffhandAttackListener;
 import net.mineskyitems.gui.editor.ItemBuilderMenu;
 import net.mineskyitems.entities.categories.CategoryHandler;
 import net.mineskyitems.entities.tooltip.TooltipHandler;
@@ -84,6 +85,10 @@ public final class MineSkyItems extends JavaPlugin {
         if (rsp != null) {
             l.info("Economy do Vault linkado!");
             economy = rsp.getProvider();
+        }
+
+        if(config.getBoolean("offhand-attack", false)) {
+            Bukkit.getPluginManager().registerEvents(new OffhandAttackListener(), this);
         }
 
         Bukkit.getPluginManager().registerEvents(new InteractionEvents(), this);

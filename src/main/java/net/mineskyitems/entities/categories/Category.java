@@ -33,6 +33,7 @@ public class Category {
 
     private final boolean noAttributes;
     private final boolean doNotStack;
+    private final boolean oneHanded;
     private final boolean disappearWhenBroken;
     private final boolean showAlmostBroken;
 
@@ -54,6 +55,7 @@ public class Category {
         this.name = categoriesSection.getString("name", id.toLowerCase());
         this.defaultItem = Material.getMaterial(categoriesSection.getString("default-item", "STONE"));
 
+        this.oneHanded = categoriesSection.getBoolean("one-handed", false);
         this.noAttributes = categoriesSection.getBoolean("no-attributes", false);
         this.doNotStack = categoriesSection.getBoolean("do-not-stack", false);
         this.disappearWhenBroken = categoriesSection.getBoolean("disappear-when-broken", false);
@@ -66,6 +68,10 @@ public class Category {
 
     public ItemCurve getCurve() {
         return curve;
+    }
+
+    public boolean isOneHanded() {
+        return oneHanded;
     }
 
     public String getType() {

@@ -16,6 +16,7 @@ machados:
 
 martelos:
   name: Martelos
+  one-handed: true
   default-item: IRON_AXE
   curve: "martelos.yml"
   type: "MELEE"
@@ -80,6 +81,7 @@ foices:
 
 cajados:
   name: Cajados
+  one-handed: true
   default-item: IRON_SWORD
   tooltip: default
   curve: "cajados.yml"

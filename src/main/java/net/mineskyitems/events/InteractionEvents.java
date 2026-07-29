@@ -4,10 +4,13 @@ import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemHandler;
 import net.mineskyitems.utils.InteractionType;
 import net.mineskyitems.utils.Utils;
+import org.bukkit.Bukkit;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -88,7 +91,6 @@ public class InteractionEvents implements Listener {
 
         if(item == null)
             return;
-
 
         if(item.getCategory().getType().equalsIgnoreCase("melee")) {
             item.onItemUse(damager, stack, e);
