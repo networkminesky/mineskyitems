@@ -58,7 +58,7 @@ public class TinkeringSearchGUI implements Listener {
 
     public static class SearchState {
         String query;
-        SortingMode sortingMode = SortingMode.DEFAULT;
+        SortingMode sortingMode = SortingMode.MATERIALS;
         int categoryIndex = 0;
         int page = 0;
 
