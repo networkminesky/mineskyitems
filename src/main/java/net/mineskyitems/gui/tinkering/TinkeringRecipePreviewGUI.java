@@ -38,17 +38,33 @@ public class TinkeringRecipePreviewGUI implements Listener {
     private static final int FILL_SLOT = 49;
 
     public static class PreviewSession {
-        final TinkeringRecipe recipe;
+        final Deque<TinkeringRecipe> recipeHistory = new ArrayDeque<>();
         final TinkeringSearchGUI.SearchState previousSearchState;
 
-        public PreviewSession(TinkeringRecipe recipe, TinkeringSearchGUI.SearchState previousSearchState) {
-            this.recipe = recipe;
+        public PreviewSession(TinkeringRecipe initialRecipe, TinkeringSearchGUI.SearchState previousSearchState) {
+            this.recipeHistory.push(initialRecipe);
             this.previousSearchState = previousSearchState;
+        }
+
+        public TinkeringRecipe getCurrentRecipe() {
+            return recipeHistory.peek();
         }
     }
 
     public static void openGUI(Player player, TinkeringRecipe recipe, TinkeringSearchGUI.SearchState previousSearchState) {
-        activeSessions.put(player.getUniqueId(), new PreviewSession(recipe, previousSearchState));
+        PreviewSession session = activeSessions.get(player.getUniqueId());
+        if (session == null) {
+            session = new PreviewSession(recipe, previousSearchState);
+            activeSessions.put(player.getUniqueId(), session);
+        } else if (session.getCurrentRecipe() != recipe) {
+            session.recipeHistory.push(recipe);
+        }
+
+        openGUIInternal(player, session);
+    }
+
+    private static void openGUIInternal(Player player, PreviewSession session) {
+        TinkeringRecipe recipe = session.getCurrentRecipe();
 
         Inventory inventory = Bukkit.createInventory(null, 54,
                 "[{\"text\":\"VZX\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\"Pré-visualização\",\"font\":\"default\",\"color\":\"black\"}]");
@@ -68,7 +84,7 @@ public class TinkeringRecipePreviewGUI implements Listener {
             }
         }
 
-        // Preenche o Grid 5x5 com a receita
+        // Renderiza o Grid 5x5 do Crafting
         TinkeringManager.ItemEntry[][] grid = recipe.getCroppedRecipeGrid();
         int[] rows = {0, 9, 18, 27, 36};
 
@@ -77,19 +93,51 @@ public class TinkeringRecipePreviewGUI implements Listener {
                 TinkeringManager.ItemEntry entry = grid[r][c];
                 if (entry != null && !entry.isAir()) {
                     int slot = rows[r] + c;
-                    inventory.setItem(slot, TinkeringManager.buildItemStackFromEntry(entry));
+                    ItemStack stack = TinkeringManager.buildItemStackFromEntry(entry);
+                    if (stack != null) {
+                        // Verifica se este ingrediente tem uma receita própria (Estilo JEI)
+                        TinkeringRecipe subRecipe = TinkeringManager.getRecipeByResultItem(stack);
+                        if (subRecipe != null) {
+                            ItemMeta m = stack.getItemMeta();
+                            if (m != null) {
+                                List<Component> lore = m.hasLore() ? m.lore() : new ArrayList<>();
+                                if (lore == null) lore = new ArrayList<>();
+                                lore.add(Component.empty());
+                                lore.add(Component.text("§e🔍 Clique para ver a receita deste item"));
+                                m.lore(lore);
+                                stack.setItemMeta(m);
+                            }
+                        }
+                        inventory.setItem(slot, stack);
+                    }
                 }
             }
         }
 
         // Renderiza o item resultante
-        inventory.setItem(RESULT_SLOT, TinkeringManager.buildItemStackFromEntry(recipe.getResult()));
+        ItemStack resultStack = TinkeringManager.buildItemStackFromEntry(recipe.getResult());
+        if (resultStack != null) {
+            TinkeringRecipe subRecipe = TinkeringManager.getRecipeByResultItem(resultStack);
+            if (subRecipe != null && subRecipe != recipe) {
+                ItemMeta m = resultStack.getItemMeta();
+                if (m != null) {
+                    List<Component> lore = m.hasLore() ? m.lore() : new ArrayList<>();
+                    if (lore == null) lore = new ArrayList<>();
+                    lore.add(Component.empty());
+                    lore.add(Component.text("§e🔍 Clique para ver a receita deste item"));
+                    m.lore(lore);
+                    resultStack.setItemMeta(m);
+                }
+            }
+            inventory.setItem(RESULT_SLOT, resultStack);
+        }
 
-        // Botão Voltar para Pesquisa (Slot 48)
-        ItemStack backBtn = new ItemStack(Material.BARRIER);
+        // Botão Voltar (Slot 48)
+        ItemStack backBtn = new ItemStack(Material.PAPER);
         ItemMeta backMeta = backBtn.getItemMeta();
         if (backMeta != null) {
-            backMeta.displayName(Component.text("§c❌ Voltar para Pesquisa"));
+            backMeta.setCustomModelData(27);
+            backMeta.displayName(Component.text("§c❌ Voltar"));
             backBtn.setItemMeta(backMeta);
         }
         inventory.setItem(BACK_SLOT, backBtn);
@@ -125,23 +173,47 @@ public class TinkeringRecipePreviewGUI implements Listener {
 
         int slot = e.getSlot();
 
-        // Slot 48: Voltar para Pesquisa
+        // Slot 48: Voltar no Histórico ou Voltar para Pesquisa
         if (slot == BACK_SLOT) {
-            player.closeInventory();
-            TinkeringSearchGUI.openGUI(player, session.previousSearchState);
+            session.recipeHistory.pop(); // Remove a receita atual
+
+            if (!session.recipeHistory.isEmpty()) {
+                // Abre a receita anterior no histórico
+                openGUIInternal(player, session);
+            } else {
+                // Se o histórico esvaziou, volta para a tela de pesquisa
+                activeSessions.remove(player.getUniqueId());
+                player.closeInventory();
+                TinkeringSearchGUI.openGUI(player, session.previousSearchState);
+            }
             return;
         }
 
-        // Slot 49: Preencher Crafting na Mesa de Tinkering
+        // Slot 49: Preencher Crafting (Corrigido para não duplicar/resetar GUI)
         if (slot == FILL_SLOT) {
+            TinkeringRecipe currentRecipe = session.getCurrentRecipe();
+            activeSessions.remove(player.getUniqueId());
             player.closeInventory();
 
             Block origin = TinkeringGUI.tinkeringBlocks.get(player.getUniqueId());
             player.getScheduler().run(MineSkyItems.getInstance(), task -> {
                 TinkeringGUI.openGUI(player, origin);
                 Inventory topInv = player.getOpenInventory().getTopInventory();
-                autoFillRecipe(player, topInv, session.recipe);
+                autoFillRecipe(player, topInv, currentRecipe);
             }, null);
+            return;
+        }
+
+        // Clique em Itens no Grid 5x5 ou no Resultado (Navegação Recursiva JEI)
+        if (INPUT_SLOTS.contains(slot) || slot == RESULT_SLOT) {
+            ItemStack clickedItem = e.getCurrentItem();
+            if (clickedItem != null && !clickedItem.getType().isAir()) {
+                TinkeringRecipe subRecipe = TinkeringManager.getRecipeByResultItem(clickedItem);
+                if (subRecipe != null && subRecipe != session.getCurrentRecipe()) {
+                    session.recipeHistory.push(subRecipe);
+                    openGUIInternal(player, session);
+                }
+            }
         }
     }
 
@@ -186,10 +258,8 @@ public class TinkeringRecipePreviewGUI implements Listener {
             }
         }
 
-        // Dispara o agendador do TinkeringGUI para calcular o resultado
-        player.getScheduler().run(MineSkyItems.getInstance(), task -> {
-            TinkeringGUI.openGUI(player, TinkeringGUI.tinkeringBlocks.get(player.getUniqueId()));
-        }, null);
+        // Atualiza os cálculos de resultado na mesa de Tinkering aberta
+        TinkeringGUI.scheduleUpdate(tinkeringInv);
 
         if (filledCount == requiredCount) {
             player.sendMessage("§a✔ Crafting totalmente preenchido!");

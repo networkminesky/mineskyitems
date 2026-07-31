@@ -176,6 +176,29 @@ public class TinkeringManager {
         return true;
     }
 
+    // Busca se existe uma receita que resulte no ItemStack fornecido (Suporta JEI)
+    public static TinkeringRecipe getRecipeByResultItem(ItemStack stack) {
+        if (stack == null || stack.getType().isAir()) return null;
+
+        Item custom = ItemHandler.getItemFromStack(stack);
+
+        for (TinkeringRecipe recipe : recipes) {
+            ItemEntry result = recipe.getResult();
+            if (result == null || result.isAir()) continue;
+
+            if (custom != null) {
+                if (!result.isVanilla() && result.getId().equalsIgnoreCase(custom.getId())) {
+                    return recipe;
+                }
+            } else {
+                if (result.isVanilla() && result.getId().equalsIgnoreCase(stack.getType().name())) {
+                    return recipe;
+                }
+            }
+        }
+        return null;
+    }
+
     private static ItemStack[][] cropGrid(ItemStack[][] grid) {
         int minRow = 5, maxRow = -1;
         int minCol = 5, maxCol = -1;

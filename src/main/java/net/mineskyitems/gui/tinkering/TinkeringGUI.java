@@ -191,14 +191,15 @@ public class TinkeringGUI implements Listener {
         }
     }
 
-    private void scheduleUpdate(Inventory inventory) {
+    // Tornado público para permitir chamada pelo Auto-Fill
+    public static void scheduleUpdate(Inventory inventory) {
         if (inventory.getViewers().isEmpty()) return;
 
         Player player = (Player) inventory.getViewers().getFirst();
         player.getScheduler().run(MineSkyItems.getInstance(), (task) -> updateCrafting(inventory), null);
     }
 
-    private void updateCrafting(Inventory inventory) {
+    private static void updateCrafting(Inventory inventory) {
         ItemStack[][] grid = getGridMatrix(inventory);
         TinkeringRecipe matchedRecipe = TinkeringManager.getMatchingRecipe(grid);
 
@@ -209,7 +210,7 @@ public class TinkeringGUI implements Listener {
         }
     }
 
-    private ItemStack[][] getGridMatrix(Inventory inventory) {
+    private static ItemStack[][] getGridMatrix(Inventory inventory) {
         ItemStack[][] grid = new ItemStack[5][5];
         int[] rows = {0, 9, 18, 27, 36};
         for (int r = 0; r < 5; r++) {
