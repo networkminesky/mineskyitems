@@ -78,9 +78,9 @@ public class TinkeringSearchGUI implements Listener {
 
         String titleText = (state.query != null && !state.query.trim().isEmpty())
                 ?
-                "[{\"text\":\"VbX\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\"Pesquisar\",\"font\":\"default\",\"color\":\"black\"}]"
+                "[{\"text\":\"VbX\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\""+state.query+"\",\"font\":\"default\",\"color\":\"black\"}]"
                 :
-                "[{\"text\":\"VaX\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\""+state.query+"\",\"font\":\"default\",\"color\":\"black\"}]";
+                "[{\"text\":\"VaX\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\"\",\"font\":\"default\",\"color\":\"black\"}]";
         Inventory inventory = Bukkit.createInventory(null, 54, Component.text(titleText));
 
         renderTopBar(inventory, state);
