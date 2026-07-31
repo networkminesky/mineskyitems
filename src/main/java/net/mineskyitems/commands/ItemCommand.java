@@ -6,6 +6,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.events.DummyEvent;
+import net.mineskyitems.gui.crafting.CraftingCreatorGUI;
+import net.mineskyitems.gui.crafting.RecipeManager;
 import net.mineskyitems.gui.editor.ItemBuilderMenu;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.ItemBuilder;
@@ -16,13 +18,16 @@ import net.mineskyitems.gui.blacksmith.ItemRecyclerMenu;
 import net.mineskyitems.gui.blacksmith.ItemRepairMenu;
 import net.mineskyitems.gui.rotatingshop.RotatingItemsGUI;
 import net.mineskyitems.gui.rotatingshop.armors.RotatingArmorsGUI;
+import net.mineskyitems.gui.tinkering.TinkeringCreatorGUI;
 import net.mineskyitems.gui.tinkering.TinkeringGUI;
-import net.mineskyitems.gui.tinkering.recipe.RecipeManager;
+import net.mineskyitems.gui.tinkering.TinkeringQueueCreator;
+import net.mineskyitems.gui.tinkering.recipe.TinkeringManager;
 import net.mineskyitems.scripts.ArmorStandScript;
 import net.mineskyitems.scripts.ItemFrameGenerator;
 import net.mineskyitems.utils.Utils;
 import org.bukkit.*;
 import org.bukkit.command.*;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemFrame;
@@ -38,8 +43,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ItemCommand implements TabExecutor {
 
-    public static final List<String> subCommands = Arrays.asList("criar", "contar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
+    public static final List<String> subCommands = Arrays.asList("criar", "criar-tinkerer", "crafting", "tinkering", "contar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
     public static final List<String> menu_subCommands = Arrays.asList("reparar", "destruir", "shop", "tinkering");
+    public static final List<String> craftingtinkering_subCommands = Arrays.asList("create", "delete", "reload");
     public static final List<String> scripts = Arrays.asList("empty", "category", "convert", "single", "armor");
 
     void commandList(CommandSender s) {
@@ -78,6 +84,10 @@ public class ItemCommand implements TabExecutor {
             return true;
         }
 
+        if (args[0].equalsIgnoreCase("criar-tinkerer")) {
+            return TinkeringQueueCreator.processNextItem(s);
+        }
+
         if(args[0].equalsIgnoreCase("reload")) {
             s.sendMessage("§7Recarregando arquivos...");
             CategoryHandler.categories.forEach(category -> {
@@ -85,7 +95,7 @@ public class ItemCommand implements TabExecutor {
                 category.reloadCategory();
             });
 
-            RecipeManager.registerAllFromFile();
+            TinkeringManager.registerAllFromFile();
 
             s.sendMessage("§aCategorias recarregadas! "+ItemHandler.getItemsNames().size()+" itens ativos.");
             return true;
@@ -156,6 +166,66 @@ public class ItemCommand implements TabExecutor {
 
             if(!s.hasPermission("mineskyitems.command."+args[0])) {
                 s.sendMessage("§cVocê não tem permissão ou o comando não existe.");
+                return true;
+            }
+
+            if(args[0].equalsIgnoreCase("crafting")) {
+                if(prompt.equalsIgnoreCase("reload")) {
+                    RecipeManager.loadRecipes();
+                    s.sendMessage("§a✔ Receitas recarregadas!");
+                    return true;
+                }
+
+                if(args.length == 2) {
+                    s.sendMessage("§cInclua o ID do crafting.");
+                    return true;
+                }
+
+                final String id = args[2].toLowerCase();
+
+                if(prompt.equalsIgnoreCase("create")) {
+                    CraftingCreatorGUI gui = new CraftingCreatorGUI(id);
+                    p.openInventory(gui.getInventory());
+                    return true;
+                }
+
+                if (prompt.equalsIgnoreCase("delete")) {
+                    RecipeManager.deleteRecipe(id);
+                    s.sendMessage("§a✔ Receita '" + id + "' removida!");
+                    return true;
+                }
+
+                return true;
+            }
+
+            if (args[0].equalsIgnoreCase("tinkering")) {
+                if (prompt.equalsIgnoreCase("reload")) {
+                    TinkeringManager.registerAllFromFile();
+                    s.sendMessage("§a✔ Receitas do Tinkering recarregadas!");
+                    return true;
+                }
+
+                if (args.length < 3) {
+                    s.sendMessage("§cInclua o ID do crafting.");
+                    return true;
+                }
+
+                String id = args[2].toLowerCase();
+
+                if (prompt.equalsIgnoreCase("create")) {
+                    TinkeringCreatorGUI.openCreatorGUI(p, id);
+                    return true;
+                }
+
+                if (prompt.equalsIgnoreCase("delete")) {
+                    if (TinkeringManager.deleteRecipe(id)) {
+                        s.sendMessage("§a✔ Receita '" + id + "' removida com sucesso!");
+                    } else {
+                        s.sendMessage("§c✘ Receita '" + id + "' não encontrada!");
+                    }
+                    return true;
+                }
+
                 return true;
             }
 
@@ -422,6 +492,7 @@ public class ItemCommand implements TabExecutor {
             }
 
             if(args[0].equalsIgnoreCase("criar")) {
+
                 Category category = CategoryHandler.getCategory(prompt);
 
                 if(category == null) {
@@ -540,6 +611,16 @@ public class ItemCommand implements TabExecutor {
             reorganizeTabComplete(e, input, args2.length);
 
             return e;
+        }
+
+        int length = args.length;
+        if (args[0].equalsIgnoreCase("crafting") || args[0].equalsIgnoreCase("tinkering")) {
+            if (length == 2) {
+                return craftingtinkering_subCommands;
+            } else if (length == 3 && args[1].equalsIgnoreCase("delete")) {
+                return new ArrayList<>(RecipeManager.getRecipes().keySet());
+            }
+            return List.of("<id>");
         }
 
         if(args[0].equalsIgnoreCase("give")) {

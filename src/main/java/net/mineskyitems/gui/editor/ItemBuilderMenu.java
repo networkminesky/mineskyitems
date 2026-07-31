@@ -3,6 +3,7 @@ package net.mineskyitems.gui.editor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.ItemBuilder;
 import net.mineskyitems.entities.item.ItemHandler;
 import net.mineskyitems.utils.ChatInputCallback;
@@ -140,8 +141,10 @@ public class ItemBuilderMenu implements Listener {
 
         reorganizeItems(builder, inv);
 
-        player.closeInventory();
-        player.openInventory(inv);
+        player.getScheduler().run(MineSkyItems.getInstance(), (task) -> {
+            player.closeInventory();
+            player.openInventory(inv);
+        }, null);
     }
 
     @EventHandler

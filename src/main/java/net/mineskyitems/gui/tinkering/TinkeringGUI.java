@@ -1,11 +1,8 @@
 package net.mineskyitems.gui.tinkering;
 
-import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.mineskyitems.MineSkyItems;
-import net.mineskyitems.entities.item.Item;
-import net.mineskyitems.entities.item.ItemHandler;
-import net.mineskyitems.gui.tinkering.recipe.RecipeManager;
+import net.mineskyitems.gui.tinkering.recipe.TinkeringManager;
 import net.mineskyitems.gui.tinkering.recipe.TinkeringRecipe;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -29,7 +26,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class TinkeringGUI implements Listener {
 
     public static final Map<UUID, Block> tinkeringBlocks = new HashMap<>();
-
     public static final Set<Inventory> inventories = Collections.synchronizedSet(new HashSet<>());
 
     private static final Set<Integer> INPUT_SLOTS = Set.of(
@@ -41,11 +37,43 @@ public class TinkeringGUI implements Listener {
     );
 
     private static final int RESULT_SLOT = 25;
+    private static final int SEARCH_BUTTON_SLOT = 43; // Slot do botão de procurar
 
     public static void openGUI(Player player, Block origin) {
         Inventory inventory = Bukkit.createInventory(null, 54,
                 "[{\"text\":\"VZX\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\"Inventando\",\"font\":\"default\",\"color\":\"black\"}]");
 
+        ItemStack filler = getFillerItem();
+
+        for (int i = 0; i < 54; i++) {
+            if (!INPUT_SLOTS.contains(i) && i != RESULT_SLOT && i != SEARCH_BUTTON_SLOT) {
+                inventory.setItem(i, filler);
+            }
+        }
+
+        // Botão Único de Busca
+        ItemStack searchBtn = new ItemStack(Material.PAPER);
+        ItemMeta searchMeta = searchBtn.getItemMeta();
+        if (searchMeta != null) {
+            searchMeta.setCustomModelData(2);
+            searchMeta.displayName(Component.text("§e🔍 Buscar e Listar Receitas"));
+            List<Component> lore = new ArrayList<>();
+            lore.add(Component.text("§7Clique para procurar itens, ordenar por"));
+            lore.add(Component.text("§7level, categoria ou materiais do inventário."));
+            searchMeta.lore(lore);
+            searchBtn.setItemMeta(searchMeta);
+        }
+        inventory.setItem(SEARCH_BUTTON_SLOT, searchBtn);
+
+        inventories.add(inventory);
+        player.openInventory(inventory);
+
+        if (origin != null) {
+            tinkeringBlocks.put(player.getUniqueId(), origin);
+        }
+    }
+
+    private static ItemStack getFillerItem() {
         ItemStack filler = new ItemStack(Material.PAPER);
         ItemMeta meta = filler.getItemMeta();
         if (meta != null) {
@@ -54,19 +82,7 @@ public class TinkeringGUI implements Listener {
             meta.displayName(Component.empty());
             filler.setItemMeta(meta);
         }
-
-        for (int i = 0; i < 54; i++) {
-            if (!INPUT_SLOTS.contains(i) && i != RESULT_SLOT) {
-                inventory.setItem(i, filler);
-            }
-        }
-
-        inventories.add(inventory);
-        player.openInventory(inventory);
-
-        if(origin != null) {
-            tinkeringBlocks.put(player.getUniqueId(), origin);
-        }
+        return filler;
     }
 
     @EventHandler
@@ -103,6 +119,13 @@ public class TinkeringGUI implements Listener {
         final int slot = e.getSlot();
 
         if (e.getClickedInventory() == e.getView().getTopInventory()) {
+            if (slot == SEARCH_BUTTON_SLOT) {
+                e.setCancelled(true);
+                Player player = (Player) e.getWhoClicked();
+                TinkeringSearchGUI.openGUI(player, null);
+                return;
+            }
+
             if (!INPUT_SLOTS.contains(slot) && slot != RESULT_SLOT) {
                 e.setCancelled(true);
                 return;
@@ -130,12 +153,12 @@ public class TinkeringGUI implements Listener {
                 return;
             }
 
-            if(tinkeringBlocks.containsKey(e.getWhoClicked().getUniqueId())) {
+            if (tinkeringBlocks.containsKey(e.getWhoClicked().getUniqueId())) {
                 final Block block = tinkeringBlocks.get(e.getWhoClicked().getUniqueId());
-                final Location location = block.getLocation().clone().add(0,0.5,0);
+                final Location location = block.getLocation().clone().add(0, 0.5, 0);
                 AtomicInteger n = new AtomicInteger(0);
                 Bukkit.getRegionScheduler().runAtFixedRate(MineSkyItems.getInstance(), location, (task) -> {
-                    if(n.getAndIncrement() >= 10) {
+                    if (n.getAndIncrement() >= 10) {
                         task.cancel();
                         return;
                     }
@@ -177,28 +200,10 @@ public class TinkeringGUI implements Listener {
 
     private void updateCrafting(Inventory inventory) {
         ItemStack[][] grid = getGridMatrix(inventory);
-        TinkeringRecipe matchedRecipe = RecipeManager.getMatchingRecipe(grid);
+        TinkeringRecipe matchedRecipe = TinkeringManager.getMatchingRecipe(grid);
 
         if (matchedRecipe != null) {
-            final RecipeManager.ItemEntry entry = matchedRecipe.getResult();
-
-            ItemStack itemStack = null;
-
-            if(entry.isVanilla()) {
-                try {
-                    Material mat = Material.valueOf(entry.getId());
-                    itemStack = new ItemStack(mat);
-                } catch (Exception ex) {
-                    ex.fillInStackTrace();
-                }
-            } else {
-                Item item = ItemHandler.getItem(entry.getId());
-                if(item != null) {
-                    itemStack = item.buildStack();
-                }
-            }
-
-            inventory.setItem(RESULT_SLOT, itemStack);
+            inventory.setItem(RESULT_SLOT, TinkeringManager.buildItemStackFromEntry(matchedRecipe.getResult()));
         } else {
             inventory.setItem(RESULT_SLOT, null);
         }

@@ -2,3 +2,9 @@ category-id:
   itemid:
     type:
       - "crafting" # crafting (crafting table), loot (copper chest), upgrade (smithing), mob_drop (netherrack)
+espadas:
+  espada_angular_de_gelo:
+    done: false
+    suggested-material: BLUE_ICE
+    type:
+      - crafting

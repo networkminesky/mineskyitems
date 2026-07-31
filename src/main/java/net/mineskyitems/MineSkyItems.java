@@ -8,6 +8,8 @@ import net.mineskyitems.entities.rarities.RarityHandler;
 import net.mineskyitems.events.InteractionEvents;
 import net.mineskyitems.events.MiscEvents;
 import net.mineskyitems.events.OffhandAttackListener;
+import net.mineskyitems.gui.crafting.CraftingListener;
+import net.mineskyitems.gui.crafting.RecipeManager;
 import net.mineskyitems.gui.editor.ItemBuilderMenu;
 import net.mineskyitems.entities.categories.CategoryHandler;
 import net.mineskyitems.entities.tooltip.TooltipHandler;
@@ -15,8 +17,8 @@ import net.mineskyitems.gui.editor.ItemSkillsMenu;
 import net.mineskyitems.gui.blacksmith.ItemRecyclerMenu;
 import net.mineskyitems.gui.blacksmith.ItemRepairMenu;
 import net.mineskyitems.gui.rotatingshop.RotatingItemsGUI;
-import net.mineskyitems.gui.tinkering.TinkeringGUI;
-import net.mineskyitems.gui.tinkering.recipe.RecipeManager;
+import net.mineskyitems.gui.tinkering.*;
+import net.mineskyitems.gui.tinkering.recipe.TinkeringManager;
 import net.mineskyitems.utils.FrameUpdater;
 import net.mineskyitems.utils.RotatingShop;
 import net.mineskyitems.utils.Runnables;
@@ -94,19 +96,30 @@ public final class MineSkyItems extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new InteractionEvents(), this);
         Bukkit.getPluginManager().registerEvents(new MiscEvents(), this);
 
+        Bukkit.getPluginManager().registerEvents(new CraftingListener(), this);
+
+        Bukkit.getPluginManager().registerEvents(new TinkeringCreatorGUI(), this);
+        Bukkit.getPluginManager().registerEvents(new TinkeringSearchGUI(), this);
+        Bukkit.getPluginManager().registerEvents(new TinkeringRecipePreviewGUI(), this);
+        Bukkit.getPluginManager().registerEvents(new TinkeringGUI(), this);
+
+        getServer().getPluginManager().registerEvents(new TinkeringQueueCreator(), this);
+
         Bukkit.getPluginManager().registerEvents(new ItemBuilderMenu(), this);
         Bukkit.getPluginManager().registerEvents(new ItemSkillsMenu(), this);
         Bukkit.getPluginManager().registerEvents(new ItemRecyclerMenu(), this);
-        Bukkit.getPluginManager().registerEvents(new TinkeringGUI(), this);
         Bukkit.getPluginManager().registerEvents(new ItemRepairMenu(), this);
 
         Bukkit.getPluginManager().registerEvents(new RotatingItemsGUI(), this);
 
         Bukkit.getGlobalRegionScheduler().runDelayed(this, (_) -> RotatingShop.initializeShop(), 20);
 
+        l.info("Carregando recipes custom...");
+        RecipeManager.loadRecipes();
+
         l.info("Carregando recipes 5x5...");
-        RecipeManager.registerAllFromFile();
-        l.info("Novos craftings registrados: "+RecipeManager.amount()+"!");
+        TinkeringManager.registerAllFromFile();
+        l.info("Novos craftings registrados: "+ TinkeringManager.amount()+"!");
 
         this.getCommand("item").setExecutor(new ItemCommand());
     }
