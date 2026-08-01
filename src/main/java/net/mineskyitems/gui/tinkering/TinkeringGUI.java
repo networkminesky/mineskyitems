@@ -4,10 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.gui.tinkering.recipe.TinkeringManager;
 import net.mineskyitems.gui.tinkering.recipe.TinkeringRecipe;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Particle;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -37,7 +34,7 @@ public class TinkeringGUI implements Listener {
     );
 
     private static final int RESULT_SLOT = 25;
-    private static final int SEARCH_BUTTON_SLOT = 43; // Slot do botão de procurar
+    private static final Set<Integer> SEARCH_BUTTON_SLOTS = Set.of(51, 52, 53); // slots do botão de procurar
 
     public static void openGUI(Player player, Block origin) {
         Inventory inventory = Bukkit.createInventory(null, 54,
@@ -46,24 +43,26 @@ public class TinkeringGUI implements Listener {
         ItemStack filler = getFillerItem();
 
         for (int i = 0; i < 54; i++) {
-            if (!INPUT_SLOTS.contains(i) && i != RESULT_SLOT && i != SEARCH_BUTTON_SLOT) {
+            if (!INPUT_SLOTS.contains(i) && i != RESULT_SLOT && !SEARCH_BUTTON_SLOTS.contains(i)) {
                 inventory.setItem(i, filler);
             }
         }
 
-        // Botão Único de Busca
+        // botão de busca
         ItemStack searchBtn = new ItemStack(Material.PAPER);
         ItemMeta searchMeta = searchBtn.getItemMeta();
         if (searchMeta != null) {
             searchMeta.setCustomModelData(2);
-            searchMeta.displayName(Component.text("§e🔍 Buscar e Listar Receitas"));
+            searchMeta.displayName(Component.text("§a🔍 Buscar e Listar Receitas"));
             List<Component> lore = new ArrayList<>();
             lore.add(Component.text("§7Clique para procurar itens, ordenar por"));
             lore.add(Component.text("§7level, categoria ou materiais do inventário."));
             searchMeta.lore(lore);
             searchBtn.setItemMeta(searchMeta);
         }
-        inventory.setItem(SEARCH_BUTTON_SLOT, searchBtn);
+        for(int i : SEARCH_BUTTON_SLOTS) {
+            inventory.setItem(i, searchBtn);
+        }
 
         inventories.add(inventory);
         player.openInventory(inventory);
@@ -119,7 +118,7 @@ public class TinkeringGUI implements Listener {
         final int slot = e.getSlot();
 
         if (e.getClickedInventory() == e.getView().getTopInventory()) {
-            if (slot == SEARCH_BUTTON_SLOT) {
+            if (SEARCH_BUTTON_SLOTS.contains(slot)) {
                 e.setCancelled(true);
                 Player player = (Player) e.getWhoClicked();
                 TinkeringSearchGUI.openGUI(player, null);
@@ -155,18 +154,20 @@ public class TinkeringGUI implements Listener {
 
             if (tinkeringBlocks.containsKey(e.getWhoClicked().getUniqueId())) {
                 final Block block = tinkeringBlocks.get(e.getWhoClicked().getUniqueId());
-                final Location location = block.getLocation().clone().add(0, 0.5, 0);
+                final Location location = block.getLocation().clone().add(0.5, 0.75, 0.5);
                 AtomicInteger n = new AtomicInteger(0);
                 Bukkit.getRegionScheduler().runAtFixedRate(MineSkyItems.getInstance(), location, (task) -> {
                     if (n.getAndIncrement() >= 10) {
                         task.cancel();
                         return;
                     }
+                    block.getWorld().playSound(block.getLocation(), Sound.BLOCK_CAMPFIRE_CRACKLE, 2, 2);
                     block.getWorld().spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, location, 0, 0, 1, 0, 0.05);
                 }, 1, 5);
             }
 
             Player player = (Player) e.getWhoClicked();
+            player.playSound(player, Sound.ENTITY_VILLAGER_WORK_TOOLSMITH, 1, 0.8f);
             if (e.isShiftClick()) {
                 craftShift(player, e.getInventory());
             } else {
@@ -191,7 +192,6 @@ public class TinkeringGUI implements Listener {
         }
     }
 
-    // Tornado público para permitir chamada pelo Auto-Fill
     public static void scheduleUpdate(Inventory inventory) {
         if (inventory.getViewers().isEmpty()) return;
 

@@ -75,7 +75,7 @@ public class CraftingListener implements Listener {
             }
 
             if (slot == CraftingCreatorGUI.RESULT_SLOT) {
-                return; // Permite colocar o item de resultado
+                return;
             }
 
             if (slot == CraftingCreatorGUI.SAVE_SLOT) {

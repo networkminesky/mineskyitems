@@ -29,10 +29,8 @@ public class TinkeringQueueCreator implements Listener {
     public static final Set<Inventory> queueInventories = Collections.synchronizedSet(new HashSet<>());
     public static final Map<UUID, QueueItem> activePlayerQueue = new HashMap<>();
 
-    // Itens em 'Hold' (reservados para um jogador específico)
     public static final Map<UUID, QueueItem> heldPlayerItems = new HashMap<>();
 
-    // Armazena os caminhos que estão sendo processados ou em hold
     public static final Set<String> activeProcessingPaths = Collections.synchronizedSet(new HashSet<>());
 
     private static final Set<Integer> INPUT_SLOTS = Set.of(
@@ -63,7 +61,6 @@ public class TinkeringQueueCreator implements Listener {
         }
     }
 
-    // Ponto de entrada do comando /mineskyitems criar-tinkerer
     public static boolean processNextItem(CommandSender sender) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cApenas jogadores podem executar este comando.");
@@ -72,18 +69,15 @@ public class TinkeringQueueCreator implements Listener {
 
         QueueItem queueItem;
 
-        // 1. Verifica se o jogador já possui um item em HOLD (reserva exclusiva)
         if (heldPlayerItems.containsKey(player.getUniqueId())) {
             queueItem = heldPlayerItems.get(player.getUniqueId());
             player.sendMessage("§e[Fila Tinkering] Retomando a criação do seu item reservado: §a" + queueItem.itemKey);
         } else {
-            // 2. Se não tiver nada em hold, pega o próximo livre da fila
             queueItem = getNextAvailableItem();
             if (queueItem == null) {
                 player.sendMessage("§a✔ Nenhum item pendente para conversão no converting.yml!");
                 return true;
             }
-            // Coloca em reserva exclusiva para o jogador
             heldPlayerItems.put(player.getUniqueId(), queueItem);
             activeProcessingPaths.add(queueItem.path);
         }
@@ -124,7 +118,6 @@ public class TinkeringQueueCreator implements Listener {
 
                 String path = categoryKey + "." + itemKey;
 
-                // Pula itens que já estejam em hold/processamento por qualquer jogador
                 if (activeProcessingPaths.contains(path)) continue;
 
                 String suggestedMaterial = itemSection.getString("suggested-material", "Nenhum");
@@ -151,10 +144,8 @@ public class TinkeringQueueCreator implements Listener {
             }
         }
 
-        // Item resultante pré-carregado no slot 25
         inventory.setItem(RESULT_SLOT, resultStack);
 
-        // Ícone de informações da conversão no slot 48
         ItemStack infoItem = new ItemStack(Material.BOOK);
         ItemMeta infoMeta = infoItem.getItemMeta();
         if (infoMeta != null) {
@@ -173,7 +164,6 @@ public class TinkeringQueueCreator implements Listener {
         }
         inventory.setItem(INFO_SLOT, infoItem);
 
-        // Botão de Salvar no slot 49
         ItemStack saveButton = new ItemStack(Material.LIME_DYE);
         ItemMeta saveMeta = saveButton.getItemMeta();
         if (saveMeta != null) {
@@ -185,7 +175,6 @@ public class TinkeringQueueCreator implements Listener {
         queueInventories.add(inventory);
         player.openInventory(inventory);
 
-        // Alertas no Chat
         player.sendMessage(" ");
         player.sendMessage("§a[Fila Tinkering] §fCriando receita para: §e" + queueItem.itemKey);
         player.sendMessage("§aMaterial Sugerido: §b" + queueItem.suggestedMaterial);
@@ -227,7 +216,6 @@ public class TinkeringQueueCreator implements Listener {
         Player player = (Player) e.getPlayer();
         QueueItem queueItem = activePlayerQueue.get(player.getUniqueId());
 
-        // Devolve os itens no input para o jogador
         for (int slot : INPUT_SLOTS) {
             ItemStack item = inventory.getItem(slot);
             if (item != null && !item.getType().isAir()) {
@@ -241,7 +229,6 @@ public class TinkeringQueueCreator implements Listener {
 
         inventory.setItem(RESULT_SLOT, null);
 
-        // Mantém o item em HOLD para o jogador até ele voltar ou deslogar
         if (queueItem != null) {
             activePlayerQueue.remove(player.getUniqueId());
             player.sendMessage("§e[Fila Tinkering] O item '" + queueItem.itemKey + "' ficou reservado exclusivamente para você!");
@@ -251,7 +238,6 @@ public class TinkeringQueueCreator implements Listener {
         queueInventories.remove(inventory);
     }
 
-    // Se o jogador deslogar, libera a reserva exclusiva dele de volta para a fila geral
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent e) {
         Player player = e.getPlayer();
@@ -284,7 +270,6 @@ public class TinkeringQueueCreator implements Listener {
             return;
         }
 
-        // 1. Salva o YAML da receita em crafting/<itemKey>.yml
         File craftingFolder = new File(MineSkyItems.getInstance().getDataFolder(), "crafting");
         if (!craftingFolder.exists()) {
             craftingFolder.mkdirs();
@@ -355,7 +340,6 @@ public class TinkeringQueueCreator implements Listener {
             return;
         }
 
-        // 2. Marca como done: true no converting.yml
         File convertingFile = new File(MineSkyItems.getInstance().getDataFolder(), "converting.yml");
         if (convertingFile.exists()) {
             YamlConfiguration convertingConfig = YamlConfiguration.loadConfiguration(convertingFile);
@@ -369,10 +353,8 @@ public class TinkeringQueueCreator implements Listener {
             }
         }
 
-        // 3. Recarrega as receitas no TinkeringManager
         TinkeringManager.registerAllFromFile();
 
-        // Limpa a reserva do jogador
         activeProcessingPaths.remove(queueItem.path);
         heldPlayerItems.remove(player.getUniqueId());
         activePlayerQueue.remove(player.getUniqueId());

@@ -42,7 +42,7 @@ public record RecipeIngredient(String customId, Material material, int amount) {
             Item customItem = ItemHandler.getItemFromStack(stack);
             return customItem != null && this.customId.equals(customItem.getId());
         } else {
-            // Se for vanilla, garante que NÃO seja um item customizado reutilizando a mesma Material
+            // se for vanilla, checa se é item customizado reutilizando o mesmo Material
             Item customItem = ItemHandler.getItemFromStack(stack);
             return customItem == null && stack.getType() == this.material;
         }

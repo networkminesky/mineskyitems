@@ -53,7 +53,7 @@ public class TinkeringCreatorGUI implements Listener {
             }
         }
 
-        // Botão Salvar no slot 49
+        // salvar
         ItemStack saveButton = new ItemStack(Material.LIME_DYE);
         ItemMeta saveMeta = saveButton.getItemMeta();
         if (saveMeta != null) {
@@ -95,7 +95,7 @@ public class TinkeringCreatorGUI implements Listener {
 
         Player player = (Player) e.getPlayer();
 
-        // Devolve os itens no input e no result para o jogador
+        // devolve os itens no input e no result para o jogador
         List<Integer> slotsToReturn = new ArrayList<>(INPUT_SLOTS);
         slotsToReturn.add(RESULT_SLOT);
 
@@ -182,17 +182,17 @@ public class TinkeringCreatorGUI implements Listener {
             shapeList.add(rowBuilder.toString());
         }
 
-        // Salva keys
+        // salva keys
         for (Map.Entry<Character, Map<String, String>> entry : keysSection.entrySet()) {
             String path = "keys." + entry.getKey();
             config.set(path + ".type", entry.getValue().get("type"));
             config.set(path + ".id", entry.getValue().get("id"));
         }
 
-        // Salva shape
+        // salva o shaper
         config.set("shape", shapeList);
 
-        // Salva resultado
+        // salva o resultado
         Item customResult = ItemHandler.getItemFromStack(resultStack);
         config.set("result.type", (customResult != null) ? "MINESKYITEM" : "VANILLA");
         config.set("result.id", (customResult != null) ? customResult.getId() : resultStack.getType().name());

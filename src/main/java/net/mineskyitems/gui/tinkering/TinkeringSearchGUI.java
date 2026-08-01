@@ -91,7 +91,6 @@ public class TinkeringSearchGUI implements Listener {
     }
 
     private static void renderTopBar(Inventory inventory, SearchState state) {
-        // Slots 0-4: Botão de Pesquisar
         ItemStack searchBtn = new ItemStack(Material.PAPER);
         ItemMeta searchMeta = searchBtn.getItemMeta();
         if (searchMeta != null) {
@@ -108,7 +107,6 @@ public class TinkeringSearchGUI implements Listener {
             inventory.setItem(i, searchBtn);
         }
 
-        // Slot 5: Botão de Sorting Dinâmico (Exibe todas as opções)
         ItemStack sortBtn = new ItemStack(Material.HOPPER);
         ItemMeta sortMeta = sortBtn.getItemMeta();
         if (sortMeta != null) {
@@ -142,7 +140,6 @@ public class TinkeringSearchGUI implements Listener {
         }
         inventory.setItem(5, sortBtn);
 
-        // Slot 6: Página Anterior
         ItemStack prevBtn = new ItemStack(Material.PAPER);
         ItemMeta prevMeta = prevBtn.getItemMeta();
         if (prevMeta != null) {
@@ -152,7 +149,6 @@ public class TinkeringSearchGUI implements Listener {
         }
         inventory.setItem(6, prevBtn);
 
-        // Slot 7: Voltar para Tinkering
         ItemStack backBtn = new ItemStack(Material.PAPER);
         ItemMeta backMeta = backBtn.getItemMeta();
         if (backMeta != null) {
@@ -162,7 +158,6 @@ public class TinkeringSearchGUI implements Listener {
         }
         inventory.setItem(7, backBtn);
 
-        // Slot 8: Próxima Página
         ItemStack nextBtn = new ItemStack(Material.PAPER);
         ItemMeta nextMeta = nextBtn.getItemMeta();
         if (nextMeta != null) {
@@ -200,7 +195,6 @@ public class TinkeringSearchGUI implements Listener {
                 }
             }
 
-            // Filtragem por Busca
             if (state.query != null && !state.query.trim().isEmpty()) {
                 String q = state.query.toLowerCase().trim();
                 boolean matches = displayName.toLowerCase().contains(q)
@@ -210,7 +204,6 @@ public class TinkeringSearchGUI implements Listener {
                 if (!matches) continue;
             }
 
-            // Filtragem por Categoria
             if (state.sortingMode == SortingMode.CATEGORY) {
                 List<String> categories = CategoryHandler.getCategoriesNames();
                 if (!categories.isEmpty() && state.categoryIndex < categories.size()) {
@@ -229,7 +222,6 @@ public class TinkeringSearchGUI implements Listener {
             entries.add(new RecipeDisplayEntry(recipe, result, level, displayName, categoryName, matScore));
         }
 
-        // Ordenação
         if (state.sortingMode == SortingMode.LEVEL_HIGHEST) {
             entries.sort((a, b) -> Integer.compare(b.level, a.level));
         } else if (state.sortingMode == SortingMode.LEVEL_LOWEST) {
@@ -255,7 +247,6 @@ public class TinkeringSearchGUI implements Listener {
         int slotIndex = 9;
         for (int i = startIndex; i < endIndex; i++) {
             RecipeDisplayEntry entry = entries.get(i);
-            // Renderização limpa sem injetar lore adicional
             ItemStack stack = TinkeringManager.buildItemStackFromEntry(entry.resultEntry);
             if (stack != null) {
                 inventory.setItem(slotIndex, stack);
@@ -312,7 +303,6 @@ public class TinkeringSearchGUI implements Listener {
 
         int slot = e.getSlot();
 
-        // Slots 0-4: Abrir Pesquisa no Chat
         if (slot >= 0 && slot <= 4) {
             awaitingSearchPrompt.put(player.getUniqueId(), state);
             player.closeInventory();
@@ -322,7 +312,6 @@ public class TinkeringSearchGUI implements Listener {
             return;
         }
 
-        // Slot 5: Alternar Ordenação (Esquerdo: Próximo, Direito: Anterior)
         if (slot == 5) {
             if (e.isShiftClick() && state.sortingMode == SortingMode.CATEGORY) {
                 List<String> categories = CategoryHandler.getCategoriesNames();
@@ -340,7 +329,6 @@ public class TinkeringSearchGUI implements Listener {
             return;
         }
 
-        // Slot 6: Página Anterior
         if (slot == 6) {
             if (state.page > 0) {
                 state.page--;
@@ -349,21 +337,18 @@ public class TinkeringSearchGUI implements Listener {
             return;
         }
 
-        // Slot 7: Voltar para Tinkering
         if (slot == 7) {
             player.closeInventory();
             TinkeringGUI.openGUI(player, TinkeringGUI.tinkeringBlocks.get(player.getUniqueId()));
             return;
         }
 
-        // Slot 8: Próxima Página
         if (slot == 8) {
             state.page++;
             openGUI(player, state);
             return;
         }
 
-        // Slots 9-53: Clique em um item para visualizar o crafting
         if (slot >= 9 && slot <= 53) {
             int indexOnPage = slot - 9;
             int pageSize = 45;

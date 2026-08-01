@@ -84,7 +84,6 @@ public class TinkeringRecipePreviewGUI implements Listener {
             }
         }
 
-        // Renderiza o Grid 5x5 do Crafting
         TinkeringManager.ItemEntry[][] grid = recipe.getCroppedRecipeGrid();
         int[] rows = {0, 9, 18, 27, 36};
 
@@ -95,7 +94,6 @@ public class TinkeringRecipePreviewGUI implements Listener {
                     int slot = rows[r] + c;
                     ItemStack stack = TinkeringManager.buildItemStackFromEntry(entry);
                     if (stack != null) {
-                        // Verifica se este ingrediente tem uma receita própria (Estilo JEI)
                         TinkeringRecipe subRecipe = TinkeringManager.getRecipeByResultItem(stack);
                         if (subRecipe != null) {
                             ItemMeta m = stack.getItemMeta();
@@ -114,7 +112,6 @@ public class TinkeringRecipePreviewGUI implements Listener {
             }
         }
 
-        // Renderiza o item resultante
         ItemStack resultStack = TinkeringManager.buildItemStackFromEntry(recipe.getResult());
         if (resultStack != null) {
             TinkeringRecipe subRecipe = TinkeringManager.getRecipeByResultItem(resultStack);
@@ -132,7 +129,6 @@ public class TinkeringRecipePreviewGUI implements Listener {
             inventory.setItem(RESULT_SLOT, resultStack);
         }
 
-        // Botão Voltar (Slot 48)
         ItemStack backBtn = new ItemStack(Material.PAPER);
         ItemMeta backMeta = backBtn.getItemMeta();
         if (backMeta != null) {
@@ -142,7 +138,6 @@ public class TinkeringRecipePreviewGUI implements Listener {
         }
         inventory.setItem(BACK_SLOT, backBtn);
 
-        // Botão Preencher Crafting (Slot 49)
         ItemStack fillBtn = new ItemStack(Material.ANVIL);
         ItemMeta fillMeta = fillBtn.getItemMeta();
         if (fillMeta != null) {
@@ -173,15 +168,12 @@ public class TinkeringRecipePreviewGUI implements Listener {
 
         int slot = e.getSlot();
 
-        // Slot 48: Voltar no Histórico ou Voltar para Pesquisa
         if (slot == BACK_SLOT) {
-            session.recipeHistory.pop(); // Remove a receita atual
+            session.recipeHistory.pop();
 
             if (!session.recipeHistory.isEmpty()) {
-                // Abre a receita anterior no histórico
                 openGUIInternal(player, session);
             } else {
-                // Se o histórico esvaziou, volta para a tela de pesquisa
                 activeSessions.remove(player.getUniqueId());
                 player.closeInventory();
                 TinkeringSearchGUI.openGUI(player, session.previousSearchState);
@@ -189,7 +181,6 @@ public class TinkeringRecipePreviewGUI implements Listener {
             return;
         }
 
-        // Slot 49: Preencher Crafting (Corrigido para não duplicar/resetar GUI)
         if (slot == FILL_SLOT) {
             TinkeringRecipe currentRecipe = session.getCurrentRecipe();
             activeSessions.remove(player.getUniqueId());
@@ -204,7 +195,6 @@ public class TinkeringRecipePreviewGUI implements Listener {
             return;
         }
 
-        // Clique em Itens no Grid 5x5 ou no Resultado (Navegação Recursiva JEI)
         if (INPUT_SLOTS.contains(slot) || slot == RESULT_SLOT) {
             ItemStack clickedItem = e.getCurrentItem();
             if (clickedItem != null && !clickedItem.getType().isAir()) {
@@ -258,7 +248,6 @@ public class TinkeringRecipePreviewGUI implements Listener {
             }
         }
 
-        // Atualiza os cálculos de resultado na mesa de Tinkering aberta
         TinkeringGUI.scheduleUpdate(tinkeringInv);
 
         if (filledCount == requiredCount) {
