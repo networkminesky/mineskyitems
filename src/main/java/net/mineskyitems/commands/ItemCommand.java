@@ -7,7 +7,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.events.DummyEvent;
 import net.mineskyitems.gui.crafting.CraftingCreatorGUI;
-import net.mineskyitems.gui.crafting.RecipeManager;
+import net.mineskyitems.gui.crafting.CraftingManager;
 import net.mineskyitems.gui.editor.ItemBuilderMenu;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.ItemBuilder;
@@ -22,12 +22,12 @@ import net.mineskyitems.gui.tinkering.TinkeringCreatorGUI;
 import net.mineskyitems.gui.tinkering.TinkeringGUI;
 import net.mineskyitems.gui.tinkering.TinkeringQueueCreator;
 import net.mineskyitems.gui.tinkering.recipe.TinkeringManager;
+import net.mineskyitems.gui.tinkering.recipe.TinkeringRecipe;
 import net.mineskyitems.scripts.ArmorStandScript;
 import net.mineskyitems.scripts.ItemFrameGenerator;
 import net.mineskyitems.utils.Utils;
 import org.bukkit.*;
 import org.bukkit.command.*;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemFrame;
@@ -171,7 +171,7 @@ public class ItemCommand implements TabExecutor {
 
             if(args[0].equalsIgnoreCase("crafting")) {
                 if(prompt.equalsIgnoreCase("reload")) {
-                    RecipeManager.loadRecipes();
+                    CraftingManager.loadRecipes();
                     s.sendMessage("§a✔ Receitas recarregadas!");
                     return true;
                 }
@@ -190,7 +190,7 @@ public class ItemCommand implements TabExecutor {
                 }
 
                 if (prompt.equalsIgnoreCase("delete")) {
-                    RecipeManager.deleteRecipe(id);
+                    CraftingManager.deleteRecipe(id);
                     s.sendMessage("§a✔ Receita '" + id + "' removida!");
                     return true;
                 }
@@ -615,10 +615,14 @@ public class ItemCommand implements TabExecutor {
 
         int length = args.length;
         if (args[0].equalsIgnoreCase("crafting") || args[0].equalsIgnoreCase("tinkering")) {
+            final String type = args[0].toLowerCase();
             if (length == 2) {
                 return craftingtinkering_subCommands;
             } else if (length == 3 && args[1].equalsIgnoreCase("delete")) {
-                return new ArrayList<>(RecipeManager.getRecipes().keySet());
+                if(type.equals("crafting"))
+                    return new ArrayList<>(CraftingManager.getRecipes().keySet());
+                else if(type.equals("tinkering"))
+                    return new ArrayList<>(TinkeringManager.getRecipes().stream().map(TinkeringRecipe::getId).toList());
             }
             return List.of("<id>");
         }

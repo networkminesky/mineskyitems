@@ -8,8 +8,9 @@ import net.mineskyitems.entities.rarities.RarityHandler;
 import net.mineskyitems.events.InteractionEvents;
 import net.mineskyitems.events.MiscEvents;
 import net.mineskyitems.events.OffhandAttackListener;
+import net.mineskyitems.gui.crafting.CraftingCreatorGUI;
 import net.mineskyitems.gui.crafting.CraftingListener;
-import net.mineskyitems.gui.crafting.RecipeManager;
+import net.mineskyitems.gui.crafting.CraftingManager;
 import net.mineskyitems.gui.editor.ItemBuilderMenu;
 import net.mineskyitems.entities.categories.CategoryHandler;
 import net.mineskyitems.entities.tooltip.TooltipHandler;
@@ -97,6 +98,7 @@ public final class MineSkyItems extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new MiscEvents(), this);
 
         Bukkit.getPluginManager().registerEvents(new CraftingListener(), this);
+        Bukkit.getPluginManager().registerEvents(new CraftingCreatorGUI(""), this);
 
         Bukkit.getPluginManager().registerEvents(new TinkeringCreatorGUI(), this);
         Bukkit.getPluginManager().registerEvents(new TinkeringSearchGUI(), this);
@@ -115,7 +117,7 @@ public final class MineSkyItems extends JavaPlugin {
         Bukkit.getGlobalRegionScheduler().runDelayed(this, (_) -> RotatingShop.initializeShop(), 20);
 
         l.info("Carregando recipes custom...");
-        RecipeManager.loadRecipes();
+        CraftingManager.loadRecipes();
 
         l.info("Carregando recipes 5x5...");
         TinkeringManager.registerAllFromFile();
