@@ -18,6 +18,8 @@ import net.mineskyitems.gui.blacksmith.ItemRecyclerMenu;
 import net.mineskyitems.gui.blacksmith.ItemRepairMenu;
 import net.mineskyitems.gui.rotatingshop.RotatingItemsGUI;
 import net.mineskyitems.gui.rotatingshop.armors.RotatingArmorsGUI;
+import net.mineskyitems.gui.smelting.SmeltingCreatorGUI;
+import net.mineskyitems.gui.smelting.SmeltingManager;
 import net.mineskyitems.gui.tinkering.TinkeringCreatorGUI;
 import net.mineskyitems.gui.tinkering.TinkeringGUI;
 import net.mineskyitems.gui.tinkering.TinkeringQueueCreator;
@@ -43,7 +45,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ItemCommand implements TabExecutor {
 
-    public static final List<String> subCommands = Arrays.asList("criar", "criar-tinkerer", "crafting", "tinkering", "contar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
+    public static final List<String> subCommands = Arrays.asList("criar", "criar-tinkerer", "crafting", "smelting", "tinkering", "contar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
     public static final List<String> menu_subCommands = Arrays.asList("reparar", "destruir", "shop", "tinkering");
     public static final List<String> craftingtinkering_subCommands = Arrays.asList("create", "delete", "reload");
     public static final List<String> scripts = Arrays.asList("empty", "category", "convert", "single", "armor");
@@ -166,6 +168,35 @@ public class ItemCommand implements TabExecutor {
 
             if(!s.hasPermission("mineskyitems.command."+args[0])) {
                 s.sendMessage("§cVocê não tem permissão ou o comando não existe.");
+                return true;
+            }
+
+            if(args[0].equalsIgnoreCase("smelting")) {
+                if(prompt.equalsIgnoreCase("reload")) {
+                    SmeltingManager.loadRecipes();
+                    s.sendMessage("§a✔ Receitas recarregadas!");
+                    return true;
+                }
+
+                if(args.length == 2) {
+                    s.sendMessage("§cInclua o ID do crafting.");
+                    return true;
+                }
+
+                final String id = args[2].toLowerCase();
+
+                if(prompt.equalsIgnoreCase("create")) {
+                    SmeltingCreatorGUI gui = new SmeltingCreatorGUI(id);
+                    p.openInventory(gui.getInventory());
+                    return true;
+                }
+
+                if (prompt.equalsIgnoreCase("delete")) {
+                    SmeltingManager.deleteRecipe(id);
+                    s.sendMessage("§a✔ Receita '" + id + "' removida!");
+                    return true;
+                }
+
                 return true;
             }
 
@@ -613,16 +644,24 @@ public class ItemCommand implements TabExecutor {
             return e;
         }
 
-        int length = args.length;
-        if (args[0].equalsIgnoreCase("crafting") || args[0].equalsIgnoreCase("tinkering")) {
-            final String type = args[0].toLowerCase();
+        final int length = args.length;
+        final String type = args[0].toLowerCase();
+
+        if (type.equals("crafting") || type.equals("tinkering") || type.equals("smelting")) {
             if (length == 2) {
                 return craftingtinkering_subCommands;
             } else if (length == 3 && args[1].equalsIgnoreCase("delete")) {
-                if(type.equals("crafting"))
-                    return new ArrayList<>(CraftingManager.getRecipes().keySet());
-                else if(type.equals("tinkering"))
-                    return new ArrayList<>(TinkeringManager.getRecipes().stream().map(TinkeringRecipe::getId).toList());
+                switch (type) {
+                    case "crafting" -> {
+                        return new ArrayList<>(CraftingManager.getRecipes().keySet());
+                    }
+                    case "tinkering" -> {
+                        return new ArrayList<>(TinkeringManager.getRecipes().stream().map(TinkeringRecipe::getId).toList());
+                    }
+                    case "smelting" -> {
+                        return new ArrayList<>(SmeltingManager.getRecipes().keySet());
+                    }
+                }
             }
             return List.of("<id>");
         }

@@ -27,16 +27,26 @@ public class TinkeringManager {
         private final boolean isVanilla;
         private final String type;
         private final String id;
+        private final int amount;
 
         public ItemEntry(final String type, final String id) {
+            this(type, id, 1);
+        }
+
+        public ItemEntry(final String type, final String id, final int amount) {
             this.isVanilla = !type.equalsIgnoreCase("mineskyitem");
             this.type = type;
+            this.amount = Math.max(1, amount);
 
             if (this.isVanilla) {
                 this.id = id.replace("minecraft:", "").toUpperCase().trim();
             } else {
                 this.id = id.trim();
             }
+        }
+
+        public int getAmount() {
+            return amount;
         }
 
         public boolean isAir() {
@@ -105,6 +115,74 @@ public class TinkeringManager {
             TinkeringRecipe customRecipe = new TinkeringRecipe(id, shape.toArray(new String[0]), ingredients, result);
             TinkeringManager.registerRecipe(customRecipe);
         }
+
+        register3x3RecipesFromCraftingManager();
+    }
+
+    private static void register3x3RecipesFromCraftingManager() {
+        Map<String, Object> recipesMap = net.mineskyitems.gui.crafting.CraftingManager.getRecipes();
+        if (recipesMap == null || recipesMap.isEmpty()) return;
+
+        for (Map.Entry<String, Object> entry : recipesMap.entrySet()) {
+            String recipeId = entry.getKey();
+            if (!(entry.getValue() instanceof org.bukkit.configuration.ConfigurationSection section)) {
+                continue;
+            }
+
+            List<String> grid = section.getStringList("grid");
+            if (grid.size() < 9) continue;
+
+            String resStr = section.getString("result");
+            if (resStr == null || resStr.isEmpty()) continue;
+
+            // result parser
+            String[] resParts = resStr.split(":", 3);
+            if (resParts.length < 2) continue;
+
+            String resType = resParts[0].equalsIgnoreCase("CUSTOM") ? "MINESKYITEM" : "VANILLA";
+            String resId = resParts[1];
+            int resAmount = resParts.length >= 3 ? Integer.parseInt(resParts[2]) : 1;
+
+            ItemEntry resultEntry = new ItemEntry(resType, resId, resAmount);
+
+            // 3x3 grid parser (9 slots)
+            Map<Character, ItemEntry> ingredients = new HashMap<>();
+            Map<String, Character> descriptorToChar = new HashMap<>();
+            char currentChar = 'A';
+
+            String[] shape = new String[3];
+
+            for (int r = 0; r < 3; r++) {
+                StringBuilder rowSb = new StringBuilder();
+                for (int c = 0; c < 3; c++) {
+                    int slot = r * 3 + c;
+                    String descriptor = grid.get(slot);
+
+                    if (descriptor == null || descriptor.equalsIgnoreCase("AIR") || descriptor.isEmpty()) {
+                        rowSb.append(' ');
+                    } else {
+                        if (!descriptorToChar.containsKey(descriptor)) {
+                            String[] parts = descriptor.split(":", 3);
+                            if (parts.length >= 2) {
+                                String type = parts[0].equalsIgnoreCase("CUSTOM") ? "MINESKYITEM" : "VANILLA";
+                                String itemId = parts[1];
+
+                                descriptorToChar.put(descriptor, currentChar);
+                                ingredients.put(currentChar, new ItemEntry(type, itemId));
+                                currentChar++;
+                            }
+                        }
+
+                        Character ch = descriptorToChar.get(descriptor);
+                        rowSb.append(ch != null ? ch : ' ');
+                    }
+                }
+                shape[r] = rowSb.toString();
+            }
+
+            TinkeringRecipe tinkRecipe = new TinkeringRecipe("crafting_3x3_" + recipeId, shape, ingredients, resultEntry);
+            TinkeringManager.registerRecipe(tinkRecipe);
+        }
     }
 
     public static boolean deleteRecipe(String id) {
@@ -132,17 +210,23 @@ public class TinkeringManager {
     public static ItemStack buildItemStackFromEntry(ItemEntry entry) {
         if (entry == null || entry.isAir()) return null;
 
+        ItemStack stack = null;
         if (entry.isVanilla()) {
             try {
                 Material mat = Material.valueOf(entry.getId());
-                return new ItemStack(mat);
+                stack = new ItemStack(mat);
             } catch (Exception ex) {
                 return null;
             }
         } else {
             Item item = ItemHandler.getItem(entry.getId());
-            return (item != null) ? item.buildStack() : null;
+            if (item != null) stack = item.buildStack();
         }
+
+        if (stack != null && entry.getAmount() > 1) {
+            stack.setAmount(entry.getAmount());
+        }
+        return stack;
     }
 
     private static boolean matches(ItemStack[][] croppedGrid, ItemEntry[][] croppedRecipe) {
@@ -176,7 +260,7 @@ public class TinkeringManager {
         return true;
     }
 
-    // Busca se existe uma receita que resulte no ItemStack fornecido (Suporta JEI)
+    // searches for a recipe
     public static TinkeringRecipe getRecipeByResultItem(ItemStack stack) {
         if (stack == null || stack.getType().isAir()) return null;
 

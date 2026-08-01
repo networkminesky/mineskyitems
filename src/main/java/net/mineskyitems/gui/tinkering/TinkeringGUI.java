@@ -91,8 +91,6 @@ public class TinkeringGUI implements Listener {
             return;
         }
 
-        tinkeringBlocks.remove(e.getPlayer().getUniqueId());
-
         Player player = (Player) e.getPlayer();
 
         for (int slot : INPUT_SLOTS) {

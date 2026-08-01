@@ -18,6 +18,9 @@ import net.mineskyitems.gui.editor.ItemSkillsMenu;
 import net.mineskyitems.gui.blacksmith.ItemRecyclerMenu;
 import net.mineskyitems.gui.blacksmith.ItemRepairMenu;
 import net.mineskyitems.gui.rotatingshop.RotatingItemsGUI;
+import net.mineskyitems.gui.smelting.SmeltingCreatorGUI;
+import net.mineskyitems.gui.smelting.SmeltingListener;
+import net.mineskyitems.gui.smelting.SmeltingManager;
 import net.mineskyitems.gui.tinkering.*;
 import net.mineskyitems.gui.tinkering.recipe.TinkeringManager;
 import net.mineskyitems.utils.FrameUpdater;
@@ -100,6 +103,9 @@ public final class MineSkyItems extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new CraftingListener(), this);
         Bukkit.getPluginManager().registerEvents(new CraftingCreatorGUI(""), this);
 
+        Bukkit.getPluginManager().registerEvents(new SmeltingListener(), this);
+        Bukkit.getPluginManager().registerEvents(new SmeltingCreatorGUI(""), this);
+
         Bukkit.getPluginManager().registerEvents(new TinkeringCreatorGUI(), this);
         Bukkit.getPluginManager().registerEvents(new TinkeringSearchGUI(), this);
         Bukkit.getPluginManager().registerEvents(new TinkeringRecipePreviewGUI(), this);
@@ -118,6 +124,7 @@ public final class MineSkyItems extends JavaPlugin {
 
         l.info("Carregando recipes custom...");
         CraftingManager.loadRecipes();
+        SmeltingManager.loadRecipes();
 
         l.info("Carregando recipes 5x5...");
         TinkeringManager.registerAllFromFile();

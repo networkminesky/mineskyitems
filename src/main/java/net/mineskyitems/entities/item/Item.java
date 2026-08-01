@@ -165,6 +165,9 @@ public class Item {
     }
 
     public void damageItem(Player player, ItemStack itemStack, int amount, @Nullable Cancellable event) {
+        if(this.getCategory().isNoAttributes())
+            return;
+
         int result = (getDurability(itemStack) - amount);
 
         if(result < 0) {
@@ -175,7 +178,10 @@ public class Item {
             return;
         } else if(result <= 30) {
             if(getCategory().shouldShowAlmostBroken())
-                player.sendMessage("§cSeu item "+getMetadata().displayName+" está quase quebrado! Ele possui mais "+result+" usos.");
+                player.sendActionBar(
+                        Component.text("O item "+getMetadata().displayName+" está quebrando! Possui mais "+result+" usos.")
+                                .color(NamedTextColor.RED)
+                );
         }
 
         if(result == 0) {
