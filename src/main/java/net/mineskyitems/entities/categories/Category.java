@@ -9,6 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,8 +24,16 @@ public class Category {
     private final File file;
     private YamlConfiguration config;
 
-    // Type can be: "MELEE" for melee physical weapons - "RANGED" for ranged attack weapons (e.g. Bows, Crossbows, ...)
+    /**
+     * MELEE for melee physical weapons
+     * RANGED for ranged attack weapons (e.g. Bows, Crossbows
+     * TOOL for tools
+     */
     private final String type;
+    /** nullable
+     * PICKAXE, AXE, HOE, SHOVEL
+     */
+    private final @Nullable String tool;
 
     private final String name;
     private final Material defaultItem;
@@ -36,6 +45,7 @@ public class Category {
     private final boolean oneHanded;
     private final boolean disappearWhenBroken;
     private final boolean showAlmostBroken;
+    private final boolean vanillaDurability;
 
     private final Tooltip tooltip;
 
@@ -50,16 +60,24 @@ public class Category {
 
         this.tooltip = TooltipHandler.getTooltipById(categoriesSection.getString("tooltip", "default"));
 
-        this.curve = CurveHandler.getById(categoriesSection.getString("curve", "default-curves.yml"));
         this.type = categoriesSection.getString("type", "MELEE");
+        this.tool = categoriesSection.getString("tool", null);
+
+        this.vanillaDurability = categoriesSection.getBoolean("vanilla-durability", true);
+
+        this.curve = CurveHandler.getById(categoriesSection.getString("curve", "default-curves.yml"));
         this.name = categoriesSection.getString("name", id.toLowerCase());
         this.defaultItem = Material.getMaterial(categoriesSection.getString("default-item", "STONE"));
 
         this.oneHanded = categoriesSection.getBoolean("one-handed", false);
         this.noAttributes = categoriesSection.getBoolean("no-attributes", false);
         this.doNotStack = categoriesSection.getBoolean("do-not-stack", false);
-        this.disappearWhenBroken = categoriesSection.getBoolean("disappear-when-broken", false);
+        this.disappearWhenBroken = categoriesSection.getBoolean("disappear-when-broken", true);
         this.showAlmostBroken = categoriesSection.getBoolean("show-almost-broken", true);
+    }
+
+    public boolean isVanillaDurability() {
+        return this.vanillaDurability;
     }
 
     public boolean shouldShowAlmostBroken() {
@@ -72,6 +90,15 @@ public class Category {
 
     public boolean isOneHanded() {
         return oneHanded;
+    }
+
+    public boolean isTool() {
+        return this.tool != null;
+    }
+
+    @Nullable
+    public String getTool() {
+        return this.tool;
     }
 
     public String getType() {

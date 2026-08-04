@@ -18,6 +18,9 @@ public class CurveHandler {
     public static final String ITEM_DURABILITY_CURVE = "ITEM_DURABILITY";
     public static final String ARROW_DAMAGE_CURVE = "ARROW_DAMAGE";
 
+    public static final String TOOL_SPEED = "TOOL_SPEED"; // when breaking the right set of blocks
+    public static final String DEFAULT_TOOL_SPEED  = "DEFAULT_TOOL_SPEED"; // when breaking unknown blocks
+
     public static Set<ItemCurve> curves = new HashSet<>();
 
     public static File folder = new File(MineSkyItems.getInstance().getDataFolder(), "curves");

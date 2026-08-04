@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.item.ItemHandler;
+import org.bukkit.Bukkit;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -68,13 +69,13 @@ public class MiscEvents implements Listener {
         final Player player = (Player) e.getEntity();
         final EntityDamageEvent.DamageCause damageCause = e.getCause();
 
-        if(player.getEquipment() == null)
-            return;
+        Bukkit.broadcastMessage(damageCause.name());
 
         Arrays.stream(player.getEquipment().getArmorContents()).forEach(stack -> {
             net.mineskyitems.entities.item.Item item = ItemHandler.getItemFromStack(stack);
 
-            if(item != null) {
+            if(item != null
+            && !item.getCategory().isVanillaDurability()) {
                 item.damageItem(player, stack, 1, null);
                 item.removeHealthIfBroken(player, stack);
             }

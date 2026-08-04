@@ -26,6 +26,9 @@ public class ItemAttributes {
     private double maxHealth = 0;
     private double attackRange = 1;
 
+    private float toolSpeed = 1f;
+    private float defaultToolSpeed = 1f;
+
     private double attackKnockback = 1;
 
     public ItemAttributes(Item item) {
@@ -50,6 +53,9 @@ public class ItemAttributes {
         this.maxHealth = curve.calculateValue(item.getRequiredLevel(), Attribute.MAX_HEALTH);
         this.attackRange = curve.calculateValue(item.getRequiredLevel(), Attribute.ENTITY_INTERACTION_RANGE);
 
+        this.toolSpeed = (float)curve.calculateValue(item.getRequiredLevel(), CurveHandler.TOOL_SPEED);
+        this.defaultToolSpeed = (float)curve.calculateValue(item.getRequiredLevel(), CurveHandler.DEFAULT_TOOL_SPEED);
+
         this.attackKnockback = curve.calculateValue(item.getRequiredLevel(), Attribute.ATTACK_KNOCKBACK);
 
         this.arrowDamage = curve.calculateValue(item.getRequiredLevel(), CurveHandler.ARROW_DAMAGE_CURVE);
@@ -60,6 +66,13 @@ public class ItemAttributes {
     }
 
     public double getArrowDamage() { return this.arrowDamage; }
+
+    public float getDefaultToolSpeed() {
+        return defaultToolSpeed;
+    }
+    public float getToolSpeed() {
+        return toolSpeed;
+    }
 
     public double getSpeed() {return this.speed;}
     public double getDamage() {return this.damage;}

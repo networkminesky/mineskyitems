@@ -75,7 +75,7 @@ public class FrameUpdater {
                     lastItem.put(player.getUniqueId(), mainHand.toString());
                 }, null);
             }
-        }, 60, 5);
+        }, 60, 2);
     }
 
 }

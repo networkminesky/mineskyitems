@@ -2,11 +2,13 @@ package net.mineskyitems.entities.item;
 
 import io.lumine.mythic.bukkit.MythicBukkit;
 import io.lumine.mythic.core.utils.MythicUtil;
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.categories.Category;
 import net.mineskyitems.entities.curves.CurveHandler;
+import net.mineskyitems.entities.curves.ItemCurve;
 import net.mineskyitems.entities.rarities.ItemRarity;
 import net.mineskyitems.entities.rarities.RarityHandler;
 import net.mineskyitems.utils.InteractionType;
@@ -21,10 +23,12 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 import org.bukkit.inventory.meta.components.EquippableComponent;
+import org.bukkit.inventory.meta.components.ToolComponent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
@@ -128,13 +132,22 @@ public class Item {
     public int getMaxDurability() {
         return (int)Math.round(getCategory().getCurve().calculateValue(getRequiredLevel(), CurveHandler.ITEM_DURABILITY_CURVE));
     }
+
     public int getDurability(ItemStack itemStack) {
-        PersistentDataContainer container = itemStack.getItemMeta().getPersistentDataContainer();
+        if(getCategory().isVanillaDurability()) {
+            int max = itemStack.hasData(DataComponentTypes.MAX_DAMAGE)
+                    ? itemStack.getData(DataComponentTypes.MAX_DAMAGE)
+                    : itemStack.getType().getMaxDurability();
 
-        if(!container.has(ITEM_DURABILITY, PersistentDataType.INTEGER))
-            return 0;
+            int damage = itemStack.hasData(DataComponentTypes.DAMAGE)
+                    ? itemStack.getData(DataComponentTypes.DAMAGE)
+                    : 0;
 
-        return container.get(ITEM_DURABILITY, PersistentDataType.INTEGER);
+            return Math.max(0, max - damage);
+        }
+
+        return itemStack.getItemMeta().getPersistentDataContainer()
+                .getOrDefault(ITEM_DURABILITY, PersistentDataType.INTEGER, 0);
     }
 
     public boolean isItemBroken(ItemStack itemStack) {
@@ -164,17 +177,36 @@ public class Item {
         }
     }
 
+    public void forceDamageItem(Player player, ItemStack itemStack, int amount) {
+        if(getCategory().isVanillaDurability()
+                && itemStack.hasData(DataComponentTypes.DAMAGE)) {
+            final int current = itemStack.getData(DataComponentTypes.DAMAGE);
+            final int max = getMaxDurability();
+            final int result = (current + amount);
+
+            itemStack.setData(DataComponentTypes.MAX_DAMAGE, getMaxDurability());
+            itemStack.setData(DataComponentTypes.DAMAGE, result);
+
+            if(result >= max) {
+                itemStack.damage(1, player);
+                return;
+            }
+        }
+
+        int result = (getDurability(itemStack) - amount);
+        updateItemOnDamage(itemStack, result);
+    }
+
     public void damageItem(Player player, ItemStack itemStack, int amount, @Nullable Cancellable event) {
         if(this.getCategory().isNoAttributes())
             return;
 
-        int result = (getDurability(itemStack) - amount);
+        final int result = (getDurability(itemStack) - amount);
 
         if(result < 0) {
             if(event != null) event.setCancelled(true);
 
             noDurability(player, itemStack);
-
             return;
         } else if(result <= 30) {
             if(getCategory().shouldShowAlmostBroken())
@@ -191,12 +223,17 @@ public class Item {
             }
         }
 
+        forceDamageItem(player, itemStack, result);
+    }
+
+    public void updateItemOnDamage(ItemStack itemStack, final int result) {
         ItemMeta im = itemStack.getItemMeta();
-        im.getPersistentDataContainer().set(ITEM_DURABILITY, PersistentDataType.INTEGER, result);
-        itemStack.setItemMeta(im);
+        if(!getCategory().isVanillaDurability()) {
+            im.getPersistentDataContainer().set(ITEM_DURABILITY, PersistentDataType.INTEGER, result);
+            itemStack.setItemMeta(im);
+        }
 
         im.lore(getCategory().getTooltip().getFormattedLore(this, itemStack));
-
         itemStack.setItemMeta(im);
     }
 
@@ -212,6 +249,12 @@ public class Item {
         // Reduzir durabilidade do item
         if(player.getGameMode() == GameMode.CREATIVE)
             return;
+        if(this.getCategory().isVanillaDurability()) {
+            player.getScheduler().runDelayed(MineSkyItems.getInstance(), (task) -> {
+                updateItemOnDamage(itemStack, -1);
+            }, null, 1);
+            return;
+        }
 
         // Checando encantamento de durabilidade
         if(itemStack.getEnchantments().containsKey(Enchantment.UNBREAKING)) {
@@ -337,6 +380,8 @@ public class Item {
 
             player.getWorld().spawnParticle(Particle.CLOUD, player.getEyeLocation(), 0, 0, 0, 0, 0);
             getCategory().playUseSounds(player, true);
+
+            return;
         }
 
         getItemSkills().stream()
@@ -365,7 +410,10 @@ public class Item {
                     }
                     CooldownManager.createCooldown(player, skill, skill.getCooldown());
 
-                    damageItem(player, itemStack, 1, null);
+                    if(!getCategory().isVanillaDurability())
+                        damageItem(player, itemStack, 1, null);
+                    else
+                        forceDamageItem(player, itemStack, 1);
 
                     List<Entity> targets = new ArrayList();
                     Entity casterEntity = player;
@@ -411,57 +459,86 @@ public class Item {
     }
 
     public ItemStack buildStack() {
-        // Setar os atributos aqui
         ItemStack itemStack = new ItemStack(metadata.material());
 
         if(!getCategory().isNoAttributes())
-            itemStack = getItemAttributes().translateAndUpdate(new ItemStack(metadata.material()));
+            itemStack = getItemAttributes().translateAndUpdate(itemStack);
 
         ItemMeta im = itemStack.getItemMeta();
 
-        im.getPersistentDataContainer().set(ItemHandler.LEVEL_NAMESPACE, PersistentDataType.INTEGER,
-                this.levelRequirement);
-        im.getPersistentDataContainer().set(ItemHandler.CLASS_NAMESPACE, PersistentDataType.LIST.strings(),
-                this.requiredClasses);
+        // Persistent Data Container
+        PersistentDataContainer container = im.getPersistentDataContainer();
+        container.set(ItemHandler.LEVEL_NAMESPACE, PersistentDataType.INTEGER, this.levelRequirement);
+        container.set(ItemHandler.CLASS_NAMESPACE, PersistentDataType.LIST.strings(), this.requiredClasses);
+        container.set(MineSkyItems.NAMESPACED_KEY, PersistentDataType.STRING, getId());
 
-        if(getCategory().isDoNotStack())
-            im.getPersistentDataContainer().set(NamespacedKey.minecraft("unique"),
-                    PersistentDataType.STRING, UUID.randomUUID().toString());
+        if(getCategory().isDoNotStack()) {
+            container.set(NamespacedKey.minecraft("unique"), PersistentDataType.STRING, UUID.randomUUID().toString());
+            im.setMaxStackSize(1);
+        }
 
-        im.setUnbreakable(true);
-        im.addItemFlags(ItemFlag.HIDE_UNBREAKABLE, ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+        fixVanillaDurability(itemStack);
 
         if(getItemRarity().hasTooltip()) {
             im.setTooltipStyle(NamespacedKey.minecraft(getItemRarity().getTooltip()));
         }
 
-        PersistentDataContainer container = im.getPersistentDataContainer();
-        container.set(MineSkyItems.NAMESPACED_KEY, PersistentDataType.STRING, getId());
-        container.set(ITEM_DURABILITY, PersistentDataType.INTEGER, getMaxDurability());
-        itemStack.setItemMeta(im);
+        if(!getCategory().isVanillaDurability()) {
+            im.setUnbreakable(true);
+            im.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
+            container.set(ITEM_DURABILITY, PersistentDataType.INTEGER, getMaxDurability());
+        }
 
-        Component itemName = Component.text(metadata.displayName())
-                .color(getItemRarity().getTextColor());
+        im.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+
+        // Tools
+        if(getCategory().isTool()) {
+            ToolComponent toolComponent = im.getTool();
+            toolComponent.getRules().clear();
+
+            final float toolSpeed = getItemAttributes().getToolSpeed();
+            final float defaultToolSpeed = getItemAttributes().getDefaultToolSpeed();
+            toolComponent.setDefaultMiningSpeed(defaultToolSpeed);
+
+            switch(getCategory().getTool()) {
+                case "PICKAXE" -> toolComponent.addRule(Tag.MINEABLE_PICKAXE, toolSpeed, true);
+                case "AXE" -> toolComponent.addRule(Tag.MINEABLE_AXE, toolSpeed, true);
+                case "HOE" -> toolComponent.addRule(Tag.MINEABLE_HOE, toolSpeed, true);
+                case "SHOVEL" -> toolComponent.addRule(Tag.MINEABLE_SHOVEL, toolSpeed, true);
+            }
+            im.setTool(toolComponent);
+        }
+
+        Component itemName = Component.text(metadata.displayName()).color(getItemRarity().getTextColor());
         im.itemName(itemName);
-
         im.lore(getCategory().getTooltip().getFormattedLore(this, itemStack));
-
         im.setCustomModelData(metadata.modelData());
 
-        // Armor Type Category
-        if(getCategory().getType().equalsIgnoreCase("armor")
-        && !isNoAutoArmor()) {
+        // Armor
+        if(getCategory().getType().equalsIgnoreCase("armor") && !isNoAutoArmor()) {
             EquippableComponent equippableComponent = im.getEquippable();
-
-            equippableComponent.setModel(NamespacedKey.minecraft("part_"+metadata.modelData));
+            equippableComponent.setModel(NamespacedKey.minecraft("part_" + metadata.modelData));
             equippableComponent.setSlot(metadata.material().getEquipmentSlot());
-
             im.setEquippable(equippableComponent);
         }
 
         itemStack.setItemMeta(im);
 
+        fixVanillaDurability(itemStack);
+
         return itemStack;
+    }
+
+    public void fixVanillaDurability(ItemStack itemStack) {
+        if(getCategory().isVanillaDurability()) {
+            // OBRIGATÓRIO: Definir MAX_STACK_SIZE para 1
+            itemStack.setData(DataComponentTypes.MAX_STACK_SIZE, 1);
+            itemStack.setData(DataComponentTypes.MAX_DAMAGE, getMaxDurability());
+            itemStack.setData(DataComponentTypes.DAMAGE, 0);
+        } else {
+            itemStack.resetData(DataComponentTypes.MAX_DAMAGE);
+            itemStack.resetData(DataComponentTypes.DAMAGE);
+        }
     }
 
     public record ItemMetadata(Material material,

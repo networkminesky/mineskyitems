@@ -518,7 +518,7 @@ public class ItemCommand implements TabExecutor {
                     return true;
                 }
 
-                item.damageItem(p, p.getInventory().getItemInMainHand(), damage, new DummyEvent());
+                item.forceDamageItem(p, p.getInventory().getItemInMainHand(), damage);
                 return true;
             }
 
