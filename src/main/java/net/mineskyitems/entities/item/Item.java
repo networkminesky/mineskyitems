@@ -34,6 +34,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
+import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -499,6 +500,7 @@ public class Item {
             final float toolSpeed = getItemAttributes().getToolSpeed();
             final float defaultToolSpeed = getItemAttributes().getDefaultToolSpeed();
             toolComponent.setDefaultMiningSpeed(defaultToolSpeed);
+            toolComponent.setDamagePerBlock(1);
 
             switch(getCategory().getTool()) {
                 case "PICKAXE" -> toolComponent.addRule(Tag.MINEABLE_PICKAXE, toolSpeed, true);
