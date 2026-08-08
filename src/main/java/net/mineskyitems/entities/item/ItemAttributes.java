@@ -29,6 +29,8 @@ public class ItemAttributes {
     private double armor = 0;
     private double armorToughness = 0;
 
+    private double knockbackResistance = 0.0;
+
     private float toolSpeed = 1f;
     private float defaultToolSpeed = 1f;
 
@@ -56,8 +58,10 @@ public class ItemAttributes {
         this.maxHealth = curve.calculateValue(item.getRequiredLevel(), Attribute.MAX_HEALTH);
         this.attackRange = curve.calculateValue(item.getRequiredLevel(), Attribute.ENTITY_INTERACTION_RANGE);
 
-        this.armor = (float)curve.calculateValue(item.getRequiredLevel(), Attribute.ARMOR);
-        this.armorToughness = (float)curve.calculateValue(item.getRequiredLevel(), Attribute.ARMOR_TOUGHNESS);
+        this.armor = curve.calculateValue(item.getRequiredLevel(), Attribute.ARMOR);
+        this.armorToughness = curve.calculateValue(item.getRequiredLevel(), Attribute.ARMOR_TOUGHNESS);
+
+        this.knockbackResistance = (float)curve.calculateValue(item.getRequiredLevel(), Attribute.KNOCKBACK_RESISTANCE);
 
         this.toolSpeed = (float)curve.calculateValue(item.getRequiredLevel(), CurveHandler.TOOL_SPEED);
         this.defaultToolSpeed = (float)curve.calculateValue(item.getRequiredLevel(), CurveHandler.DEFAULT_TOOL_SPEED);
@@ -91,6 +95,10 @@ public class ItemAttributes {
     }
     public double getArmor() {
         return this.armor;
+    }
+
+    public double getKnockbackResistance() {
+        return knockbackResistance;
     }
 
     public double getAttackKnockback() {return this.attackKnockback;}
@@ -134,6 +142,13 @@ public class ItemAttributes {
         if(this.armorToughness != 0.0) {
             itemMeta.addAttributeModifier(Attribute.ARMOR_TOUGHNESS,
                     new AttributeModifier(new NamespacedKey(MineSkyItems.getInstance(), UUID.randomUUID().toString()), this.armorToughness, defaultOperation,
+                            getItem().getMetadata().material().getEquipmentSlot().getGroup()));
+        }
+
+        // Kb Resistance
+        if(this.knockbackResistance != 0.0) {
+            itemMeta.addAttributeModifier(Attribute.KNOCKBACK_RESISTANCE,
+                    new AttributeModifier(new NamespacedKey(MineSkyItems.getInstance(), UUID.randomUUID().toString()), this.knockbackResistance, defaultOperation,
                             getItem().getMetadata().material().getEquipmentSlot().getGroup()));
         }
 
