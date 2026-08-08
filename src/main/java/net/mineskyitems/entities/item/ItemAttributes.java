@@ -26,10 +26,13 @@ public class ItemAttributes {
     private double maxHealth = 0;
     private double attackRange = 1;
 
+    private double armor = 0;
+    private double armorToughness = 0;
+
     private float toolSpeed = 1f;
     private float defaultToolSpeed = 1f;
 
-    private double attackKnockback = 1;
+    private double attackKnockback = 1.0;
 
     public ItemAttributes(Item item) {
         this.item = item;
@@ -52,6 +55,9 @@ public class ItemAttributes {
 
         this.maxHealth = curve.calculateValue(item.getRequiredLevel(), Attribute.MAX_HEALTH);
         this.attackRange = curve.calculateValue(item.getRequiredLevel(), Attribute.ENTITY_INTERACTION_RANGE);
+
+        this.armor = (float)curve.calculateValue(item.getRequiredLevel(), Attribute.ARMOR);
+        this.armorToughness = (float)curve.calculateValue(item.getRequiredLevel(), Attribute.ARMOR_TOUGHNESS);
 
         this.toolSpeed = (float)curve.calculateValue(item.getRequiredLevel(), CurveHandler.TOOL_SPEED);
         this.defaultToolSpeed = (float)curve.calculateValue(item.getRequiredLevel(), CurveHandler.DEFAULT_TOOL_SPEED);
@@ -79,6 +85,13 @@ public class ItemAttributes {
 
     public double getMaxHealth() {return this.maxHealth;}
     public double getAttackRange() {return this.attackRange;}
+
+    public double getArmorToughness() {
+        return this.armorToughness;
+    }
+    public double getArmor() {
+        return this.armor;
+    }
 
     public double getAttackKnockback() {return this.attackKnockback;}
 
@@ -112,6 +125,18 @@ public class ItemAttributes {
                             getItem().getMetadata().material().getEquipmentSlot().getGroup()));
         }
 
+        // Armors
+        if(this.armor != 0.0) {
+            itemMeta.addAttributeModifier(Attribute.ARMOR,
+                    new AttributeModifier(new NamespacedKey(MineSkyItems.getInstance(), UUID.randomUUID().toString()), this.armor, defaultOperation,
+                            getItem().getMetadata().material().getEquipmentSlot().getGroup()));
+        }
+        if(this.armorToughness != 0.0) {
+            itemMeta.addAttributeModifier(Attribute.ARMOR_TOUGHNESS,
+                    new AttributeModifier(new NamespacedKey(MineSkyItems.getInstance(), UUID.randomUUID().toString()), this.armorToughness, defaultOperation,
+                            getItem().getMetadata().material().getEquipmentSlot().getGroup()));
+        }
+
         // Attack Range
         if(this.attackRange != 0.0) {
             itemMeta.addAttributeModifier(Attribute.ENTITY_INTERACTION_RANGE,
@@ -119,7 +144,7 @@ public class ItemAttributes {
         }
 
         // Attack Knockback
-        if(this.attackKnockback != 0.0) {
+        if(this.attackKnockback != 1.0) {
             itemMeta.addAttributeModifier(Attribute.ATTACK_KNOCKBACK,
                     new AttributeModifier(namespace, this.attackKnockback, defaultOperation, EquipmentSlotGroup.HAND));
         }

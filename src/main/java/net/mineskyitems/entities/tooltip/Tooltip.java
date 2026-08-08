@@ -77,6 +77,9 @@ public class Tooltip {
 
             s = s.replace("%health%", "+"+Utils.format(attributes.getMaxHealth()));
 
+            s = s.replace("%armor%", Utils.format(attributes.getArmor()));
+            s = s.replace("%toughness%", Utils.format(attributes.getArmorToughness()));
+
             final int durability = item.getDurability(stack);
             final int maxDurability = item.getMaxDurability();
             final String durString = (maxDurability == durability) ? durability+"" : durability+"/"+maxDurability;
