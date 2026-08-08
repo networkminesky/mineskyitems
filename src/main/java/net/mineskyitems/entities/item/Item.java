@@ -532,6 +532,9 @@ public class Item {
     }
 
     public void fixVanillaDurability(ItemStack itemStack) {
+        if(getCategory().isNoAttributes())
+            return;
+
         if(getCategory().isVanillaDurability()) {
             // OBRIGATÓRIO: Definir MAX_STACK_SIZE para 1
             itemStack.setData(DataComponentTypes.MAX_STACK_SIZE, 1);
