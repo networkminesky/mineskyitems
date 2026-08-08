@@ -69,8 +69,6 @@ public class MiscEvents implements Listener {
         final Player player = (Player) e.getEntity();
         final EntityDamageEvent.DamageCause damageCause = e.getCause();
 
-        Bukkit.broadcastMessage(damageCause.name());
-
         Arrays.stream(player.getEquipment().getArmorContents()).forEach(stack -> {
             net.mineskyitems.entities.item.Item item = ItemHandler.getItemFromStack(stack);
 
