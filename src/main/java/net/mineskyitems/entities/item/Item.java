@@ -385,6 +385,12 @@ public class Item {
             return;
         }
 
+        if(interactionType == InteractionType.RIGHT_CLICK) {
+            Item offhand = ItemHandler.getItemFromStack(player.getInventory().getItemInOffHand());
+            if(offhand != null && offhand.getCategory().isDualHanded())
+                return;
+        }
+
         getItemSkills().stream()
                 .filter(skill -> skill.getInteractionType() == interactionType)
                 .findFirst()
