@@ -15,6 +15,8 @@ public class CurveHandler {
     // hardcoded para evitar modificações desnecessárias.
     public static final int maxLevel = 100;
 
+    public static final String SKILL_DAMAGE_CURVE = "SKILL_DAMAGE";
+
     public static final String ITEM_DURABILITY_CURVE = "ITEM_DURABILITY";
     public static final String ARROW_DAMAGE_CURVE = "ARROW_DAMAGE";
 

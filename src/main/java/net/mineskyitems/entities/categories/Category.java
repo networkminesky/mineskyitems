@@ -42,6 +42,7 @@ public class Category {
 
     private final boolean noAttributes;
     private final boolean doNotStack;
+    private final boolean dualHanded;
     private final boolean oneHanded;
     private final boolean disappearWhenBroken;
     private final boolean showAlmostBroken;
@@ -69,7 +70,9 @@ public class Category {
         this.name = categoriesSection.getString("name", id.toLowerCase());
         this.defaultItem = Material.getMaterial(categoriesSection.getString("default-item", "STONE"));
 
+        this.dualHanded = categoriesSection.getBoolean("dual-handed", false);
         this.oneHanded = categoriesSection.getBoolean("one-handed", false);
+
         this.noAttributes = categoriesSection.getBoolean("no-attributes", false);
         this.doNotStack = categoriesSection.getBoolean("do-not-stack", false);
         this.disappearWhenBroken = categoriesSection.getBoolean("disappear-when-broken", true);
@@ -88,6 +91,18 @@ public class Category {
         return curve;
     }
 
+    /**
+     * Means that the player can put the item in the offhand slot (F) and attack with the right click.
+     * @return
+     */
+    public boolean isDualHanded() {
+        return dualHanded;
+    }
+
+    /**
+     * Means that the player can only attack with this item if it they do not have another item in the offhand slot.
+     * @return
+     */
     public boolean isOneHanded() {
         return oneHanded;
     }

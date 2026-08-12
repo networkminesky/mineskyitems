@@ -20,7 +20,9 @@ public class ItemAttributes {
     private final ConfigurationSection section;
 
     private double damage = 1.0;
+    private double skillDamage = 0.0;
     private double arrowDamage = 1.0;
+
     private double speed = 1.0;
 
     private double maxHealth = 0;
@@ -53,6 +55,8 @@ public class ItemAttributes {
         final ItemCurve curve = getItem().getCategory().getCurve();
 
         this.damage = curve.calculateValue(item.getRequiredLevel(), Attribute.ATTACK_DAMAGE);
+        this.skillDamage = curve.calculateValue(item.getRequiredLevel(), CurveHandler.SKILL_DAMAGE_CURVE);
+
         this.speed = curve.calculateValue(item.getRequiredLevel(), Attribute.ATTACK_SPEED);
 
         this.maxHealth = curve.calculateValue(item.getRequiredLevel(), Attribute.MAX_HEALTH);
@@ -86,6 +90,7 @@ public class ItemAttributes {
 
     public double getSpeed() {return this.speed;}
     public double getDamage() {return this.damage;}
+    public double getSkillDamage() {return this.damage;}
 
     public double getMaxHealth() {return this.maxHealth;}
     public double getAttackRange() {return this.attackRange;}

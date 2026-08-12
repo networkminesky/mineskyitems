@@ -424,7 +424,8 @@ public class Item {
 
                     String spell = skill.getMythicSkillId();
 
-                    MythicBukkit.inst().getAPIHelper().castSkill(casterEntity, spell, casterEntity, origin, targets, null, 1.0F);
+                    MythicBukkit.inst().getAPIHelper()
+                            .castSkill(casterEntity, spell, casterEntity, origin, targets, null, (float)this.getItemAttributes().getSkillDamage());
                 });
     }
 

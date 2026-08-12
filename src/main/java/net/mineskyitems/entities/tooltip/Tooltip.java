@@ -73,6 +73,8 @@ public class Tooltip {
                     ? attributes.getArrowDamage() : attributes.getDamage();
 
             s = s.replace("%damage%", Utils.format(damage));
+            s = s.replace("%skill_damage%", Utils.format(attributes.getSkillDamage()));
+
             s = s.replace("%speed%", Utils.format(attributes.getSpeed()));
 
             s = s.replace("%health%", "+"+Utils.format(attributes.getMaxHealth()));

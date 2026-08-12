@@ -43,7 +43,7 @@ public class OffhandAttackListener implements Listener {
         Item customItem = ItemHandler.getItemFromStack(stack);
         if (customItem == null) return;
 
-        if(customItem.getCategory().isOneHanded())
+        if(!customItem.getCategory().isDualHanded())
             return;
 
         e.setCancelled(true);
@@ -66,6 +66,9 @@ public class OffhandAttackListener implements Listener {
                 entity -> entity instanceof LivingEntity && !entity.equals(p)
         );
 
+        if(rayTrace.getHitBlock() != null)
+            return;
+
         if (rayTrace != null && rayTrace.getHitEntity() instanceof LivingEntity target) {
             offHandCooldowns.put(p.getUniqueId(), now);
 
@@ -74,6 +77,8 @@ public class OffhandAttackListener implements Listener {
             double damage = getAttackDamage(stack);
 
             target.damage(damage, p);
+
+            customItem.forceDamageItem(p, stack, 1);
 
             if (p.getFallDistance() > 0.0F && !p.isOnGround() && !p.isClimbing() && !p.isInWater()) {
                 p.getWorld().spawnParticle(Particle.CRIT, target.getLocation().add(0, 1, 0), 12, 0.2, 0.2, 0.2, 0.1);
