@@ -66,13 +66,16 @@ public class OffhandAttackListener implements Listener {
                 entity -> entity instanceof LivingEntity && !entity.equals(p)
         );
 
+        p.swingOffHand();
+
+        if(rayTrace == null)
+            return;
+
         if(rayTrace.getHitBlock() != null)
             return;
 
-        if (rayTrace != null && rayTrace.getHitEntity() instanceof LivingEntity target) {
+        if (rayTrace.getHitEntity() instanceof LivingEntity target) {
             offHandCooldowns.put(p.getUniqueId(), now);
-
-            p.swingOffHand();
 
             double damage = getAttackDamage(stack);
 
