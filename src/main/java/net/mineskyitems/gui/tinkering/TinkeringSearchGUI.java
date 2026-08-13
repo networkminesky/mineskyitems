@@ -307,7 +307,7 @@ public class TinkeringSearchGUI implements Listener {
             awaitingSearchPrompt.put(player.getUniqueId(), state);
             player.closeInventory();
             player.sendMessage(" ");
-            player.sendMessage("§e[Tinkering] Digite no chat o termo da pesquisa (ou 'cancelar'):");
+            player.sendMessage("§aDigite no chat o termo da pesquisa (ou 'cancelar'):");
             player.sendMessage(" ");
             return;
         }
