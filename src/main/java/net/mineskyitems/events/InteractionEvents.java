@@ -92,9 +92,8 @@ public class InteractionEvents implements Listener {
         if(item == null)
             return;
 
-        if(item.getCategory().getType().equalsIgnoreCase("melee")) {
-            item.onItemUse(damager, stack, e);
-        }
+        //if(item.getCategory().getType().equalsIgnoreCase("melee")) {
+        //    item.onItemUse(damager, stack, e);
+        //}
     }
-
 }

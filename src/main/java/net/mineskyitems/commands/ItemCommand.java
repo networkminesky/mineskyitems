@@ -5,6 +5,7 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.mineskyitems.MineSkyItems;
+import net.mineskyitems.entities.item.ObtainingMethod;
 import net.mineskyitems.events.DummyEvent;
 import net.mineskyitems.gui.crafting.CraftingCreatorGUI;
 import net.mineskyitems.gui.crafting.CraftingManager;
@@ -30,6 +31,7 @@ import net.mineskyitems.scripts.ItemFrameGenerator;
 import net.mineskyitems.utils.Utils;
 import org.bukkit.*;
 import org.bukkit.command.*;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemFrame;
@@ -48,7 +50,7 @@ public class ItemCommand implements TabExecutor {
     public static final List<String> subCommands = Arrays.asList("criar", "criar-tinkerer", "crafting", "smelting", "tinkering", "contar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
     public static final List<String> menu_subCommands = Arrays.asList("reparar", "destruir", "shop", "tinkering");
     public static final List<String> craftingtinkering_subCommands = Arrays.asList("create", "delete", "reload");
-    public static final List<String> scripts = Arrays.asList("empty", "category", "convert", "single", "armor");
+    public static final List<String> scripts = Arrays.asList("empty", "category", "register-obtainings", "convert", "single", "armor");
 
     void commandList(CommandSender s) {
         s.sendMessage(Utils.PURPLE_COLOR+Utils.c("&lMineSkyItems v"+MineSkyItems.getInstance().getDescription().getVersion()));
@@ -366,6 +368,60 @@ public class ItemCommand implements TabExecutor {
                 final String script = args[1].toLowerCase();
 
                 switch(script) {
+                    case "register-obtainings" -> {
+                        File convertingFIle = new File(MineSkyItems.getInstance().getDataFolder(), "converting.yml");
+                        if(!convertingFIle.exists()) {
+                            s.sendMessage("nao exisdtre");
+                            return true;
+                        }
+
+                        AtomicInteger converted = new AtomicInteger(0);
+
+                        YamlConfiguration config = YamlConfiguration.loadConfiguration(convertingFIle);
+
+                        List<String> naoAchou = new ArrayList<>();
+                        Set<Category> categories = new HashSet<>();
+
+                        for(String categoryId : config.getKeys(false)) {
+                            ConfigurationSection categorySection = config.getConfigurationSection(categoryId);
+                            if(categorySection == null)
+                                continue;
+
+                            for(String itemId : categorySection.getKeys(false)) {
+                                final Item item = ItemHandler.getItemById(itemId);
+                                if(item == null) {
+                                    naoAchou.add(itemId);
+                                    continue;
+                                }
+
+                                List<String> list = new ArrayList<>();
+                                for(String obtId : categorySection.getStringList(itemId+".type")) {
+                                    if(obtId.equals("MOB_DROPS"))
+                                        obtId = "MOB_DROP";
+
+                                    ObtainingMethod toGet = ObtainingMethod.fromValue(obtId);
+                                    if(toGet == null)
+                                        toGet = ObtainingMethod.UNKNOWN;
+
+                                    list.add(toGet.name());
+                                }
+
+                                categories.add(item.getCategory());
+                                item.getCategory().getConfig().set(item.getId()+".obtaining-methods", list);
+
+                                converted.getAndIncrement();
+                            }
+                        }
+
+                        Bukkit.getGlobalRegionScheduler().runDelayed(MineSkyItems.getInstance(), (task) -> {
+                            for(Category category : categories) {
+                                category.saveFile();
+                            }
+
+                            s.sendMessage(naoAchou.toString());
+                            s.sendMessage("obtainings configurados: "+ converted.get());
+                        }, 40);
+                    }
                     case "empty" -> {
                         int startingFrom = 0;
                         if(args.length >= 4) {

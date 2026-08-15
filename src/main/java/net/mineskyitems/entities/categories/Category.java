@@ -170,6 +170,14 @@ public class Category {
         config = YamlConfiguration.loadConfiguration(file);
     }
 
+    public void saveFile() {
+        try {
+            config.save(getFile());
+        } catch (IOException ex) {
+            ex.fillInStackTrace();
+        }
+    }
+
     private void registerItemsInsideCategory() {
         for(String itemId : getConfig().getKeys(false)) {
             final ConfigurationSection section = getConfig().getConfigurationSection(itemId);

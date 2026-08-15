@@ -32,13 +32,11 @@ import org.bukkit.inventory.meta.components.ToolComponent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.xml.crypto.Data;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Item {
@@ -59,6 +57,8 @@ public class Item {
     private final ItemRarity itemRarity;
 
     private final boolean noAutoArmor;
+
+    private final Set<ObtainingMethod> obtainingMethods;
 
     public ConfigurationSection getConfig() {
         return itemSection;
@@ -83,6 +83,19 @@ public class Item {
                 metadataSec.getInt("model", -1),
                 lore
         );
+
+        this.obtainingMethods = new HashSet<>();
+
+        if(itemSection.contains("obtaining-methods")) {
+            if(itemSection.isString("obtaining-methods"))
+                this.obtainingMethods.add(ObtainingMethod.fromValueOrUnknown(itemSection.getString("obtaining-methods", "UNKNONW")));
+            else if(itemSection.isList("obtaining-methods")) {
+                for(String s : itemSection.getStringList("obtaining-methods")) {
+                    ObtainingMethod method = ObtainingMethod.fromValue(s);
+                    if(method != null) this.obtainingMethods.add(method);
+                }
+            }
+        }
 
         this.requiredClasses = List.of();
         this.levelRequirement = itemSection.getInt("required-level", 0);
@@ -132,6 +145,14 @@ public class Item {
 
     public int getMaxDurability() {
         return (int)Math.round(getCategory().getCurve().calculateValue(getRequiredLevel(), CurveHandler.ITEM_DURABILITY_CURVE));
+    }
+
+    public Set<ObtainingMethod> getObtainingMethods() {
+        return obtainingMethods;
+    }
+
+    public boolean canBeObtained(final ObtainingMethod method) {
+        return this.obtainingMethods.contains(method);
     }
 
     public int getDurability(ItemStack itemStack) {
@@ -318,7 +339,7 @@ public class Item {
             }
 
             if(cooldownInSeconds != 0.0) {
-                player.setCooldown(itemStack, (int)(20/cooldownInSeconds));
+                //player.setCooldown(itemStack, (int)(20/cooldownInSeconds));
                 CooldownManager.createItemCooldown(player, this, (float) (20/cooldownInSeconds));
             }
 
