@@ -27,7 +27,7 @@ To use this repository as a dependency in your Maven project:
 <dependency>
   <groupId>com.github.networkminesky</groupId>
   <artifactId>mineskyitems</artifactId>
-  <version>1.0.8-ALPHA</version>
+  <version>1.0.3-BETA</version>
 </dependency>
 ```
 
