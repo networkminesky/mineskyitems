@@ -259,6 +259,10 @@ public class Item {
         itemStack.setItemMeta(im);
     }
 
+    public void updateItemOnDamage(ItemStack itemStack) {
+        updateItemOnDamage(itemStack, (getDurability(itemStack)));
+    }
+
     public static NamespacedKey ITEM_DURABILITY = NamespacedKey.fromString("item-durability");
     public void onItemUse(Player player, ItemStack itemStack, Cancellable event) {
         // Som de uso do item

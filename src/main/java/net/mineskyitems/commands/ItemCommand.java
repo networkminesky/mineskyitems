@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.item.ObtainingMethod;
 import net.mineskyitems.events.DummyEvent;
@@ -37,6 +38,8 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -47,7 +50,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ItemCommand implements TabExecutor {
 
-    public static final List<String> subCommands = Arrays.asList("criar", "criar-tinkerer", "crafting", "smelting", "tinkering", "contar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
+    public static final List<String> subCommands = Arrays.asList("criar", "force-add", "criar-tinkerer", "crafting", "smelting", "tinkering", "contar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
     public static final List<String> menu_subCommands = Arrays.asList("reparar", "destruir", "shop", "tinkering");
     public static final List<String> craftingtinkering_subCommands = Arrays.asList("create", "delete", "reload");
     public static final List<String> scripts = Arrays.asList("empty", "category", "register-obtainings", "convert", "single", "armor");
@@ -103,6 +106,47 @@ public class ItemCommand implements TabExecutor {
 
             s.sendMessage("§aCategorias recarregadas! "+ItemHandler.getItemsNames().size()+" itens ativos.");
             return true;
+        }
+
+        if (args[0].equalsIgnoreCase("force-add")) {
+            if(args.length == 1) {
+                s.sendMessage("§cInforme a categoria.");
+                return true;
+            }
+
+            Category category = CategoryHandler.getCategory(args[1]);
+            if(category == null) {
+                s.sendMessage("§cCategoria não encontrada.");
+                return true;
+            }
+
+            if(!(s instanceof Player p)) {
+                s.sendMessage("§cApenas jogadores..");
+                return true;
+            }
+
+            ItemStack itemStack = p.getInventory().getItemInMainHand();
+            if(itemStack.getType().isAir()) {
+                s.sendMessage("§cSegure um item válido para adicioná-lo.");
+                return true;
+            }
+
+            PlainTextComponentSerializer plain = PlainTextComponentSerializer.plainText();
+            final String name = plain.serialize(itemStack.getItemMeta().itemName());
+
+            final PersistentDataContainer container = itemStack.getItemMeta().getPersistentDataContainer();
+
+            final int model = itemStack.getItemMeta().hasCustomModelData() ? itemStack.getItemMeta().getCustomModelData() : 1;
+
+            ItemBuilder builder = new ItemBuilder(category);
+            builder.setItemLevel(container.getOrDefault(ItemHandler.LEVEL_NAMESPACE, PersistentDataType.INTEGER, 1));
+            builder.setCustomModel(model);
+            builder.setDisplayName(name);
+            builder.setMaterial(itemStack.getType());
+
+            Item item = builder.build();
+            s.sendMessage("Item adicionado: "+item.getMetadata().displayName()+", level: "+item.getRequiredLevel());
+            p.getInventory().setItemInMainHand(item.buildStack());
         }
 
         // give <player> <nome>
@@ -677,8 +721,9 @@ public class ItemCommand implements TabExecutor {
         }
 
         if(args[0].equalsIgnoreCase("criar")
-        || args[0].equalsIgnoreCase("get-all")
-        || args[0].equalsIgnoreCase("category")) {
+                || args[0].equalsIgnoreCase("get-all")
+                || args[0].equalsIgnoreCase("force-add")
+                || args[0].equalsIgnoreCase("category")) {
             String[] args2 = Arrays.copyOfRange(args, 1, args.length);
 
             List<String> e = new ArrayList<>(CategoryHandler.getCategoriesNames());
@@ -754,7 +799,7 @@ public class ItemCommand implements TabExecutor {
             } else {
                 if (length >= 2) {
                     iterator.remove();
-                    elementosAdicionais.add(elemento.toLowerCase().replace(input.toLowerCase(), "").trim());
+                    elementosAdicionais.add(elemento.toLowerCase().trim());
                 }
             }
         }

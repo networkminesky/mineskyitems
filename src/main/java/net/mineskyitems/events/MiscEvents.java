@@ -69,14 +69,13 @@ public class MiscEvents implements Listener {
         final Player player = (Player) e.getEntity();
         final EntityDamageEvent.DamageCause damageCause = e.getCause();
 
-        Arrays.stream(player.getEquipment().getArmorContents()).forEach(stack -> {
-            net.mineskyitems.entities.item.Item item = ItemHandler.getItemFromStack(stack);
-
-            if(item != null
-            && !item.getCategory().isVanillaDurability()) {
-                item.damageItem(player, stack, 1, null);
-                item.removeHealthIfBroken(player, stack);
-            }
-        });
+        player.getScheduler().runDelayed(MineSkyItems.getInstance(), (task) -> {
+            Arrays.stream(player.getEquipment().getArmorContents()).forEach(stack -> {
+                net.mineskyitems.entities.item.Item item = ItemHandler.getItemFromStack(stack);
+                if(item != null) {
+                    item.updateItemOnDamage(stack);
+                }
+            });
+        }, null, 1);
     }
 }
