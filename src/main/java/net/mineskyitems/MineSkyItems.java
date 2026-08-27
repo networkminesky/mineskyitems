@@ -23,7 +23,6 @@ import net.mineskyitems.gui.smelting.SmeltingListener;
 import net.mineskyitems.gui.smelting.SmeltingManager;
 import net.mineskyitems.gui.tinkering.*;
 import net.mineskyitems.gui.tinkering.recipe.TinkeringManager;
-import net.mineskyitems.utils.FrameUpdater;
 import net.mineskyitems.utils.RotatingShop;
 import net.mineskyitems.utils.Runnables;
 import org.bukkit.Bukkit;
@@ -82,8 +81,6 @@ public final class MineSkyItems extends JavaPlugin {
 
         l.info("Carregando itens hardcoded...");
         ItemDustHandler.registerDusts();
-
-        FrameUpdater.runnable();
 
         Runnables.equipmentChecker();
 

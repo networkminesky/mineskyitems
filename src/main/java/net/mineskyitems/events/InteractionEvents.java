@@ -1,10 +1,14 @@
 package net.mineskyitems.events;
 
+import io.papermc.paper.event.player.PlayerPickEntityEvent;
+import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemHandler;
 import net.mineskyitems.utils.InteractionType;
 import net.mineskyitems.utils.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -49,6 +53,32 @@ public class InteractionEvents implements Listener {
 
         if (item != null)
             item.onInteraction(p, itemStack, InteractionType.KEY_F, e, EquipmentSlot.OFF_HAND);
+    }
+
+    @EventHandler
+    public void onPickup(PlayerPickEntityEvent e) {
+        if(!e.getPlayer().hasPermission("mineskyitems.itemeditor"))
+            return;
+        if(e.getPlayer().getGameMode() != GameMode.CREATIVE)
+            return;
+
+        final int slot = e.getTargetSlot();
+
+        final Player p = e.getPlayer();
+        if(p.isSneaking())
+            return;
+
+        p.getScheduler().runDelayed(MineSkyItems.getInstance(), (task) -> {
+            final ItemStack stack = p.getInventory().getItem(slot);
+
+            Item item = ItemHandler.getItemFromStack(stack);
+            if(item != null) {
+                p.playSound(p, Sound.ENTITY_ITEM_PICKUP, 1, 1);
+                p.sendTitle("...", "§7Atualizando item", 5, 0, 3);
+
+                p.getInventory().setItem(slot, item.buildStack());
+            }
+        }, null, 1);
     }
 
     // Key Q
