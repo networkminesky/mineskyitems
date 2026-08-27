@@ -79,7 +79,6 @@ public class ItemAttributes {
         return section;
     }
 
-    public double getArrowDamage() { return this.arrowDamage; }
 
     public float getDefaultToolSpeed() {
         return defaultToolSpeed;
@@ -89,8 +88,10 @@ public class ItemAttributes {
     }
 
     public double getSpeed() {return this.speed;}
-    public double getDamage() {return this.damage;}
-    public double getSkillDamage() {return this.damage;}
+
+    public double getDamage() { return this.damage; }
+    public double getSkillDamage() { return this.skillDamage; }
+    public double getArrowDamage() { return this.arrowDamage; }
 
     public double getMaxHealth() {return this.maxHealth;}
     public double getAttackRange() {return this.attackRange;}

@@ -456,7 +456,9 @@ public class Item {
                     String spell = skill.getMythicSkillId();
 
                     MythicBukkit.inst().getAPIHelper()
-                            .castSkill(casterEntity, spell, casterEntity, origin, targets, null, (float)this.getItemAttributes().getSkillDamage());
+                            .castSkill(casterEntity, spell, casterEntity, origin, targets, null, 1.0f, metadata -> {
+                                metadata.getVariables().putFloat("mineskyitem-damage", (float)getItemAttributes().getSkillDamage());
+                            });
                 });
     }
 
