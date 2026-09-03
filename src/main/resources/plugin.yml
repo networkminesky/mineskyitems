@@ -5,6 +5,9 @@ api-version: 26.1
 
 folia-supported: true
 
+depend:
+  - MythicMobs
+
 authors:
   - "zBrunoC (Bruno C.)"
   - "Drawn (Giovane D.)"
