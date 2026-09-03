@@ -170,7 +170,7 @@ public class ItemRepairMenu implements Listener {
         final Inventory inventory = e.getInventory();
 
         // idiot-proof
-        if(inventory.getType() == InventoryType.ANVIL) {
+        /*if(inventory.getType() == InventoryType.ANVIL) {
             AnvilInventory inv = (AnvilInventory)e.getInventory();
             if(Utils.isMineSkyItem(inv.getFirstItem())
                     && (inv.getSecondItem() != null || (e.getCurrentItem() != null && slot == 1))) {
@@ -188,7 +188,7 @@ public class ItemRepairMenu implements Listener {
                 p.updateInventory();
             }
             return;
-        }
+        }*/
 
         if (!inventories.containsValue(inventory))
             return;

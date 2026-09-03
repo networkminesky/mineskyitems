@@ -53,32 +53,32 @@ public class ItemAttributes {
 
     private void calculateBasedOnLevel() {
         final ItemCurve curve = getItem().getCategory().getCurve();
+        final int level = item.getRequiredLevel();
 
-        this.damage = curve.calculateValue(item.getRequiredLevel(), Attribute.ATTACK_DAMAGE);
-        this.skillDamage = curve.calculateValue(item.getRequiredLevel(), CurveHandler.SKILL_DAMAGE_CURVE);
+        this.damage = curve.calculateValue(this.item, level, Attribute.ATTACK_DAMAGE);
+        this.skillDamage = curve.calculateValue(this.item, level, CurveHandler.SKILL_DAMAGE_CURVE);
 
-        this.speed = curve.calculateValue(item.getRequiredLevel(), Attribute.ATTACK_SPEED);
+        this.speed = curve.calculateValue(this.item, level, Attribute.ATTACK_SPEED);
 
-        this.maxHealth = curve.calculateValue(item.getRequiredLevel(), Attribute.MAX_HEALTH);
-        this.attackRange = curve.calculateValue(item.getRequiredLevel(), Attribute.ENTITY_INTERACTION_RANGE);
+        this.maxHealth = curve.calculateValue(this.item, level, Attribute.MAX_HEALTH);
+        this.attackRange = curve.calculateValue(this.item, level, Attribute.ENTITY_INTERACTION_RANGE);
 
-        this.armor = curve.calculateValue(item.getRequiredLevel(), Attribute.ARMOR);
-        this.armorToughness = curve.calculateValue(item.getRequiredLevel(), Attribute.ARMOR_TOUGHNESS);
+        this.armor = curve.calculateValue(this.item, level, Attribute.ARMOR);
+        this.armorToughness = curve.calculateValue(this.item, level, Attribute.ARMOR_TOUGHNESS);
 
-        this.knockbackResistance = (float)curve.calculateValue(item.getRequiredLevel(), Attribute.KNOCKBACK_RESISTANCE);
+        this.knockbackResistance = (float)curve.calculateValue(this.item, level, Attribute.KNOCKBACK_RESISTANCE);
 
-        this.toolSpeed = (float)curve.calculateValue(item.getRequiredLevel(), CurveHandler.TOOL_SPEED);
-        this.defaultToolSpeed = (float)curve.calculateValue(item.getRequiredLevel(), CurveHandler.DEFAULT_TOOL_SPEED);
+        this.toolSpeed = (float)curve.calculateValue(this.item, level, CurveHandler.TOOL_SPEED);
+        this.defaultToolSpeed = (float)curve.calculateValue(this.item, level, CurveHandler.DEFAULT_TOOL_SPEED);
 
-        this.attackKnockback = curve.calculateValue(item.getRequiredLevel(), Attribute.ATTACK_KNOCKBACK);
+        this.attackKnockback = curve.calculateValue(this.item, level, Attribute.ATTACK_KNOCKBACK);
 
-        this.arrowDamage = curve.calculateValue(item.getRequiredLevel(), CurveHandler.ARROW_DAMAGE_CURVE);
+        this.arrowDamage = curve.calculateValue(this.item, level, CurveHandler.ARROW_DAMAGE_CURVE);
     }
 
     public ConfigurationSection getAttributesSection() {
         return section;
     }
-
 
     public float getDefaultToolSpeed() {
         return defaultToolSpeed;

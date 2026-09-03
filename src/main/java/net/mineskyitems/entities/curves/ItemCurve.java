@@ -1,5 +1,7 @@
 package net.mineskyitems.entities.curves;
 
+import net.mineskyitems.entities.item.AttributeOverrider;
+import net.mineskyitems.entities.item.Item;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -28,10 +30,10 @@ public class ItemCurve {
         return curves;
     }
 
-    public double calculateValue(int level, Attribute attribute) {
-        return calculateValue(level, CurveHandler.translateDots(attribute.getKey().getKey()));
+    public double calculateValue(final Item item, int level, Attribute attribute) {
+        return calculateValue(item, level, CurveHandler.translateDots(attribute.getKey().getKey()));
     }
-    public double calculateValue(int level, String key) {
+    public double calculateValue(final Item item, int level, String key) {
         final List<Double> curves = getCurve(key);
 
         if (curves == null || curves.isEmpty()) {
@@ -55,7 +57,28 @@ public class ItemCurve {
         double factor = (level - posLower) / step;
 
         // Interpolação
-        return lowerValue + factor * (upperValue - lowerValue);
+        double result = lowerValue + factor * (upperValue - lowerValue);
+        if(!item.hasAttributeOverrider())
+            return result;
+
+        AttributeOverrider.Overrider overrider = item.getAttributeOverrider().getOverriders().stream()
+                .filter(e -> e.name().equalsIgnoreCase(key))
+                .findFirst().orElse(null);
+        if(overrider == null)
+            return result;
+
+        if(overrider.absolute() != -1) {
+            result = overrider.absolute();
+        } else {
+            if(overrider.divider() != -1) {
+                result = result/overrider.divider();
+            }
+            if(overrider.multiplier() != -1) {
+                result = result*overrider.multiplier();
+            }
+        }
+
+        return result;
     }
 
     public ItemCurve(final String id) {

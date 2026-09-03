@@ -3,6 +3,7 @@ package net.mineskyitems.entities.item;
 import io.lumine.mythic.bukkit.MythicBukkit;
 import io.lumine.mythic.core.utils.MythicUtil;
 import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.Repairable;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.mineskyitems.MineSkyItems;
@@ -64,6 +65,9 @@ public class Item {
         return itemSection;
     }
 
+    private final AttributeOverrider attributeOverrider;
+    private final boolean hasAnyOverride;
+
     public Item(Category category, String id, ConfigurationSection itemSection) {
         this.category = category;
         this.id = id;
@@ -84,8 +88,10 @@ public class Item {
                 lore
         );
 
-        this.obtainingMethods = new HashSet<>();
+        final ConfigurationSection overrider = itemSection.getConfigurationSection("attribute-overrider");
+        this.attributeOverrider = new AttributeOverrider(overrider);
 
+        this.obtainingMethods = new HashSet<>();
         if(itemSection.contains("obtaining-methods")) {
             if(itemSection.isString("obtaining-methods"))
                 this.obtainingMethods.add(ObtainingMethod.fromValueOrUnknown(itemSection.getString("obtaining-methods", "UNKNONW")));
@@ -96,6 +102,8 @@ public class Item {
                 }
             }
         }
+
+        this.hasAnyOverride = !attributeOverrider.getOverriders().isEmpty();
 
         this.requiredClasses = List.of();
         this.levelRequirement = itemSection.getInt("required-level", 0);
@@ -131,6 +139,14 @@ public class Item {
             this.itemRarity = RarityHandler.calculateRarityByLevel(levelRequirement);
     }
 
+    public AttributeOverrider getAttributeOverrider() {
+        return this.attributeOverrider;
+    }
+
+    public boolean hasAttributeOverrider() {
+        return hasAnyOverride;
+    }
+
     public boolean isNoAutoArmor() {
         return this.noAutoArmor;
     }
@@ -144,7 +160,7 @@ public class Item {
     }
 
     public int getMaxDurability() {
-        return (int)Math.round(getCategory().getCurve().calculateValue(getRequiredLevel(), CurveHandler.ITEM_DURABILITY_CURVE));
+        return (int)Math.round(getCategory().getCurve().calculateValue(this, getRequiredLevel(), CurveHandler.ITEM_DURABILITY_CURVE));
     }
 
     public Set<ObtainingMethod> getObtainingMethods() {
@@ -177,7 +193,7 @@ public class Item {
     }
 
     private void noDurability(Player player, final ItemStack itemStack) {
-        player.sendMessage("§cSeu item está quebrado, você deve repará-lo urgentemente em um ferreiro ou forjador.");
+        player.sendMessage("§cSeu item está quebrado, você deve repará-lo urgentemente.");
         player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1, 1.2f);
     }
 
@@ -416,6 +432,9 @@ public class Item {
                 return;
         }
 
+        final float baseDamage = (float)getItemAttributes().getSkillDamage();
+        final float level = itemStack.getEnchantmentLevel(Enchantment.SHARPNESS);
+
         getItemSkills().stream()
                 .filter(skill -> skill.getInteractionType() == interactionType)
                 .findFirst()
@@ -455,9 +474,16 @@ public class Item {
 
                     String spell = skill.getMythicSkillId();
 
+                    final float result = level <= 0 ?
+                            baseDamage // base if no sharpness
+                            :
+                            (float)(0.5 * level + 0.5); // sharpness formula
+
                     MythicBukkit.inst().getAPIHelper()
                             .castSkill(casterEntity, spell, casterEntity, origin, targets, null, 1.0f, metadata -> {
-                                metadata.getVariables().putFloat("mineskyitem-damage", (float)getItemAttributes().getSkillDamage());
+                                metadata.getVariables().putFloat(
+                                        "mineskyitem-damage", (result)
+                                );
                             });
                 });
     }
@@ -541,6 +567,11 @@ public class Item {
                 case "AXE" -> toolComponent.addRule(Tag.MINEABLE_AXE, toolSpeed, true);
                 case "HOE" -> toolComponent.addRule(Tag.MINEABLE_HOE, toolSpeed, true);
                 case "SHOVEL" -> toolComponent.addRule(Tag.MINEABLE_SHOVEL, toolSpeed, true);
+                case "PAXEL" -> {
+                    toolComponent.addRule(Tag.MINEABLE_PICKAXE, toolSpeed, true);
+                    toolComponent.addRule(Tag.MINEABLE_AXE, toolSpeed, true);
+                    toolComponent.addRule(Tag.MINEABLE_SHOVEL, toolSpeed, true);
+                }
             }
             im.setTool(toolComponent);
         }

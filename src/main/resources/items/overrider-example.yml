@@ -1,0 +1,11 @@
+attribute-overrided-item:
+  metadata:
+    material: IRON_AXE
+    displayname: Machado de Rubi
+    model: 94
+    lore: [ ]
+  required-level: 40
+  attribute-overrider:
+    "ATTRIBUTE_NAME":
+      divider: 2
+      #multiplier: 2
