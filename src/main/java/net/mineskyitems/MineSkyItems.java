@@ -23,6 +23,7 @@ import net.mineskyitems.gui.smelting.SmeltingListener;
 import net.mineskyitems.gui.smelting.SmeltingManager;
 import net.mineskyitems.gui.tinkering.*;
 import net.mineskyitems.gui.tinkering.recipe.TinkeringManager;
+import net.mineskyitems.hook.MythicHook;
 import net.mineskyitems.utils.RotatingShop;
 import net.mineskyitems.utils.Runnables;
 import org.bukkit.Bukkit;
@@ -114,6 +115,8 @@ public final class MineSkyItems extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new ItemSkillsMenu(), this);
         Bukkit.getPluginManager().registerEvents(new ItemRecyclerMenu(), this);
         Bukkit.getPluginManager().registerEvents(new ItemRepairMenu(), this);
+
+        Bukkit.getPluginManager().registerEvents(new MythicHook(), this);
 
         Bukkit.getPluginManager().registerEvents(new RotatingItemsGUI(), this);
 
