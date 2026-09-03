@@ -477,7 +477,7 @@ public class Item {
                     final float result = level <= 0 ?
                             baseDamage // base if no sharpness
                             :
-                            (float)(0.5 * level + 0.5); // sharpness formula
+                            baseDamage + (float)(0.5 * level + 0.5); // sharpness formula
 
                     MythicBukkit.inst().getAPIHelper()
                             .castSkill(casterEntity, spell, casterEntity, origin, targets, null, 1.0f, metadata -> {
