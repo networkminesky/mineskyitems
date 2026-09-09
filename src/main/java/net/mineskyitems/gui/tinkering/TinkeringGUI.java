@@ -185,6 +185,9 @@ public class TinkeringGUI implements Listener {
                 else if(id.equalsIgnoreCase("legendary")) {
                     AdvancementsAPI.get().grantAsync(player, "minesky:invencao/destrutivo");
                 }
+                else if(id.equalsIgnoreCase("special")) {
+                    AdvancementsAPI.get().grantAsync(player, "minesky:invencao/no_apice");
+                }
             }
 
             return;
