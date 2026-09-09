@@ -7,6 +7,9 @@ folia-supported: true
 
 depend:
   - MythicMobs
+  - MineSkyGameplay
+softdepend:
+  - MineSkyCustom
 
 authors:
   - "zBrunoC (Bruno C.)"

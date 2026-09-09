@@ -1,7 +1,10 @@
 package net.mineskyitems.gui.tinkering;
 
 import net.kyori.adventure.text.Component;
+import net.minesky.mineskygameplay.advancements.AdvancementsAPI;
 import net.mineskyitems.MineSkyItems;
+import net.mineskyitems.entities.item.Item;
+import net.mineskyitems.entities.item.ItemHandler;
 import net.mineskyitems.gui.tinkering.recipe.TinkeringManager;
 import net.mineskyitems.gui.tinkering.recipe.TinkeringRecipe;
 import org.bukkit.*;
@@ -171,6 +174,19 @@ public class TinkeringGUI implements Listener {
             } else {
                 craftNormal(player, e.getInventory());
             }
+            AdvancementsAPI.get().grantAsync(player, "minesky:invencao/equipado");
+
+            Item item = ItemHandler.getItemFromStack(result);
+            if(item != null && item.getItemRarity() != null) {
+                String id = item.getItemRarity().getId();
+                if(id.equalsIgnoreCase("rare")) {
+                    AdvancementsAPI.get().grantAsync(player, "minesky:invencao/equipado");
+                }
+                else if(id.equalsIgnoreCase("legendary")) {
+                    AdvancementsAPI.get().grantAsync(player, "minesky:invencao/destrutivo");
+                }
+            }
+
             return;
         }
 
