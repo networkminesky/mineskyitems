@@ -7,6 +7,7 @@ import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemHandler;
 import net.mineskyitems.gui.tinkering.recipe.TinkeringManager;
 import net.mineskyitems.gui.tinkering.recipe.TinkeringRecipe;
+import net.mineskyitems.hook.AdvancementHook;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -189,6 +190,8 @@ public class TinkeringGUI implements Listener {
                     AdvancementsAPI.get().grantAsync(player, "minesky:invencao/no_apice");
                 }
             }
+
+            AdvancementHook.onCraft(player, item);
 
             return;
         }

@@ -3,7 +3,11 @@ package net.mineskyitems.entities.item;
 import io.lumine.mythic.bukkit.MythicBukkit;
 import io.lumine.mythic.core.utils.MythicUtil;
 import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.Consumable;
+import io.papermc.paper.datacomponent.item.FoodProperties;
 import io.papermc.paper.datacomponent.item.Repairable;
+import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.mineskyitems.MineSkyItems;
@@ -29,6 +33,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 import org.bukkit.inventory.meta.components.EquippableComponent;
+import org.bukkit.inventory.meta.components.FoodComponent;
 import org.bukkit.inventory.meta.components.ToolComponent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -45,7 +50,9 @@ public class Item {
     private final ConfigurationSection itemSection;
 
     private final List<ItemSkill> itemSkills;
+
     private final ItemMetadata metadata;
+    private final @Nullable FoodMetadata foodMetadata;
 
     private final String id;
 
@@ -82,11 +89,20 @@ public class Item {
         this.noAutoArmor = itemSection.getBoolean("no-auto-armor", false);
 
         this.metadata = new ItemMetadata(
-                Material.getMaterial(metadataSec.getString("material", getCategory().getDefaultItem().name())),
+                Material.matchMaterial(metadataSec.getString("material", getCategory().getDefaultItem().name())),
                 metadataSec.getString("displayname", "Nome inválido"),
                 metadataSec.getInt("model", -1),
                 lore
         );
+
+        ConfigurationSection food = itemSection.getConfigurationSection("food");
+        if(food != null) {
+            this.foodMetadata = new FoodMetadata(
+                    food.getInt("nutrition", 0),
+                    (float)food.getDouble("saturation", 0.0),
+                    (float)food.getDouble("consume-seconds", 1.6)
+            );
+        } else this.foodMetadata = null;
 
         final ConfigurationSection overrider = itemSection.getConfigurationSection("attribute-overrider");
         this.attributeOverrider = new AttributeOverrider(overrider);
@@ -591,6 +607,26 @@ public class Item {
 
         itemStack.setItemMeta(im);
 
+        if(getCategory().isFood()
+        && this.foodMetadata != null) {
+            boolean drink = this.getCategory().getFood().equalsIgnoreCase("drink");
+
+            Consumable consum = Consumable.consumable()
+                    .hasConsumeParticles(true)
+                    .consumeSeconds(this.foodMetadata.consumeSeconds())
+                    .animation(drink ? ItemUseAnimation.DRINK : ItemUseAnimation.EAT)
+                    .sound(Key.key("minecraft", (drink) ? "entity.generic.drink" : "entity.generic.eat"))
+                    .build();
+            itemStack.setData(DataComponentTypes.CONSUMABLE, consum);
+
+            FoodProperties foodProp = FoodProperties.food()
+                    .nutrition(this.foodMetadata.nutrition())
+                    .saturation(this.foodMetadata.saturation())
+                    .canAlwaysEat(false)
+                    .build();
+            itemStack.setData(DataComponentTypes.FOOD, foodProp);
+        }
+
         fixVanillaDurability(itemStack);
 
         return itemStack;
@@ -615,4 +651,6 @@ public class Item {
                                String displayName,
                                int modelData,
                                List<String> lore) {}
+
+    public record FoodMetadata(int nutrition, float saturation, float consumeSeconds) {}
 }

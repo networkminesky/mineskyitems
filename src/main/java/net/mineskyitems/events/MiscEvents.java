@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.item.ItemHandler;
+import net.mineskyitems.hook.AdvancementHook;
 import org.bukkit.Bukkit;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.*;
@@ -11,7 +12,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Arrays;
@@ -60,6 +63,15 @@ public class MiscEvents implements Listener {
                 projectile.remove();
             }
         }
+    }
+
+    @EventHandler
+    public void onCraft(CraftItemEvent e) {
+        ItemStack crafted = e.getCurrentItem();
+        if(crafted == null) return;
+
+        net.mineskyitems.entities.item.Item item = ItemHandler.getItemFromStack(crafted);
+        AdvancementHook.onCraft((Player)e.getWhoClicked(), item);
     }
 
     @EventHandler

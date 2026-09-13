@@ -28,12 +28,18 @@ public class Category {
      * MELEE for melee physical weapons
      * RANGED for ranged attack weapons (e.g. Bows, Crossbows
      * TOOL for tools
+     * FOOD for foods
+     *
      */
     private final String type;
     /** nullable
      * PICKAXE, AXE, HOE, SHOVEL
      */
     private final @Nullable String tool;
+    /** nullable
+     * FOOD, DRINK
+     */
+    private final @Nullable String food;
 
     private final String name;
     private final Material defaultItem;
@@ -63,6 +69,7 @@ public class Category {
 
         this.type = categoriesSection.getString("type", "MELEE");
         this.tool = categoriesSection.getString("tool", null);
+        this.food = categoriesSection.getString("food", "FOOD");
 
         this.vanillaDurability = categoriesSection.getBoolean("vanilla-durability", true);
 
@@ -100,11 +107,18 @@ public class Category {
     }
 
     /**
-     * Means that the player can only attack with this item if it they do not have another item in the offhand slot.
+     * Means that the player can only attack with this item if it does not have another item in the offhand slot.
      * @return
      */
     public boolean isOneHanded() {
         return oneHanded;
+    }
+
+    public boolean isFood() {
+        return this.type.equalsIgnoreCase("food");
+    }
+    public String getFood() {
+        return this.food;
     }
 
     public boolean isTool() {
