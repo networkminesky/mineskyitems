@@ -75,6 +75,12 @@ public class Tooltip {
             s = s.replace("%damage%", Utils.format(damage));
             s = s.replace("%skill_damage%", Utils.format(attributes.getSkillDamage()));
 
+            Item.FoodMetadata food = item.getFoodMetadata();
+            if(food != null) {
+                s = s.replace("%nutrition%", Utils.format(food.nutrition()));
+                s = s.replace("%saturation%", Utils.format(food.saturation()));
+            }
+
             s = s.replace("%speed%", Utils.format(attributes.getSpeed()));
 
             s = s.replace("%health%", "+"+Utils.format(attributes.getMaxHealth()));

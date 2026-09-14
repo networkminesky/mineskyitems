@@ -20,7 +20,6 @@ public class SmeltingManager {
     private static YamlConfiguration config;
 
     public static void loadRecipes() {
-        // Desregistra receitas de fornalhas antigas
         for (NamespacedKey key : registeredKeys) {
             Bukkit.removeRecipe(key);
         }
@@ -51,6 +50,8 @@ public class SmeltingManager {
 
             if (inputDescriptor != null && resultStack != null) {
                 registerBukkitSmelting(key, inputDescriptor, resultStack, furnace, blastFurnace, smoker, campfire, cookingTime, experience);
+            } else {
+                MineSkyItems.l.warning("Receita de smelting '" + key + "' ignorada: input ou resultado inválidos.");
             }
         }
 
@@ -103,7 +104,10 @@ public class SmeltingManager {
                                                boolean furnace, boolean blastFurnace, boolean smoker, boolean campfire,
                                                int cookingTime, float experience) {
         RecipeChoice choice = parseChoice(inputDescriptor);
-        if (choice == null || resultStack == null) return;
+        if (choice == null || resultStack == null) {
+            MineSkyItems.l.severe("Erro ao registrar smelting '" + recipeId + "': ingrediente '" + inputDescriptor + "' inválido.");
+            return;
+        }
 
         String baseKey = recipeId.toLowerCase();
 
@@ -114,7 +118,9 @@ public class SmeltingManager {
                 FurnaceRecipe recipe = new FurnaceRecipe(key, resultStack, choice, experience, cookingTime);
                 Bukkit.addRecipe(recipe);
                 registeredKeys.add(key);
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                MineSkyItems.l.severe("Erro ao registrar fornalha para '" + recipeId + "': " + e.getMessage());
+            }
         }
 
         if (blastFurnace) {
@@ -124,7 +130,9 @@ public class SmeltingManager {
                 BlastingRecipe recipe = new BlastingRecipe(key, resultStack, choice, experience, Math.max(1, cookingTime / 2));
                 Bukkit.addRecipe(recipe);
                 registeredKeys.add(key);
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                MineSkyItems.l.severe("Erro ao registrar alto-forno para '" + recipeId + "': " + e.getMessage());
+            }
         }
 
         if (smoker) {
@@ -134,7 +142,9 @@ public class SmeltingManager {
                 SmokingRecipe recipe = new SmokingRecipe(key, resultStack, choice, experience, Math.max(1, cookingTime / 2));
                 Bukkit.addRecipe(recipe);
                 registeredKeys.add(key);
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                MineSkyItems.l.severe("Erro ao registrar defumador para '" + recipeId + "': " + e.getMessage());
+            }
         }
 
         if (campfire) {
@@ -144,48 +154,102 @@ public class SmeltingManager {
                 CampfireRecipe recipe = new CampfireRecipe(key, resultStack, choice, experience, cookingTime * 2);
                 Bukkit.addRecipe(recipe);
                 registeredKeys.add(key);
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                MineSkyItems.l.severe("Erro ao registrar fogueira para '" + recipeId + "': " + e.getMessage());
+            }
         }
     }
 
     private static RecipeChoice parseChoice(String descriptor) {
-        String[] parts = descriptor.split(":", 2);
-        if (parts.length < 2) return null;
+        if (descriptor == null) return null;
+        String clean = descriptor.trim();
+        if (clean.isEmpty()) return null;
 
-        if (parts[0].equalsIgnoreCase("CUSTOM")) {
-            Item customItem = ItemHandler.getItemById(parts[1]);
-            if (customItem != null) {
-                ItemStack stack = customItem.buildStack();
-                stack.setAmount(1);
-                return new RecipeChoice.ExactChoice(stack);
+        String[] parts = clean.split(":");
+
+        if (parts[0].equalsIgnoreCase("CUSTOM") || parts[0].equalsIgnoreCase("MINESKYITEM")) {
+            if (parts.length >= 2) {
+                Item customItem = ItemHandler.getItemById(parts[1].trim());
+                if (customItem != null) {
+                    ItemStack stack = customItem.buildStack();
+                    stack.setAmount(1);
+                    return new RecipeChoice.ExactChoice(stack);
+                }
             }
-        } else if (parts[0].equalsIgnoreCase("VANILLA")) {
-            Material mat = Material.matchMaterial(parts[1]);
-            if (mat != null) {
-                return new RecipeChoice.MaterialChoice(mat);
-            }
+            return null;
         }
+
+        Material mat = resolveMaterial(clean);
+        if (mat != null && mat != Material.AIR) {
+            return new RecipeChoice.MaterialChoice(mat);
+        }
+
         return null;
     }
 
-    private static ItemStack parseResultStack(String resStr, ItemStack fallbackVanilla) {
-        if (resStr != null) {
-            String[] parts = resStr.split(":", 3);
-            if (parts[0].equalsIgnoreCase("CUSTOM")) {
-                Item customItem = ItemHandler.getItemById(parts[1]);
+    public static ItemStack parseResultStack(String resStr, ItemStack fallbackVanilla) {
+        if (resStr == null || resStr.trim().isEmpty()) {
+            return fallbackVanilla;
+        }
+
+        String clean = resStr.trim();
+        String[] parts = clean.split(":");
+
+        if (parts[0].equalsIgnoreCase("CUSTOM") || parts[0].equalsIgnoreCase("MINESKYITEM")) {
+            if (parts.length >= 2) {
+                Item customItem = ItemHandler.getItemById(parts[1].trim());
                 if (customItem != null) {
                     ItemStack stack = customItem.buildStack();
-                    stack.setAmount(Integer.parseInt(parts[2]));
+                    int amount = parts.length >= 3 ? parseAmountSafe(parts[2]) : 1;
+                    stack.setAmount(amount);
                     return stack;
                 }
-            } else if (parts[0].equalsIgnoreCase("VANILLA")) {
-                Material mat = Material.matchMaterial(parts[1]);
-                if (mat != null) {
-                    return new ItemStack(mat, Integer.parseInt(parts[2]));
-                }
             }
+            return fallbackVanilla;
         }
+
+        Material mat = resolveMaterial(clean);
+        if (mat != null && mat != Material.AIR) {
+            int amount = 1;
+            if (parts.length >= 3 && parts[0].equalsIgnoreCase("VANILLA")) {
+                amount = parseAmountSafe(parts[2]);
+            } else if (parts.length >= 2 && !parts[0].equalsIgnoreCase("VANILLA") && !clean.toLowerCase().startsWith("minecraft:")) {
+                amount = parseAmountSafe(parts[1]);
+            }
+            return new ItemStack(mat, amount);
+        }
+
         return fallbackVanilla;
+    }
+
+    private static Material resolveMaterial(String descriptor) {
+        String s = descriptor.trim();
+        if (s.toLowerCase().startsWith("minecraft:")) {
+            s = s.substring(10);
+        }
+
+        String[] parts = s.split(":");
+        String matName;
+
+        if (parts[0].equalsIgnoreCase("VANILLA") && parts.length >= 2) {
+            matName = parts[1].trim();
+        } else {
+            matName = parts[0].trim();
+        }
+
+        Material mat = Material.matchMaterial(matName);
+        if (mat == null) {
+            mat = Material.matchMaterial(matName.toUpperCase());
+        }
+        return mat;
+    }
+
+    private static int parseAmountSafe(String str) {
+        try {
+            return Math.max(1, Integer.parseInt(str.trim()));
+        } catch (NumberFormatException e) {
+            return 1;
+        }
     }
 
     private static void removeIfRegistered(String keyString) {

@@ -75,6 +75,10 @@ public class Item {
     private final AttributeOverrider attributeOverrider;
     private final boolean hasAnyOverride;
 
+    public @Nullable FoodMetadata getFoodMetadata() {
+        return foodMetadata;
+    }
+
     public Item(Category category, String id, ConfigurationSection itemSection) {
         this.category = category;
         this.id = id;

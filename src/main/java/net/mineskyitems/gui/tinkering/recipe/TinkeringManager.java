@@ -130,22 +130,14 @@ public class TinkeringManager {
             }
 
             List<String> grid = section.getStringList("grid");
-            if (grid.size() < 9) continue;
+            if (grid.isEmpty()) continue;
 
             String resStr = section.getString("result");
-            if (resStr == null || resStr.isEmpty()) continue;
+            if (resStr == null || resStr.trim().isEmpty()) continue;
 
-            // result parser
-            String[] resParts = resStr.split(":", 3);
-            if (resParts.length < 2) continue;
+            ItemEntry resultEntry = parseItemEntry(resStr);
+            if (resultEntry == null || resultEntry.isAir()) continue;
 
-            String resType = resParts[0].equalsIgnoreCase("CUSTOM") ? "MINESKYITEM" : "VANILLA";
-            String resId = resParts[1];
-            int resAmount = resParts.length >= 3 ? Integer.parseInt(resParts[2]) : 1;
-
-            ItemEntry resultEntry = new ItemEntry(resType, resId, resAmount);
-
-            // 3x3 grid parser (9 slots)
             Map<Character, ItemEntry> ingredients = new HashMap<>();
             Map<String, Character> descriptorToChar = new HashMap<>();
             char currentChar = 'A';
@@ -156,24 +148,22 @@ public class TinkeringManager {
                 StringBuilder rowSb = new StringBuilder();
                 for (int c = 0; c < 3; c++) {
                     int slot = r * 3 + c;
-                    String descriptor = grid.get(slot);
+                    String descriptor = slot < grid.size() ? grid.get(slot) : "AIR";
 
-                    if (descriptor == null || descriptor.equalsIgnoreCase("AIR") || descriptor.isEmpty()) {
+                    if (isAirDescriptor(descriptor)) {
                         rowSb.append(' ');
                     } else {
-                        if (!descriptorToChar.containsKey(descriptor)) {
-                            String[] parts = descriptor.split(":", 3);
-                            if (parts.length >= 2) {
-                                String type = parts[0].equalsIgnoreCase("CUSTOM") ? "MINESKYITEM" : "VANILLA";
-                                String itemId = parts[1];
-
-                                descriptorToChar.put(descriptor, currentChar);
-                                ingredients.put(currentChar, new ItemEntry(type, itemId));
+                        String clean = descriptor.trim();
+                        if (!descriptorToChar.containsKey(clean)) {
+                            ItemEntry itemEntry = parseItemEntry(clean);
+                            if (itemEntry != null && !itemEntry.isAir()) {
+                                descriptorToChar.put(clean, currentChar);
+                                ingredients.put(currentChar, itemEntry);
                                 currentChar++;
                             }
                         }
 
-                        Character ch = descriptorToChar.get(descriptor);
+                        Character ch = descriptorToChar.get(clean);
                         rowSb.append(ch != null ? ch : ' ');
                     }
                 }
@@ -183,6 +173,70 @@ public class TinkeringManager {
             TinkeringRecipe tinkRecipe = new TinkeringRecipe("crafting_3x3_" + recipeId, shape, ingredients, resultEntry);
             TinkeringManager.registerRecipe(tinkRecipe);
         }
+    }
+
+    private static ItemEntry parseItemEntry(String descriptor) {
+        if (descriptor == null) return null;
+        String clean = descriptor.trim();
+        if (clean.isEmpty() || isAirDescriptor(clean)) return null;
+
+        String[] parts = clean.split(":");
+
+        if (parts[0].equalsIgnoreCase("CUSTOM") || parts[0].equalsIgnoreCase("MINESKYITEM")) {
+            if (parts.length >= 2) {
+                String id = parts[1].trim();
+                int amount = 1;
+                if (parts.length >= 3) {
+                    try {
+                        amount = Integer.parseInt(parts[2].trim());
+                    } catch (NumberFormatException ignored) {}
+                }
+                return new ItemEntry("MINESKYITEM", id, amount);
+            }
+            return null;
+        }
+
+        if (parts[0].equalsIgnoreCase("VANILLA")) {
+            if (parts.length >= 2) {
+                String id = parts[1].trim();
+                int amount = 1;
+                if (parts.length >= 3) {
+                    try {
+                        amount = Integer.parseInt(parts[2].trim());
+                    } catch (NumberFormatException ignored) {}
+                }
+                return new ItemEntry("VANILLA", id, amount);
+            }
+            return null;
+        }
+
+        if (clean.toLowerCase().startsWith("minecraft:")) {
+            String withoutNamespace = clean.substring(10);
+            String[] subParts = withoutNamespace.split(":");
+            String id = subParts[0].trim();
+            int amount = 1;
+            if (subParts.length >= 2) {
+                try {
+                    amount = Integer.parseInt(subParts[1].trim());
+                } catch (NumberFormatException ignored) {}
+            }
+            return new ItemEntry("VANILLA", id, amount);
+        }
+
+        String id = parts[0].trim();
+        int amount = 1;
+        if (parts.length >= 2) {
+            try {
+                amount = Integer.parseInt(parts[1].trim());
+            } catch (NumberFormatException ignored) {}
+        }
+        return new ItemEntry("VANILLA", id, amount);
+    }
+
+    private static boolean isAirDescriptor(String descriptor) {
+        if (descriptor == null) return true;
+        String s = descriptor.trim().toUpperCase();
+        return s.isEmpty() || s.equals("AIR") || s.equals("VANILLA:AIR") || s.startsWith("AIR:") || s.startsWith("VANILLA:AIR:");
     }
 
     public static boolean deleteRecipe(String id) {

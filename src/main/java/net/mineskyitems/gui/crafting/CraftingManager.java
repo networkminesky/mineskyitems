@@ -22,7 +22,6 @@ public class CraftingManager {
     private static YamlConfiguration config;
 
     public static void loadRecipes() {
-        // unregister old recipes
         for (NamespacedKey key : registeredKeys) {
             Bukkit.removeRecipe(key);
         }
@@ -38,37 +37,31 @@ public class CraftingManager {
         for (String key : config.getConfigurationSection("recipes").getKeys(false)) {
             String path = "recipes." + key;
             List<String> gridList = config.getStringList(path + ".grid");
-            String[] grid = gridList.toArray(new String[0]);
+
+            String[] grid = new String[9];
+            Arrays.fill(grid, "AIR");
+            for (int i = 0; i < Math.min(gridList.size(), 9); i++) {
+                grid[i] = gridList.get(i);
+            }
 
             ItemStack resultStack = null;
             String resStr = config.getString(path + ".result");
 
-            if (resStr != null) {
-                String[] parts = resStr.split(":", 3);
-                if (parts[0].equalsIgnoreCase("CUSTOM")) {
-                    Item customItem = ItemHandler.getItemById(parts[1]);
-                    if (customItem != null) {
-                        resultStack = customItem.buildStack();
-                        resultStack.setAmount(Integer.parseInt(parts[2]));
-                    }
-                } else if (parts[0].equalsIgnoreCase("VANILLA")) {
-                    Material mat = Material.matchMaterial(parts[1]);
-                    if (mat != null) {
-                        resultStack = new ItemStack(mat, Integer.parseInt(parts[2]));
-                    }
-                }
+            if (resStr != null && !resStr.trim().isEmpty()) {
+                resultStack = parseItemStack(resStr);
             }
 
             if (resultStack == null) {
                 resultStack = config.getItemStack(path + ".result_vanilla");
             }
 
-            if (resultStack != null && grid.length >= 9) {
+            if (resultStack != null) {
                 registerBukkitRecipe(key, grid, resultStack);
+            } else {
+                MineSkyItems.l.warning("Receita '" + key + "' ignorada: resultado inválido ou nulo.");
             }
         }
 
-        // update recipes
         Bukkit.updateRecipes();
         MineSkyItems.l.info("Carregadas " + registeredKeys.size() + " receitas nativas com sucesso.");
     }
@@ -86,7 +79,6 @@ public class CraftingManager {
             config.set(path + ".result_vanilla", resultStack);
         }
 
-        // register recipes
         registerBukkitRecipe(id.toLowerCase(), gridDescriptors, resultStack);
         Bukkit.updateRecipes();
 
@@ -112,7 +104,7 @@ public class CraftingManager {
         int minRow = 3, maxRow = -1, minCol = 3, maxCol = -1;
         for (int i = 0; i < 9; i++) {
             String descriptor = grid[i];
-            if (descriptor != null && !descriptor.equalsIgnoreCase("AIR") && !descriptor.isEmpty()) {
+            if (!isAirDescriptor(descriptor)) {
                 int r = i / 3;
                 int c = i % 3;
                 minRow = Math.min(minRow, r);
@@ -122,7 +114,10 @@ public class CraftingManager {
             }
         }
 
-        if (maxRow == -1) return; // empty
+        if (maxRow == -1) {
+            MineSkyItems.l.warning("Receita '" + recipeId + "' está vazia e não foi registrada.");
+            return;
+        }
 
         Map<String, Character> descriptorToChar = new HashMap<>();
         Map<Character, RecipeChoice> charToChoice = new HashMap<>();
@@ -135,23 +130,30 @@ public class CraftingManager {
             StringBuilder sb = new StringBuilder();
             for (int c = minCol; c <= maxCol; c++) {
                 int slot = r * 3 + c;
-                String descriptor = grid[slot];
+                String descriptor = (slot < grid.length) ? grid[slot] : "AIR";
 
-                if (descriptor == null || descriptor.equalsIgnoreCase("AIR") || descriptor.isEmpty()) {
+                if (isAirDescriptor(descriptor)) {
                     sb.append(' ');
                 } else {
-                    if (!descriptorToChar.containsKey(descriptor)) {
-                        RecipeChoice choice = parseChoice(descriptor);
-                        if (choice == null) return;
-                        descriptorToChar.put(descriptor, currentChar);
+                    String cleanDescriptor = descriptor.trim();
+                    if (!descriptorToChar.containsKey(cleanDescriptor)) {
+                        RecipeChoice choice = parseChoice(cleanDescriptor);
+                        if (choice == null) {
+                            MineSkyItems.l.severe("Erro na receita '" + recipeId + "': ingrediente inválido '" + descriptor + "'.");
+                            return;
+                        }
+                        descriptorToChar.put(cleanDescriptor, currentChar);
                         charToChoice.put(currentChar, choice);
                         currentChar++;
                     }
-                    sb.append(descriptorToChar.get(descriptor));
+                    sb.append(descriptorToChar.get(cleanDescriptor));
                 }
             }
             shape[r - minRow] = sb.toString();
         }
+
+        if(resultStack.isEmpty() || resultStack.getType().isAir())
+            return;
 
         ShapedRecipe recipe = new ShapedRecipe(key, resultStack);
         recipe.shape(shape);
@@ -168,25 +170,101 @@ public class CraftingManager {
     }
 
     private static RecipeChoice parseChoice(String descriptor) {
-        String[] parts = descriptor.split(":", 3);
-        if (parts.length < 2) return null;
+        if (isAirDescriptor(descriptor)) return null;
 
-        final int amount = parts.length >= 3 ? Integer.parseInt(parts[2]) : 1;
+        String clean = descriptor.trim();
+        String[] parts = clean.split(":");
 
         if (parts[0].equalsIgnoreCase("CUSTOM")) {
-            Item customItem = ItemHandler.getItemById(parts[1]);
-            if (customItem != null) {
-                ItemStack stack = customItem.buildStack();
-                stack.setAmount(amount);
-                return new RecipeChoice.ExactChoice(stack);
+            if (parts.length >= 2) {
+                Item customItem = ItemHandler.getItemById(parts[1]);
+                if (customItem != null) {
+                    int amount = parts.length >= 3 ? parseAmountSafe(parts[2]) : 1;
+                    ItemStack stack = customItem.buildStack();
+                    stack.setAmount(amount);
+                    return new RecipeChoice.ExactChoice(stack);
+                }
             }
-        } else if (parts[0].equalsIgnoreCase("VANILLA")) {
-            Material mat = Material.matchMaterial(parts[1]);
-            if (mat != null) {
-                return new RecipeChoice.MaterialChoice(mat);
-            }
+            return null;
         }
+
+        Material mat = resolveMaterial(clean);
+        if (mat != null && mat != Material.AIR) {
+            return new RecipeChoice.MaterialChoice(mat);
+        }
+
         return null;
+    }
+
+   public static ItemStack parseItemStack(String descriptor) {
+        if (isAirDescriptor(descriptor)) {
+            return new ItemStack(Material.AIR);
+        }
+
+        String clean = descriptor.trim();
+        String[] parts = clean.split(":");
+
+        if (parts[0].equalsIgnoreCase("CUSTOM")) {
+            if (parts.length >= 2) {
+                Item customItem = ItemHandler.getItemById(parts[1]);
+                if (customItem != null) {
+                    int amount = parts.length >= 3 ? parseAmountSafe(parts[2]) : 1;
+                    ItemStack stack = customItem.buildStack();
+                    stack.setAmount(amount);
+                    return stack;
+                }
+            }
+            return new ItemStack(Material.AIR);
+        }
+
+        Material mat = resolveMaterial(clean);
+        if (mat != null && mat != Material.AIR) {
+            int amount = 1;
+            if (parts.length >= 3 && parts[0].equalsIgnoreCase("VANILLA")) {
+                amount = parseAmountSafe(parts[2]);
+            } else if (parts.length >= 2 && !parts[0].equalsIgnoreCase("VANILLA") && !clean.toLowerCase().startsWith("minecraft:")) {
+                amount = parseAmountSafe(parts[1]);
+            }
+            return new ItemStack(mat, amount);
+        }
+
+        return new ItemStack(Material.AIR);
+    }
+
+    private static Material resolveMaterial(String descriptor) {
+        String s = descriptor.trim();
+        if (s.toLowerCase().startsWith("minecraft:")) {
+            s = s.substring(10);
+        }
+
+        String[] parts = s.split(":");
+        String matName;
+
+        if (parts[0].equalsIgnoreCase("VANILLA") && parts.length >= 2) {
+            matName = parts[1];
+        } else {
+            matName = parts[0];
+        }
+
+        Material mat = Material.matchMaterial(matName);
+        if (mat == null) {
+            mat = Material.matchMaterial(matName.toUpperCase());
+        }
+        return mat;
+    }
+
+    private static boolean isAirDescriptor(String descriptor) {
+        if (descriptor == null) return true;
+        String s = descriptor.trim().toUpperCase();
+        return s.isEmpty() || s.equals("AIR") || s.equals("VANILLA:AIR") || s.startsWith("AIR:") || s.startsWith("VANILLA:AIR:");
+    }
+
+    private static int parseAmountSafe(String str) {
+        try {
+            return Math.max(1, Integer.parseInt(str.trim()));
+        } catch (NumberFormatException e) {
+            return 1;
+        }
     }
 
     private static void saveAsync() {
