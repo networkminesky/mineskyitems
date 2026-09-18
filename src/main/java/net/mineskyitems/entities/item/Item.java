@@ -5,7 +5,6 @@ import io.lumine.mythic.core.utils.MythicUtil;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Consumable;
 import io.papermc.paper.datacomponent.item.FoodProperties;
-import io.papermc.paper.datacomponent.item.Repairable;
 import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
@@ -13,7 +12,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.categories.Category;
 import net.mineskyitems.entities.curves.CurveHandler;
-import net.mineskyitems.entities.curves.ItemCurve;
 import net.mineskyitems.entities.rarities.ItemRarity;
 import net.mineskyitems.entities.rarities.RarityHandler;
 import net.mineskyitems.utils.InteractionType;
@@ -28,20 +26,15 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 import org.bukkit.inventory.meta.components.EquippableComponent;
-import org.bukkit.inventory.meta.components.FoodComponent;
 import org.bukkit.inventory.meta.components.ToolComponent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.xml.crypto.Data;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -81,14 +74,20 @@ public class Item {
         return foodMetadata;
     }
 
-    public void setRevision(int revision) {this.revision = revision;}
-    public int getRevision() {return revision;}
+    public void setRevision(int revision) {
+        this.revision = revision;
+    }
+
+    public int getRevision() {
+        return revision;
+    }
 
     public Item(Category category, String id, ConfigurationSection itemSection) {
         this.category = category;
         this.id = id;
 
         this.itemSection = itemSection;
+        this.revision = itemSection.getInt("revision", 0);
 
         final ConfigurationSection metadataSec = itemSection.getConfigurationSection("metadata");
         List<String> lore = new ArrayList<>();
@@ -139,22 +138,22 @@ public class Item {
             this.itemSkills = new ArrayList<>();
         else
             this.itemSkills = skillsSection.getKeys(false).stream()
-                .map(key -> {
-                    ConfigurationSection skill = skillsSection.getConfigurationSection(key);
+                    .map(key -> {
+                        ConfigurationSection skill = skillsSection.getConfigurationSection(key);
 
-                    InteractionType interactionType = Arrays.stream(InteractionType.values())
-                            .filter(a -> a.name().equalsIgnoreCase(skill.getString("interaction-type", "RIGHT_CLICK")))
-                            .findFirst()
-                            .orElse(InteractionType.RIGHT_CLICK);
+                        InteractionType interactionType = Arrays.stream(InteractionType.values())
+                                .filter(a -> a.name().equalsIgnoreCase(skill.getString("interaction-type", "RIGHT_CLICK")))
+                                .findFirst()
+                                .orElse(InteractionType.RIGHT_CLICK);
 
-                    return new ItemSkill(
-                            key,
-                            interactionType,
-                            skill.getInt("cooldown", 0),
-                            skill.getString("mythic-id", "")
-                    );
-                })
-                .collect(Collectors.toList());
+                        return new ItemSkill(
+                                key,
+                                interactionType,
+                                skill.getInt("cooldown", 0),
+                                skill.getString("mythic-id", "")
+                        );
+                    })
+                    .collect(Collectors.toList());
 
         this.itemAttributes = new ItemAttributes(this);
 
@@ -227,15 +226,8 @@ public class Item {
 
         if(isItemBroken(itemStack)) {
             im.removeAttributeModifier(Attribute.MAX_HEALTH);
-            /*for(Attribute attribute : im.getAttributeModifiers().keySet()) {
-                if(attribute == Attribute.MAX_HEALTH) {
-                    im.removeAttributeModifier(attribute);
-                }
-            }*/
-
             itemStack.setItemMeta(im);
         } else if(im.getAttributeModifiers(Attribute.MAX_HEALTH) == null) {
-            //Bukkit.broadcastMessage("botano coiso");
             getItemAttributes().translateAndUpdate(itemStack);
         }
     }
@@ -306,14 +298,11 @@ public class Item {
 
     public static NamespacedKey ITEM_DURABILITY = NamespacedKey.fromString("item-durability");
     public void onItemUse(Player player, ItemStack itemStack, Cancellable event) {
-        // Som de uso do item
         getCategory().playUseSounds(player, false);
-
         naturalItemDamage(player, itemStack, event);
     }
 
     public void naturalItemDamage(Player player, ItemStack itemStack, Cancellable event) {
-        // Reduzir durabilidade do item
         if(player.getGameMode() == GameMode.CREATIVE)
             return;
         if(this.getCategory().isVanillaDurability()) {
@@ -323,11 +312,10 @@ public class Item {
             return;
         }
 
-        // Checando encantamento de durabilidade
         if(itemStack.getEnchantments().containsKey(Enchantment.UNBREAKING)) {
             int level = itemStack.getEnchantmentLevel(Enchantment.UNBREAKING);
 
-            double chance = 100.0 / (level + 1); // Fórmula vanilla de durabilidade do Minecraft
+            double chance = 100.0 / (level + 1);
             double roll = Math.random() * 100.0;
 
             if (roll < chance)
@@ -343,25 +331,6 @@ public class Item {
 
     public void onInteraction(Player player, ItemStack itemStack, InteractionType interactionType,
                               Cancellable event, @Nullable EquipmentSlot hand) {
-        if(MineSkyItems.MMOCORE_HOOK) {
-            /*
-            PlayerData playerData = MineSkyItems.mmocoreAPI.getPlayerData(player);
-            if (!player.hasPermission("mineskyitems.bypass.class-requirement") &&
-                    !hasClassRequirement(playerData.getProfess().getName())) {
-                //event.setCancelled(true);
-                player.sendMessage("§cSua classe não possui conhecimento de como usar esse item.");
-                return;
-            }
-
-            if (!player.hasPermission("mineskyitems.bypass.level-requirement") &&
-                    !hasLevelRequirement(playerData.getLevel())) {
-                //event.setCancelled(true);
-                player.sendMessage("§cVocê ainda não possui o nível apropriado para usar esse item.");
-                return;
-            }*/
-        }
-
-        // Ranged system logic
         if(getCategory().getType().equalsIgnoreCase("ranged")
                 && interactionType == InteractionType.RIGHT_CLICK) {
             double damage = getItemAttributes().getArrowDamage();
@@ -384,7 +353,6 @@ public class Item {
             }
 
             if(cooldownInSeconds != 0.0) {
-                //player.setCooldown(itemStack, (int)(20/cooldownInSeconds));
                 CooldownManager.createItemCooldown(player, this, (float) (20/cooldownInSeconds));
             }
 
@@ -423,7 +391,6 @@ public class Item {
                     arr.setVelocity(shotDirection.multiply(FIXED_VELOCITY_MULTIPLIER));
                     arr.setDamage(0);
                     arr.getPersistentDataContainer().set(MineSkyItems.NAMESPACED_KEY, PersistentDataType.DOUBLE, finalDamage);
-                    //arr.setKnockbackStrength(itemStack.getEnchantmentLevel(Enchantment.PUNCH) * 3);
 
                     if (stack.getType() == Material.TIPPED_ARROW
                             && arr instanceof Arrow) {
@@ -470,18 +437,13 @@ public class Item {
                         return;
                     }
 
-                    // Key feedback
                     player.playSound(player, Sound.UI_BUTTON_CLICK, 0.3f, 1.2f);
                     event.setCancelled(true);
 
                     if (CooldownManager.inCooldown(player, skill)) {
                         final String message =
                                 "Habilidade em recarga, aguarde mais "+CooldownManager.getRemainingCooldown(player, skill)+" segundo(s)!";
-                        //if(MineSkyItems.MMOCORE_HOOK) {
-                        //    MineSkyItems.mmocoreAPI.getPlayerData(player).displayActionBar("§c"+message);
-                        //} else {
-                            player.sendActionBar(Component.text(message).color(NamedTextColor.RED));
-                        //}
+                        player.sendActionBar(Component.text(message).color(NamedTextColor.RED));
                         return;
                     }
                     CooldownManager.createCooldown(player, skill, skill.getCooldown());
@@ -491,7 +453,7 @@ public class Item {
                     else
                         forceDamageItem(player, itemStack, 1);
 
-                    List<Entity> targets = new ArrayList();
+                    List<Entity> targets = new ArrayList<>();
                     Entity casterEntity = player;
                     Location origin = player.getLocation();
                     LivingEntity target = MythicUtil.getTargetedEntity(player);
@@ -500,9 +462,9 @@ public class Item {
                     String spell = skill.getMythicSkillId();
 
                     final float result = level <= 0 ?
-                            baseDamage // base if no sharpness
+                            baseDamage
                             :
-                            baseDamage + (float)(0.5 * level + 0.5); // sharpness formula
+                            baseDamage + (float)(0.5 * level + 0.5);
 
                     MythicBukkit.inst().getAPIHelper()
                             .castSkill(casterEntity, spell, casterEntity, origin, targets, null, 1.0f, metadata -> {
@@ -552,11 +514,11 @@ public class Item {
 
         ItemMeta im = itemStack.getItemMeta();
 
-        // Persistent Data Container
         PersistentDataContainer container = im.getPersistentDataContainer();
         container.set(ItemHandler.LEVEL_NAMESPACE, PersistentDataType.INTEGER, this.levelRequirement);
         container.set(ItemHandler.CLASS_NAMESPACE, PersistentDataType.LIST.strings(), this.requiredClasses);
         container.set(MineSkyItems.NAMESPACED_KEY, PersistentDataType.STRING, getId());
+        container.set(RevisionHandler.REVISION_KEY, PersistentDataType.INTEGER, this.revision);
 
         if(getCategory().isDoNotStack()) {
             container.set(NamespacedKey.minecraft("unique"), PersistentDataType.STRING, UUID.randomUUID().toString());
@@ -577,7 +539,6 @@ public class Item {
 
         im.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
 
-        // Tools
         if(getCategory().isTool()) {
             ToolComponent toolComponent = im.getTool();
             toolComponent.getRules().clear();
@@ -606,7 +567,6 @@ public class Item {
         im.lore(getCategory().getTooltip().getFormattedLore(this, itemStack));
         im.setCustomModelData(metadata.modelData());
 
-        // Armor
         if(getCategory().getType().equalsIgnoreCase("armor") && !isNoAutoArmor()) {
             EquippableComponent equippableComponent = im.getEquippable();
             equippableComponent.setModel(NamespacedKey.minecraft("part_" + metadata.modelData));
@@ -617,7 +577,7 @@ public class Item {
         itemStack.setItemMeta(im);
 
         if(getCategory().isFood()
-        && this.foodMetadata != null) {
+                && this.foodMetadata != null) {
             boolean drink = this.getCategory().getFood().equalsIgnoreCase("drink");
 
             Consumable consum = Consumable.consumable()
@@ -646,7 +606,6 @@ public class Item {
             return;
 
         if(getCategory().isVanillaDurability()) {
-            // OBRIGATÓRIO: Definir MAX_STACK_SIZE para 1
             itemStack.setData(DataComponentTypes.MAX_STACK_SIZE, 1);
             itemStack.setData(DataComponentTypes.MAX_DAMAGE, getMaxDurability());
             itemStack.setData(DataComponentTypes.DAMAGE, 0);

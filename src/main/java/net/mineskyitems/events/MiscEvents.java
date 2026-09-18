@@ -4,9 +4,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.item.ItemHandler;
+import net.mineskyitems.entities.item.RevisionHandler;
 import net.mineskyitems.hook.AdvancementHook;
-import org.bukkit.Bukkit;
-import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,12 +13,26 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Arrays;
 
 public class MiscEvents implements Listener {
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent e) {
+        final Player player = e.getPlayer();
+        ItemStack main = player.getInventory().getItemInMainHand();
+        if (RevisionHandler.checkAndApply(player, main)) {
+            player.getInventory().setItemInMainHand(main);
+        }
+        ItemStack off = player.getInventory().getItemInOffHand();
+        if (RevisionHandler.checkAndApply(player, off)) {
+            player.getInventory().setItemInOffHand(off);
+        }
+    }
 
     @EventHandler
     public void onDrop(PlayerDropItemEvent e) {
@@ -35,7 +48,6 @@ public class MiscEvents implements Listener {
 
         drop.setCustomNameVisible(true);
 
-        // paper por algum motivo adiciona [] mesmo nao sendo um array (????)
         String semColchetes = LegacyComponentSerializer.legacySection().serialize(drop.getItemStack().displayName())
                 .replace("[", "").replace("]", "");
         Component novoNome = LegacyComponentSerializer.legacySection().deserialize(semColchetes);
@@ -49,7 +61,7 @@ public class MiscEvents implements Listener {
         final Entity entity = e.getHitEntity();
 
         if(entity == null
-        || !projectile.getPersistentDataContainer().has(MineSkyItems.NAMESPACED_KEY,
+                || !projectile.getPersistentDataContainer().has(MineSkyItems.NAMESPACED_KEY,
                 PersistentDataType.DOUBLE))
             return;
 
@@ -79,7 +91,6 @@ public class MiscEvents implements Listener {
         if(e.getEntity().getType() != EntityType.PLAYER) return;
 
         final Player player = (Player) e.getEntity();
-        final EntityDamageEvent.DamageCause damageCause = e.getCause();
 
         player.getScheduler().runDelayed(MineSkyItems.getInstance(), (task) -> {
             Arrays.stream(player.getEquipment().getArmorContents()).forEach(stack -> {

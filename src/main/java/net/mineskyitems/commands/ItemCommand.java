@@ -7,7 +7,6 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.item.ObtainingMethod;
-import net.mineskyitems.events.DummyEvent;
 import net.mineskyitems.gui.crafting.CraftingCreatorGUI;
 import net.mineskyitems.gui.crafting.CraftingManager;
 import net.mineskyitems.gui.editor.ItemBuilderMenu;
@@ -50,7 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ItemCommand implements TabExecutor {
 
-    public static final List<String> subCommands = Arrays.asList("criar", "force-add", "criar-tinkerer", "crafting", "smelting", "tinkering", "contar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu");
+    public static final List<String> subCommands = Arrays.asList("criar", "force-add", "criar-tinkerer", "crafting", "smelting", "tinkering", "contar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu", "revision");
     public static final List<String> menu_subCommands = Arrays.asList("reparar", "destruir", "shop", "tinkering");
     public static final List<String> craftingtinkering_subCommands = Arrays.asList("create", "delete", "reload");
     public static final List<String> scripts = Arrays.asList("empty", "category", "register-obtainings", "convert", "single", "armor");
@@ -69,6 +68,7 @@ public class ItemCommand implements TabExecutor {
                         Utils.PURPLE_COLOR+"/item menu <menu> &8- &7Abre um menu de item, ex: menu de destruir itens para virar pó\n"+
                         Utils.PURPLE_COLOR+"/item reload &8- &7Recarregar o plugin (não recomendado)\n"+
                         Utils.PURPLE_COLOR+"/item danificar <dano> &8- &7Danifica o item de sua mão na quantidade informada\n"+
+                        Utils.PURPLE_COLOR+"/item revision <id> [add/set] [valor] &8- &7Gerencia o número de revisão de um item\n"+
                         Utils.PURPLE_COLOR+"/item achar [id, nome ou nada] &8- &7Procura um item pela parte do nome dele, ou pelo seu ID, ou pelo item em sua mão."
         ));
     }
@@ -93,6 +93,71 @@ public class ItemCommand implements TabExecutor {
 
         if (args[0].equalsIgnoreCase("criar-tinkerer")) {
             return TinkeringQueueCreator.processNextItem(s);
+        }
+
+        if (args[0].equalsIgnoreCase("revision")) {
+            if (args.length < 2) {
+                s.sendMessage("§cUso: /item revision <id> [add/set] [valor]");
+                return true;
+            }
+
+            String itemId = args[1];
+            Item item = ItemHandler.getItemById(itemId);
+            if (item == null) {
+                s.sendMessage("§cNenhum item encontrado com o ID: " + itemId);
+                return true;
+            }
+
+            if (args.length == 2) {
+                s.sendMessage("§6Item: §f" + item.getMetadata().displayName() + " §7(" + item.getId() + ")");
+                s.sendMessage("§6Revisão atual: §a" + item.getRevision());
+                return true;
+            }
+
+            String action = args[2].toLowerCase();
+
+            if (action.equals("add")) {
+                int amount = 1;
+                if (args.length >= 4) {
+                    try {
+                        amount = Integer.parseInt(args[3]);
+                    } catch (NumberFormatException ex) {
+                        s.sendMessage("§cInforme um número válido para incrementar.");
+                        return true;
+                    }
+                }
+
+                int newRevision = item.getRevision() + amount;
+                item.setRevision(newRevision);
+                item.getConfig().set("revision", newRevision);
+                item.getCategory().saveFile();
+                s.sendMessage("§aRevisão do item §f" + item.getId() + " §aaumentada para §f" + newRevision + "§a.");
+                return true;
+            }
+
+            if (action.equals("set")) {
+                if (args.length < 4) {
+                    s.sendMessage("§cUso: /item revision " + itemId + " set <valor>");
+                    return true;
+                }
+
+                int newRevision;
+                try {
+                    newRevision = Integer.parseInt(args[3]);
+                } catch (NumberFormatException ex) {
+                    s.sendMessage("§cInforme um número válido para a revisão.");
+                    return true;
+                }
+
+                item.setRevision(newRevision);
+                item.getConfig().set("revision", newRevision);
+                item.getCategory().saveFile();
+                s.sendMessage("§aRevisão do item §f" + item.getId() + " §adefinida para §f" + newRevision + "§a.");
+                return true;
+            }
+
+            s.sendMessage("§cAção inválida. Utilize 'add' ou 'set'.");
+            return true;
         }
 
         if(args[0].equalsIgnoreCase("reload")) {
@@ -149,7 +214,6 @@ public class ItemCommand implements TabExecutor {
             p.getInventory().setItemInMainHand(item.buildStack());
         }
 
-        // give <player> <nome>
         if(args.length >= 3) {
             if(args[0].equalsIgnoreCase("give")) {
                 if(!s.hasPermission("mineskyitems.command.give")) {
@@ -184,7 +248,6 @@ public class ItemCommand implements TabExecutor {
 
             Item item;
 
-            // Comando possui input
             if(args.length >= 2) {
                 String itemSearch = String.join(" ", Arrays.copyOfRange(args, 1, args.length)).trim();
 
@@ -208,7 +271,6 @@ public class ItemCommand implements TabExecutor {
             return true;
         }
 
-        // criar, achar, get, editar, deletar, menu, script
         if(args.length >= 2) {
             final String prompt = args[1];
 
@@ -320,8 +382,8 @@ public class ItemCommand implements TabExecutor {
                 s.sendMessage("§fListando todos os §e"+category.getAllItems().size()+" §fitens...");
                 category.getAllItems().stream().sorted(Comparator.comparingInt(Item::getRequiredLevel))
                         .forEach(item -> {
-                    s.sendMessage("§6• §e"+item.getMetadata().displayName()+"§f- Modelo: §a"+item.getMetadata().modelData()+"§f, Level: §d"+item.getRequiredLevel());
-                });
+                            s.sendMessage("§6• §e"+item.getMetadata().displayName()+"§f- Modelo: §a"+item.getMetadata().modelData()+"§f, Level: §d"+item.getRequiredLevel());
+                        });
 
                 return true;
             }
@@ -506,7 +568,6 @@ public class ItemCommand implements TabExecutor {
                                             final Item item = ItemHandler.getItemFromStack(stack);
 
                                             if (item != null) {
-                                                // good things here
                                                 final String id = item.getId();
                                                 final String categoryId = item.getCategory().getId();
                                                 final String path = categoryId + "." + id;
@@ -521,7 +582,6 @@ public class ItemCommand implements TabExecutor {
                                                     config.set(path + ".suggested-material", suggested.name());
                                                 }
 
-                                                // types
                                                 List<String> types = new ArrayList<>();
                                                 for (int i = 0; i < 5; i++) {
                                                     final String type = now.getWorld().getType(now.clone().add(0, (5 + i), 0)).name();
@@ -663,6 +723,7 @@ public class ItemCommand implements TabExecutor {
         p.sendMessage("§6ID: §e"+item.getId());
         p.sendMessage("§6Level: §e"+item.getRequiredLevel());
         p.sendMessage("§6Categoria: §e"+item.getCategory().getName());
+        p.sendMessage("§6Revisão: §e"+item.getRevision());
 
         Component component = Component.text("Clique aqui para editar esse item.")
                 .color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD)
@@ -693,8 +754,19 @@ public class ItemCommand implements TabExecutor {
         }
 
         if(args[0].equalsIgnoreCase("danificar")
-        || args[0].equalsIgnoreCase("reload")) {
+                || args[0].equalsIgnoreCase("reload")) {
             return null;
+        }
+
+        if(args[0].equalsIgnoreCase("revision")) {
+            if(args.length == 2) {
+                return ItemHandler.getAllItems().stream().map(Item::getId).filter(id -> id.toLowerCase().startsWith(args[1].toLowerCase())).toList();
+            } else if(args.length == 3) {
+                return List.of("add", "set");
+            } else if(args.length == 4) {
+                return List.of("1", "2", "3");
+            }
+            return List.of();
         }
 
         if(args[0].equalsIgnoreCase("script")) {
@@ -782,7 +854,6 @@ public class ItemCommand implements TabExecutor {
             return e;
         }
 
-        //return List.of();
         return ItemHandler.getItemsNames();
     }
 

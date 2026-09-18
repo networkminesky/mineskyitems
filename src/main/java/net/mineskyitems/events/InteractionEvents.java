@@ -4,17 +4,15 @@ import io.papermc.paper.event.player.PlayerPickEntityEvent;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemHandler;
+import net.mineskyitems.entities.item.RevisionHandler;
 import net.mineskyitems.utils.InteractionType;
 import net.mineskyitems.utils.Utils;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Sound;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -25,7 +23,15 @@ import org.bukkit.inventory.ItemStack;
 
 public class InteractionEvents implements Listener {
 
-    // Right and Left click
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onItemHeld(PlayerItemHeldEvent e) {
+        final Player p = e.getPlayer();
+        ItemStack stack = p.getInventory().getItem(e.getNewSlot());
+        if (RevisionHandler.checkAndApply(p, stack)) {
+            p.getInventory().setItem(e.getNewSlot(), stack);
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onClick(PlayerInteractEvent e) {
         final Player p = e.getPlayer();
@@ -34,16 +40,32 @@ public class InteractionEvents implements Listener {
             return;
 
         ItemStack itemStack = e.getItem();
+
+        if (RevisionHandler.checkAndApply(p, itemStack)) {
+            if (e.getHand() == EquipmentSlot.HAND) {
+                p.getInventory().setItemInMainHand(itemStack);
+            } else if (e.getHand() == EquipmentSlot.OFF_HAND) {
+                p.getInventory().setItemInOffHand(itemStack);
+            }
+        }
+
         Item item = ItemHandler.getItemFromStack(itemStack);
 
         if (item != null)
             item.onInteraction(p, itemStack, Utils.convertInteractionType(e.getAction()), e, e.getHand());
     }
 
-    // Key F
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
     public void onSwap(PlayerSwapHandItemsEvent e) {
         final Player p = e.getPlayer();
+
+        if (e.getMainHandItem() != null && RevisionHandler.checkAndApply(p, e.getMainHandItem())) {
+            e.setMainHandItem(e.getMainHandItem());
+        }
+
+        if (e.getOffHandItem() != null && RevisionHandler.checkAndApply(p, e.getOffHandItem())) {
+            e.setOffHandItem(e.getOffHandItem());
+        }
 
         if (e.getOffHandItem() == null)
             return;
@@ -81,7 +103,6 @@ public class InteractionEvents implements Listener {
         }, null, 1);
     }
 
-    // Key Q
     @EventHandler
     public void onDrop(PlayerDropItemEvent e) {
         final Player p = e.getPlayer();
@@ -114,16 +135,10 @@ public class InteractionEvents implements Listener {
         if(e.isCancelled())
             return;
 
-        //final int playerLevel = PlayerData.get(damager).getLevel();
-
         ItemStack stack = damager.getInventory().getItemInMainHand();
         Item item = ItemHandler.getItemFromStack(stack);
 
         if(item == null)
             return;
-
-        //if(item.getCategory().getType().equalsIgnoreCase("melee")) {
-        //    item.onItemUse(damager, stack, e);
-        //}
     }
 }
