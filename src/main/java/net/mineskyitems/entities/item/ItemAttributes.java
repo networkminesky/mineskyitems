@@ -10,7 +10,6 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.w3c.dom.Attr;
 
 import java.util.UUID;
 
@@ -47,8 +46,6 @@ public class ItemAttributes {
             this.section = item.getConfig();
 
         calculateBasedOnLevel();
-        //this.damage = section.getDouble("damage", 1.0);
-        //this.speed = section.getDouble("speed", 1.0);
     }
 
     private void calculateBasedOnLevel() {
@@ -83,22 +80,39 @@ public class ItemAttributes {
     public float getDefaultToolSpeed() {
         return defaultToolSpeed;
     }
+
     public float getToolSpeed() {
         return toolSpeed;
     }
 
-    public double getSpeed() {return this.speed;}
+    public double getSpeed() {
+        return this.speed;
+    }
 
-    public double getDamage() { return this.damage; }
-    public double getSkillDamage() { return this.skillDamage; }
-    public double getArrowDamage() { return this.arrowDamage; }
+    public double getDamage() {
+        return this.damage;
+    }
 
-    public double getMaxHealth() {return this.maxHealth;}
-    public double getAttackRange() {return this.attackRange;}
+    public double getSkillDamage() {
+        return this.skillDamage;
+    }
+
+    public double getArrowDamage() {
+        return this.arrowDamage;
+    }
+
+    public double getMaxHealth() {
+        return this.maxHealth;
+    }
+
+    public double getAttackRange() {
+        return this.attackRange;
+    }
 
     public double getArmorToughness() {
         return this.armorToughness;
     }
+
     public double getArmor() {
         return this.armor;
     }
@@ -107,7 +121,9 @@ public class ItemAttributes {
         return knockbackResistance;
     }
 
-    public double getAttackKnockback() {return this.attackKnockback;}
+    public double getAttackKnockback() {
+        return this.attackKnockback;
+    }
 
     public Item getItem() {
         return item;
@@ -117,61 +133,58 @@ public class ItemAttributes {
     public static final AttributeModifier.Operation defaultOperation = AttributeModifier.Operation.ADD_NUMBER;
 
     public ItemStack translateAndUpdate(ItemStack itemStack) {
+        if (itemStack == null || !itemStack.hasItemMeta()) {
+            return itemStack;
+        }
+
         ItemMeta itemMeta = itemStack.getItemMeta();
+        itemMeta.setAttributeModifiers(null);
 
-        // Damage
-        if(this.damage != 0.0) {
+        if (this.damage != 0.0) {
             itemMeta.addAttributeModifier(Attribute.ATTACK_DAMAGE,
-                    new AttributeModifier(namespace, this.damage -1, defaultOperation, EquipmentSlotGroup.HAND));
+                    new AttributeModifier(namespace, this.damage - 1, defaultOperation, EquipmentSlotGroup.HAND));
         }
 
-        // Speed
-        // this.getSpeed()-4
-        if(this.speed != 0.0) {
+        if (this.speed != 0.0) {
             itemMeta.addAttributeModifier(Attribute.ATTACK_SPEED,
-                    new AttributeModifier(namespace, this.speed -4, defaultOperation, EquipmentSlotGroup.HAND));
+                    new AttributeModifier(namespace, this.speed - 4, defaultOperation, EquipmentSlotGroup.HAND));
         }
 
-        // Max Health
-        if(this.maxHealth != 0.0) {
+        if (this.maxHealth != 0.0) {
             itemMeta.addAttributeModifier(Attribute.MAX_HEALTH,
                     new AttributeModifier(new NamespacedKey(MineSkyItems.getInstance(), UUID.randomUUID().toString()), this.maxHealth, defaultOperation,
                             getItem().getMetadata().material().getEquipmentSlot().getGroup()));
         }
 
-        // Armors
-        if(this.armor != 0.0) {
+        if (this.armor != 0.0) {
             itemMeta.addAttributeModifier(Attribute.ARMOR,
                     new AttributeModifier(new NamespacedKey(MineSkyItems.getInstance(), UUID.randomUUID().toString()), this.armor, defaultOperation,
                             getItem().getMetadata().material().getEquipmentSlot().getGroup()));
         }
-        if(this.armorToughness != 0.0) {
+
+        if (this.armorToughness != 0.0) {
             itemMeta.addAttributeModifier(Attribute.ARMOR_TOUGHNESS,
                     new AttributeModifier(new NamespacedKey(MineSkyItems.getInstance(), UUID.randomUUID().toString()), this.armorToughness, defaultOperation,
                             getItem().getMetadata().material().getEquipmentSlot().getGroup()));
         }
 
-        // Kb Resistance
-        if(this.knockbackResistance != 0.0) {
+        if (this.knockbackResistance != 0.0) {
             itemMeta.addAttributeModifier(Attribute.KNOCKBACK_RESISTANCE,
                     new AttributeModifier(new NamespacedKey(MineSkyItems.getInstance(), UUID.randomUUID().toString()), this.knockbackResistance, defaultOperation,
                             getItem().getMetadata().material().getEquipmentSlot().getGroup()));
         }
 
-        // Attack Range
-        if(this.attackRange != 0.0) {
+        if (this.attackRange != 0.0) {
             itemMeta.addAttributeModifier(Attribute.ENTITY_INTERACTION_RANGE,
                     new AttributeModifier(namespace, this.attackRange, defaultOperation, EquipmentSlotGroup.HAND));
         }
 
-        // Attack Knockback
-        if(this.attackKnockback != 1.0) {
+        if (this.attackKnockback != 1.0) {
             itemMeta.addAttributeModifier(Attribute.ATTACK_KNOCKBACK,
                     new AttributeModifier(namespace, this.attackKnockback, defaultOperation, EquipmentSlotGroup.HAND));
         }
 
         itemStack.setItemMeta(itemMeta);
-
         return itemStack;
     }
 }

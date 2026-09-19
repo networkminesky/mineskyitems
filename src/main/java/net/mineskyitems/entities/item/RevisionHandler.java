@@ -28,7 +28,7 @@ public class RevisionHandler {
         if (stack == null || !stack.hasItemMeta()) {
             return 0;
         }
-        return stack.getItemMeta().getPersistentDataContainer().getOrDefault(REVISION_KEY, PersistentDataType.INTEGER, 0);
+        return stack.getItemMeta().getPersistentDataContainer().getOrDefault(REVISION_KEY, PersistentDataType.INTEGER, -1);
     }
 
     public static boolean shouldRevision(final ItemStack stack) {
