@@ -17,6 +17,9 @@ import net.mineskyitems.entities.categories.Category;
 import net.mineskyitems.entities.categories.CategoryHandler;
 import net.mineskyitems.gui.blacksmith.ItemRecyclerMenu;
 import net.mineskyitems.gui.blacksmith.ItemRepairMenu;
+import net.mineskyitems.entities.kits.KitHandler;
+import net.mineskyitems.entities.kits.KitHandler.Kit;
+import net.mineskyitems.gui.kits.KitManagerGUI;
 import net.mineskyitems.gui.rotatingshop.RotatingItemsGUI;
 import net.mineskyitems.gui.rotatingshop.armors.RotatingArmorsGUI;
 import net.mineskyitems.gui.smelting.SmeltingCreatorGUI;
@@ -49,9 +52,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ItemCommand implements TabExecutor {
 
-    public static final List<String> subCommands = Arrays.asList("criar", "force-add", "criar-tinkerer", "crafting", "smelting", "tinkering", "contar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu", "revision");
+    public static final List<String> subCommands = Arrays.asList("criar", "force-add", "criar-tinkerer", "crafting", "smelting", "tinkering", "kits", "contar", "script", "get-all", "category", "editar", "give", "get", "reload", "achar", "deletar", "danificar", "menu", "revision");
     public static final List<String> menu_subCommands = Arrays.asList("reparar", "destruir", "shop", "tinkering");
     public static final List<String> craftingtinkering_subCommands = Arrays.asList("create", "delete", "reload");
+    public static final List<String> kits_subCommands = Arrays.asList("create", "edit", "delete", "reload");
     public static final List<String> scripts = Arrays.asList("empty", "category", "register-obtainings", "convert", "single", "armor");
 
     void commandList(CommandSender s) {
@@ -64,7 +68,7 @@ public class ItemCommand implements TabExecutor {
                         Utils.PURPLE_COLOR+"/item get <nome> &8- &7Pega uma cópia do item a partir do nome\n"+
                         Utils.PURPLE_COLOR+"/item get-all <categoria> &8- &7Pega uma cópia de todos os itens de uma categoria\n"+
                         Utils.PURPLE_COLOR+"/item category <categoria> &8- &7Lista a categoria com seus devidos itens\n"+
-                        Utils.PURPLE_COLOR+"/item get <nome> &8- &7Pega uma cópia do item a partir do nome\n"+
+                        Utils.PURPLE_COLOR+"/item kits <create|edit|delete|reload> &8- &7Gerencia os kits do servidor\n"+
                         Utils.PURPLE_COLOR+"/item menu <menu> &8- &7Abre um menu de item, ex: menu de destruir itens para virar pó\n"+
                         Utils.PURPLE_COLOR+"/item reload &8- &7Recarregar o plugin (não recomendado)\n"+
                         Utils.PURPLE_COLOR+"/item danificar <dano> &8- &7Danifica o item de sua mão na quantidade informada\n"+
@@ -88,6 +92,67 @@ public class ItemCommand implements TabExecutor {
 
         if (!s.hasPermission("mineskyitems.command."+args[0].toLowerCase())) {
             s.sendMessage("§cVocê não tem permissão ou o comando não existe.");
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("kits")) {
+            if (args.length < 2) {
+                s.sendMessage("§cUso: /" + label + " kits <create|edit|delete|reload> [id]");
+                return true;
+            }
+
+            String action = args[1].toLowerCase();
+
+            if (action.equals("reload")) {
+                KitHandler.reload();
+                s.sendMessage("§a✔ Sistema de kits recarregado com sucesso!");
+                return true;
+            }
+
+            if (args.length < 3) {
+                s.sendMessage("§cInforme o ID do kit.");
+                return true;
+            }
+
+            String id = args[2].toLowerCase();
+
+            if (action.equals("create")) {
+                if (!(s instanceof Player p)) {
+                    s.sendMessage("§cApenas jogadores podem usar esse comando.");
+                    return true;
+                }
+                if (KitHandler.getKit(id) != null) {
+                    s.sendMessage("§cJá existe um kit com esse ID!");
+                    return true;
+                }
+                KitManagerGUI.openCreate(p, id);
+                return true;
+            }
+
+            if (action.equals("edit")) {
+                if (!(s instanceof Player p)) {
+                    s.sendMessage("§cApenas jogadores podem usar esse comando.");
+                    return true;
+                }
+                Kit kit = KitHandler.getKit(id);
+                if (kit == null) {
+                    s.sendMessage("§cKit não encontrado com o ID: " + id);
+                    return true;
+                }
+                KitManagerGUI.openEdit(p, kit);
+                return true;
+            }
+
+            if (action.equals("delete")) {
+                if (KitHandler.deleteKit(id)) {
+                    s.sendMessage("§a✔ Kit '" + id + "' deletado com sucesso!");
+                } else {
+                    s.sendMessage("§cKit não encontrado com o ID: " + id);
+                }
+                return true;
+            }
+
+            s.sendMessage("§cSubcomando de kits inválido. Use: create, edit, delete ou reload.");
             return true;
         }
 
@@ -168,8 +233,9 @@ public class ItemCommand implements TabExecutor {
             });
 
             TinkeringManager.registerAllFromFile();
+            KitHandler.reload();
 
-            s.sendMessage("§aCategorias recarregadas! "+ItemHandler.getItemsNames().size()+" itens ativos.");
+            s.sendMessage("§aCategorias e kits recarregados! "+ItemHandler.getItemsNames().size()+" itens ativos.");
             return true;
         }
 
@@ -756,6 +822,15 @@ public class ItemCommand implements TabExecutor {
         if(args[0].equalsIgnoreCase("danificar")
                 || args[0].equalsIgnoreCase("reload")) {
             return null;
+        }
+
+        if(args[0].equalsIgnoreCase("kits")) {
+            if(args.length == 2) {
+                return kits_subCommands;
+            } else if(args.length == 3 && (args[1].equalsIgnoreCase("edit") || args[1].equalsIgnoreCase("delete"))) {
+                return KitHandler.getAllKits().stream().map(Kit::getId).filter(id -> id.toLowerCase().startsWith(args[2].toLowerCase())).toList();
+            }
+            return List.of();
         }
 
         if(args[0].equalsIgnoreCase("revision")) {

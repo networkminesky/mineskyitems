@@ -21,3 +21,7 @@ commands:
     aliases:
       - mineskyitems
       - msit
+  kit:
+    description: Comando principal para pegar kits
+    aliases:
+      - kits

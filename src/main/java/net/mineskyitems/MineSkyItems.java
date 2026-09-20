@@ -2,6 +2,7 @@ package net.mineskyitems;
 
 import net.milkbowl.vault.economy.Economy;
 import net.mineskyitems.commands.ItemCommand;
+import net.mineskyitems.commands.KitCommand;
 import net.mineskyitems.entities.ItemDustHandler;
 import net.mineskyitems.entities.curves.CurveHandler;
 import net.mineskyitems.entities.rarities.RarityHandler;
@@ -17,6 +18,10 @@ import net.mineskyitems.entities.tooltip.TooltipHandler;
 import net.mineskyitems.gui.editor.ItemSkillsMenu;
 import net.mineskyitems.gui.blacksmith.ItemRecyclerMenu;
 import net.mineskyitems.gui.blacksmith.ItemRepairMenu;
+import net.mineskyitems.gui.kits.KitListGUI;
+import net.mineskyitems.entities.kits.KitHandler;
+import net.mineskyitems.gui.kits.KitManagerGUI;
+import net.mineskyitems.gui.kits.KitPreviewGUI;
 import net.mineskyitems.gui.rotatingshop.RotatingItemsGUI;
 import net.mineskyitems.gui.smelting.SmeltingCreatorGUI;
 import net.mineskyitems.gui.smelting.SmeltingListener;
@@ -116,6 +121,10 @@ public final class MineSkyItems extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new ItemRecyclerMenu(), this);
         Bukkit.getPluginManager().registerEvents(new ItemRepairMenu(), this);
 
+        Bukkit.getPluginManager().registerEvents(new KitListGUI(), this);
+        Bukkit.getPluginManager().registerEvents(new KitPreviewGUI(), this);
+        Bukkit.getPluginManager().registerEvents(new KitManagerGUI(), this);
+
         Bukkit.getPluginManager().registerEvents(new MythicHook(), this);
 
         Bukkit.getPluginManager().registerEvents(new RotatingItemsGUI(), this);
@@ -130,7 +139,21 @@ public final class MineSkyItems extends JavaPlugin {
         TinkeringManager.registerAllFromFile();
         l.info("Novos craftings registrados: "+ TinkeringManager.amount()+"!");
 
-        this.getCommand("item").setExecutor(new ItemCommand());
+        l.info("Carregando kits...");
+        KitHandler.load();
+
+        ItemCommand itemCommand = new ItemCommand();
+        this.getCommand("item").setExecutor(itemCommand);
+
+        KitCommand kitCommand = new KitCommand();
+        if (this.getCommand("kit") != null) {
+            this.getCommand("kit").setExecutor(kitCommand);
+            this.getCommand("kit").setTabCompleter(kitCommand);
+        }
+        if (this.getCommand("kits") != null) {
+            this.getCommand("kits").setExecutor(kitCommand);
+            this.getCommand("kits").setTabCompleter(kitCommand);
+        }
     }
 
     public static MineSkyItems getInstance() {

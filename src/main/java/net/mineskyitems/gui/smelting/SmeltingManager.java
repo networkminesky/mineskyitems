@@ -20,8 +20,18 @@ public class SmeltingManager {
     private static YamlConfiguration config;
 
     public static void loadRecipes() {
-        for (NamespacedKey key : registeredKeys) {
-            Bukkit.removeRecipe(key);
+        boolean isStartup = true;
+        for (StackTraceElement element : Thread.currentThread().getStackTrace()) {
+            if (element.getClassName().toLowerCase().contains("plugman")) {
+                isStartup = false;
+                break;
+            }
+        }
+
+        if (isStartup) {
+            for (NamespacedKey key : registeredKeys) {
+                Bukkit.removeRecipe(key);
+            }
         }
         registeredKeys.clear();
 
@@ -49,14 +59,21 @@ public class SmeltingManager {
             ItemStack resultStack = parseResultStack(resStr, config.getItemStack(path + ".result_vanilla"));
 
             if (inputDescriptor != null && resultStack != null) {
-                registerBukkitSmelting(key, inputDescriptor, resultStack, furnace, blastFurnace, smoker, campfire, cookingTime, experience);
+                // Registra no Bukkit APENAS no startup[cite: 2]
+                if (isStartup) {
+                    registerBukkitSmelting(key, inputDescriptor, resultStack, furnace, blastFurnace, smoker, campfire, cookingTime, experience);
+                }
             } else {
                 MineSkyItems.l.warning("Receita de smelting '" + key + "' ignorada: input ou resultado inválidos.");
             }
         }
 
-        Bukkit.updateRecipes();
-        MineSkyItems.l.info("Carregadas " + registeredKeys.size() + " receitas de queima (smelting) com sucesso.");
+        if (isStartup) {
+            Bukkit.updateRecipes();
+            MineSkyItems.l.info("Carregadas " + registeredKeys.size() + " receitas de queima (smelting) com sucesso.");
+        } else {
+            MineSkyItems.l.info("Plugman detectado: receitas de smelting carregadas apenas na memoria.");
+        }
     }
 
     public static void saveRecipe(String id, String inputDescriptor, ItemStack resultStack,
@@ -112,7 +129,7 @@ public class SmeltingManager {
         String baseKey = recipeId.toLowerCase();
 
         if (furnace) {
-            NamespacedKey key = new NamespacedKey(MineSkyItems.getInstance(), "smelt_f_" + baseKey);
+            NamespacedKey key = NamespacedKey.fromString("msirecipes:smelt_f_" + baseKey);
             Bukkit.removeRecipe(key);
             try {
                 FurnaceRecipe recipe = new FurnaceRecipe(key, resultStack, choice, experience, cookingTime);
@@ -124,7 +141,7 @@ public class SmeltingManager {
         }
 
         if (blastFurnace) {
-            NamespacedKey key = new NamespacedKey(MineSkyItems.getInstance(), "smelt_b_" + baseKey);
+            NamespacedKey key = NamespacedKey.fromString("msirecipes:smelt_b_" + baseKey);
             Bukkit.removeRecipe(key);
             try {
                 BlastingRecipe recipe = new BlastingRecipe(key, resultStack, choice, experience, Math.max(1, cookingTime / 2));
@@ -136,7 +153,7 @@ public class SmeltingManager {
         }
 
         if (smoker) {
-            NamespacedKey key = new NamespacedKey(MineSkyItems.getInstance(), "smelt_s_" + baseKey);
+            NamespacedKey key = NamespacedKey.fromString("msirecipes:smelt_s_" + baseKey);
             Bukkit.removeRecipe(key);
             try {
                 SmokingRecipe recipe = new SmokingRecipe(key, resultStack, choice, experience, Math.max(1, cookingTime / 2));
@@ -148,7 +165,7 @@ public class SmeltingManager {
         }
 
         if (campfire) {
-            NamespacedKey key = new NamespacedKey(MineSkyItems.getInstance(), "smelt_c_" + baseKey);
+            NamespacedKey key = NamespacedKey.fromString("msirecipes:smelt_c_" + baseKey);
             Bukkit.removeRecipe(key);
             try {
                 CampfireRecipe recipe = new CampfireRecipe(key, resultStack, choice, experience, cookingTime * 2);
@@ -253,7 +270,7 @@ public class SmeltingManager {
     }
 
     private static void removeIfRegistered(String keyString) {
-        NamespacedKey key = new NamespacedKey(MineSkyItems.getInstance(), keyString);
+        NamespacedKey key = NamespacedKey.fromString("msirecipes:" + keyString);
         Bukkit.removeRecipe(key);
         registeredKeys.remove(key);
     }

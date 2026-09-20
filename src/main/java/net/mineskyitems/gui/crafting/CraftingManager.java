@@ -22,8 +22,18 @@ public class CraftingManager {
     private static YamlConfiguration config;
 
     public static void loadRecipes() {
-        for (NamespacedKey key : registeredKeys) {
-            Bukkit.removeRecipe(key);
+        boolean isStartup = true;
+        for (StackTraceElement element : Thread.currentThread().getStackTrace()) {
+            if (element.getClassName().toLowerCase().contains("plugman")) {
+                isStartup = false;
+                break;
+            }
+        }
+
+        if (isStartup) {
+            for (NamespacedKey key : registeredKeys) {
+                Bukkit.removeRecipe(key);
+            }
         }
         registeredKeys.clear();
 
@@ -56,14 +66,21 @@ public class CraftingManager {
             }
 
             if (resultStack != null) {
-                registerBukkitRecipe(key, grid, resultStack);
+                // Registra no Bukkit APENAS no startup[cite: 3]
+                if (isStartup) {
+                    registerBukkitRecipe(key, grid, resultStack);
+                }
             } else {
                 MineSkyItems.l.warning("Receita '" + key + "' ignorada: resultado inválido ou nulo.");
             }
         }
 
-        Bukkit.updateRecipes();
-        MineSkyItems.l.info("Carregadas " + registeredKeys.size() + " receitas nativas com sucesso.");
+        if (isStartup) {
+            Bukkit.updateRecipes();
+            MineSkyItems.l.info("Carregadas " + registeredKeys.size() + " receitas nativas com sucesso.");
+        } else {
+            MineSkyItems.l.info("Plugman detectado: " + config.getConfigurationSection("recipes").getKeys(false).size() + " receitas de crafting carregadas apenas na memoria (sem lag).");
+        }
     }
 
     public static void saveRecipe(String id, String[] gridDescriptors, ItemStack resultStack) {
@@ -87,7 +104,7 @@ public class CraftingManager {
 
     public static void deleteRecipe(String id) {
         String keyName = id.toLowerCase();
-        NamespacedKey key = new NamespacedKey(MineSkyItems.getInstance(), "craft_" + keyName);
+        NamespacedKey key = NamespacedKey.fromString("msirecipes:craft_" + keyName);
         Bukkit.removeRecipe(key);
         registeredKeys.remove(key);
 
@@ -98,7 +115,7 @@ public class CraftingManager {
     }
 
     private static void registerBukkitRecipe(String recipeId, String[] grid, ItemStack resultStack) {
-        NamespacedKey key = new NamespacedKey(MineSkyItems.getInstance(), "craft_" + recipeId.toLowerCase());
+        NamespacedKey key = NamespacedKey.fromString("msirecipes:craft_" + recipeId.toLowerCase());
         Bukkit.removeRecipe(key);
 
         int minRow = 3, maxRow = -1, minCol = 3, maxCol = -1;
