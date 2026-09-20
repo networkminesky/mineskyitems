@@ -16,7 +16,7 @@ public class CraftingListener implements Listener {
         Recipe recipe = event.getRecipe();
         if (recipe == null) return;
 
-        if (recipe instanceof Keyed keyed && keyed.getKey().getNamespace().equalsIgnoreCase("mineskyitems")) {
+        if (recipe instanceof Keyed keyed && keyed.getKey().getNamespace().equalsIgnoreCase("msirecipes")) {
             return;
         }
 

@@ -17,7 +17,7 @@ public class SmeltingListener implements Listener {
         if (recipe == null) return;
 
         // Se for receita de queima customizada registrada pelo nosso plugin, permite
-        if (recipe instanceof Keyed keyed && keyed.getKey().getNamespace().equalsIgnoreCase("mineskyitems")) {
+        if (recipe instanceof Keyed keyed && keyed.getKey().getNamespace().equalsIgnoreCase("msirecipes")) {
             return;
         }
 
