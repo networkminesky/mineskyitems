@@ -12,6 +12,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
@@ -51,10 +52,11 @@ public class KitListGUI implements Listener {
 
             ItemStack icon = kit.getIcon().clone();
             ItemMeta meta = icon.getItemMeta();
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             meta.displayName(KitHandler.parseComponent(kit.getName()));
 
             List<Component> lore = new ArrayList<>();
-            lore.add(KitHandler.parseComponent("<dark_gray>Kit ID: " + kit.getId() + "</dark_gray>"));
+            lore.add(KitHandler.parseComponent("<dark_gray>/kit: " + kit.getId() + "</dark_gray>"));
             lore.add(Component.empty());
             lore.add(KitHandler.parseComponent("<gray>Tempo de espera: <gold>" + KitHandler.formatTime(kit.getCooldown() * 1000L) + "</gold></gray>"));
             lore.add(Component.empty());
