@@ -10,6 +10,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.inventory.recipe.CraftingBookCategory;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +34,7 @@ public class CraftingManager {
         if (isStartup) {
             for (NamespacedKey key : registeredKeys) {
                 Bukkit.removeRecipe(key);
+                RecipeBookManager.unregisterKey(key);
             }
         }
         registeredKeys.clear();
@@ -66,7 +68,6 @@ public class CraftingManager {
             }
 
             if (resultStack != null) {
-                // Registra no Bukkit APENAS no startup[cite: 3]
                 if (isStartup) {
                     registerBukkitRecipe(key, grid, resultStack);
                 }
@@ -77,6 +78,7 @@ public class CraftingManager {
 
         if (isStartup) {
             Bukkit.updateRecipes();
+            RecipeBookManager.broadcastAllToOnlinePlayers();
             MineSkyItems.l.info("Carregadas " + registeredKeys.size() + " receitas nativas com sucesso.");
         } else {
             MineSkyItems.l.info("Plugman detectado: " + config.getConfigurationSection("recipes").getKeys(false).size() + " receitas de crafting carregadas apenas na memoria (sem lag).");
@@ -99,6 +101,9 @@ public class CraftingManager {
         registerBukkitRecipe(id.toLowerCase(), gridDescriptors, resultStack);
         Bukkit.updateRecipes();
 
+        NamespacedKey key = NamespacedKey.fromString("msirecipes:craft_" + id.toLowerCase());
+        RecipeBookManager.broadcastNewRecipe(key);
+
         saveAsync();
     }
 
@@ -107,6 +112,7 @@ public class CraftingManager {
         NamespacedKey key = NamespacedKey.fromString("msirecipes:craft_" + keyName);
         Bukkit.removeRecipe(key);
         registeredKeys.remove(key);
+        RecipeBookManager.unregisterKey(key);
 
         config.set("recipes." + keyName, null);
         Bukkit.updateRecipes();
@@ -169,7 +175,7 @@ public class CraftingManager {
             shape[r - minRow] = sb.toString();
         }
 
-        if(resultStack.isEmpty() || resultStack.getType().isAir())
+        if (resultStack.isEmpty() || resultStack.getType().isAir())
             return;
 
         ShapedRecipe recipe = new ShapedRecipe(key, resultStack);
@@ -178,12 +184,49 @@ public class CraftingManager {
             recipe.setIngredient(entry.getKey(), entry.getValue());
         }
 
+        recipe.setCategory(resolveCraftingCategory(resultStack));
+
         try {
             Bukkit.addRecipe(recipe);
             registeredKeys.add(key);
+            RecipeBookManager.registerKey(key);
         } catch (Exception e) {
             MineSkyItems.l.severe("Erro ao registrar receita '" + recipeId + "': " + e.getMessage());
         }
+    }
+
+    private static CraftingBookCategory resolveCraftingCategory(ItemStack stack) {
+        Item custom = ItemHandler.getItemFromStack(stack);
+        if (custom != null) {
+            String catType = custom.getCategory().getType().toLowerCase();
+            if (catType.contains("armor") || catType.contains("weapon") || catType.contains("tool") || catType.contains("ranged")) {
+                return CraftingBookCategory.EQUIPMENT;
+            }
+            if (custom.getCategory().isFood()) {
+                return CraftingBookCategory.MISC;
+            }
+        }
+
+        Material mat = stack.getType();
+        if (mat.isBlock()) {
+            if (mat.name().contains("REDSTONE") || mat.name().contains("PISTON") || mat.name().contains("DROPPER") || mat.name().contains("DISPENSER") || mat.name().contains("HOPPER")) {
+                return CraftingBookCategory.REDSTONE;
+            }
+            return CraftingBookCategory.BUILDING;
+        }
+
+        String name = mat.name();
+        if (name.contains("SWORD") || name.contains("AXE") || name.contains("PICKAXE") || name.contains("SHOVEL") || name.contains("HOE")
+                || name.contains("HELMET") || name.contains("CHESTPLATE") || name.contains("LEGGINGS") || name.contains("BOOTS")
+                || name.contains("BOW") || name.contains("SHIELD")) {
+            return CraftingBookCategory.EQUIPMENT;
+        }
+
+        if (name.contains("REDSTONE") || name.contains("REPEATER") || name.contains("COMPARATOR")) {
+            return CraftingBookCategory.REDSTONE;
+        }
+
+        return CraftingBookCategory.MISC;
     }
 
     private static RecipeChoice parseChoice(String descriptor) {
@@ -213,7 +256,7 @@ public class CraftingManager {
         return null;
     }
 
-   public static ItemStack parseItemStack(String descriptor) {
+    public static ItemStack parseItemStack(String descriptor) {
         if (isAirDescriptor(descriptor)) {
             return new ItemStack(Material.AIR);
         }

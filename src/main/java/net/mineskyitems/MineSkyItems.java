@@ -12,6 +12,7 @@ import net.mineskyitems.events.OffhandAttackListener;
 import net.mineskyitems.gui.crafting.CraftingCreatorGUI;
 import net.mineskyitems.gui.crafting.CraftingListener;
 import net.mineskyitems.gui.crafting.CraftingManager;
+import net.mineskyitems.gui.crafting.RecipeBookManager;
 import net.mineskyitems.gui.editor.ItemBuilderMenu;
 import net.mineskyitems.entities.categories.CategoryHandler;
 import net.mineskyitems.entities.tooltip.TooltipHandler;
@@ -35,6 +36,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.Recipe;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -126,6 +128,7 @@ public final class MineSkyItems extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new KitManagerGUI(), this);
 
         Bukkit.getPluginManager().registerEvents(new MythicHook(), this);
+        Bukkit.getPluginManager().registerEvents(new RecipeBookManager(), this);
 
         Bukkit.getPluginManager().registerEvents(new RotatingItemsGUI(), this);
 

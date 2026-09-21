@@ -3,11 +3,13 @@ package net.mineskyitems.gui.smelting;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemHandler;
+import net.mineskyitems.gui.crafting.RecipeBookManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.*;
+import org.bukkit.inventory.recipe.CookingBookCategory;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +33,7 @@ public class SmeltingManager {
         if (isStartup) {
             for (NamespacedKey key : registeredKeys) {
                 Bukkit.removeRecipe(key);
+                RecipeBookManager.unregisterKey(key);
             }
         }
         registeredKeys.clear();
@@ -59,7 +62,6 @@ public class SmeltingManager {
             ItemStack resultStack = parseResultStack(resStr, config.getItemStack(path + ".result_vanilla"));
 
             if (inputDescriptor != null && resultStack != null) {
-                // Registra no Bukkit APENAS no startup[cite: 2]
                 if (isStartup) {
                     registerBukkitSmelting(key, inputDescriptor, resultStack, furnace, blastFurnace, smoker, campfire, cookingTime, experience);
                 }
@@ -70,6 +72,7 @@ public class SmeltingManager {
 
         if (isStartup) {
             Bukkit.updateRecipes();
+            RecipeBookManager.broadcastAllToOnlinePlayers();
             MineSkyItems.l.info("Carregadas " + registeredKeys.size() + " receitas de queima (smelting) com sucesso.");
         } else {
             MineSkyItems.l.info("Plugman detectado: receitas de smelting carregadas apenas na memoria.");
@@ -127,14 +130,17 @@ public class SmeltingManager {
         }
 
         String baseKey = recipeId.toLowerCase();
+        CookingBookCategory cookingCategory = resolveCookingCategory(resultStack);
 
         if (furnace) {
             NamespacedKey key = NamespacedKey.fromString("msirecipes:smelt_f_" + baseKey);
             Bukkit.removeRecipe(key);
             try {
                 FurnaceRecipe recipe = new FurnaceRecipe(key, resultStack, choice, experience, cookingTime);
+                recipe.setCategory(cookingCategory);
                 Bukkit.addRecipe(recipe);
                 registeredKeys.add(key);
+                RecipeBookManager.registerKey(key);
             } catch (Exception e) {
                 MineSkyItems.l.severe("Erro ao registrar fornalha para '" + recipeId + "': " + e.getMessage());
             }
@@ -145,8 +151,10 @@ public class SmeltingManager {
             Bukkit.removeRecipe(key);
             try {
                 BlastingRecipe recipe = new BlastingRecipe(key, resultStack, choice, experience, Math.max(1, cookingTime / 2));
+                recipe.setCategory(cookingCategory);
                 Bukkit.addRecipe(recipe);
                 registeredKeys.add(key);
+                RecipeBookManager.registerKey(key);
             } catch (Exception e) {
                 MineSkyItems.l.severe("Erro ao registrar alto-forno para '" + recipeId + "': " + e.getMessage());
             }
@@ -157,8 +165,10 @@ public class SmeltingManager {
             Bukkit.removeRecipe(key);
             try {
                 SmokingRecipe recipe = new SmokingRecipe(key, resultStack, choice, experience, Math.max(1, cookingTime / 2));
+                recipe.setCategory(CookingBookCategory.FOOD);
                 Bukkit.addRecipe(recipe);
                 registeredKeys.add(key);
+                RecipeBookManager.registerKey(key);
             } catch (Exception e) {
                 MineSkyItems.l.severe("Erro ao registrar defumador para '" + recipeId + "': " + e.getMessage());
             }
@@ -169,12 +179,25 @@ public class SmeltingManager {
             Bukkit.removeRecipe(key);
             try {
                 CampfireRecipe recipe = new CampfireRecipe(key, resultStack, choice, experience, cookingTime * 2);
+                recipe.setCategory(cookingCategory);
                 Bukkit.addRecipe(recipe);
                 registeredKeys.add(key);
+                RecipeBookManager.registerKey(key);
             } catch (Exception e) {
                 MineSkyItems.l.severe("Erro ao registrar fogueira para '" + recipeId + "': " + e.getMessage());
             }
         }
+    }
+
+    private static CookingBookCategory resolveCookingCategory(ItemStack stack) {
+        Item custom = ItemHandler.getItemFromStack(stack);
+        if (custom != null && custom.getCategory().isFood()) {
+            return CookingBookCategory.FOOD;
+        }
+        if (stack.getType().isEdible()) {
+            return CookingBookCategory.FOOD;
+        }
+        return CookingBookCategory.MISC;
     }
 
     private static RecipeChoice parseChoice(String descriptor) {
@@ -273,6 +296,7 @@ public class SmeltingManager {
         NamespacedKey key = NamespacedKey.fromString("msirecipes:" + keyString);
         Bukkit.removeRecipe(key);
         registeredKeys.remove(key);
+        RecipeBookManager.unregisterKey(key);
     }
 
     private static void saveAsync() {
