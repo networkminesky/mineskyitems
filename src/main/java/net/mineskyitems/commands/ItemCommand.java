@@ -72,7 +72,7 @@ public class ItemCommand implements TabExecutor {
                         Utils.PURPLE_COLOR+"/item menu <menu> &8- &7Abre um menu de item, ex: menu de destruir itens para virar pó\n"+
                         Utils.PURPLE_COLOR+"/item reload &8- &7Recarregar o plugin (não recomendado)\n"+
                         Utils.PURPLE_COLOR+"/item danificar <dano> &8- &7Danifica o item de sua mão na quantidade informada\n"+
-                        Utils.PURPLE_COLOR+"/item revision <id> [add/set] [valor] &8- &7Gerencia o número de revisão de um item\n"+
+                        Utils.PURPLE_COLOR+"/item revision <id|categoria> [add/set] [valor] &8- &7Gerencia o número de revisão de um item ou categoria\n"+
                         Utils.PURPLE_COLOR+"/item achar [id, nome ou nada] &8- &7Procura um item pela parte do nome dele, ou pelo seu ID, ou pelo item em sua mão."
         ));
     }
@@ -162,66 +162,130 @@ public class ItemCommand implements TabExecutor {
 
         if (args[0].equalsIgnoreCase("revision")) {
             if (args.length < 2) {
-                s.sendMessage("§cUso: /item revision <id> [add/set] [valor]");
+                s.sendMessage("§cUso: /item revision <id|categoria> [add/set] [valor]");
                 return true;
             }
 
-            String itemId = args[1];
-            Item item = ItemHandler.getItemById(itemId);
-            if (item == null) {
-                s.sendMessage("§cNenhum item encontrado com o ID: " + itemId);
+            String target = args[1];
+            Category category = CategoryHandler.getCategory(target);
+            Item item = ItemHandler.getItemById(target);
+
+            if (item == null && category == null) {
+                s.sendMessage("§cNenhum item ou categoria encontrado com o identificador: " + target);
                 return true;
             }
 
-            if (args.length == 2) {
-                s.sendMessage("§6Item: §f" + item.getMetadata().displayName() + " §7(" + item.getId() + ")");
-                s.sendMessage("§6Revisão atual: §a" + item.getRevision());
-                return true;
-            }
+            if (category != null && (item == null || category.getId().equalsIgnoreCase(target) && !item.getId().equalsIgnoreCase(target))) {
+                if (args.length == 2) {
+                    s.sendMessage("§6Categoria: §f" + category.getName() + " §7(" + category.getId() + ")");
+                    s.sendMessage("§6Total de itens: §e" + category.getAllItems().size());
+                    s.sendMessage("§7Use '/item revision " + category.getId() + " add [valor]' ou 'set <valor>' para alterar todos.");
+                    return true;
+                }
 
-            String action = args[2].toLowerCase();
+                String action = args[2].toLowerCase();
 
-            if (action.equals("add")) {
-                int amount = 1;
-                if (args.length >= 4) {
-                    try {
-                        amount = Integer.parseInt(args[3]);
-                    } catch (NumberFormatException ex) {
-                        s.sendMessage("§cInforme um número válido para incrementar.");
+                if (action.equals("add")) {
+                    int amount = 1;
+                    if (args.length >= 4) {
+                        try {
+                            amount = Integer.parseInt(args[3]);
+                        } catch (NumberFormatException ex) {
+                            s.sendMessage("§cInforme um número válido para incrementar.");
+                            return true;
+                        }
+                    }
+
+                    for (Item catItem : category.getAllItems()) {
+                        int newRevision = catItem.getRevision() + amount;
+                        catItem.setRevision(newRevision);
+                        catItem.getConfig().set("revision", newRevision);
+                    }
+                    category.saveFile();
+                    s.sendMessage("§aRevisão de todos os §f" + category.getAllItems().size() + " §aitens da categoria §f" + category.getName() + " §aaumentada em §f+" + amount + "§a.");
+                    return true;
+                }
+
+                if (action.equals("set")) {
+                    if (args.length < 4) {
+                        s.sendMessage("§cUso: /item revision " + target + " set <valor>");
                         return true;
                     }
-                }
 
-                int newRevision = item.getRevision() + amount;
-                item.setRevision(newRevision);
-                item.getConfig().set("revision", newRevision);
-                item.getCategory().saveFile();
-                s.sendMessage("§aRevisão do item §f" + item.getId() + " §aaumentada para §f" + newRevision + "§a.");
-                return true;
-            }
+                    int newRevision;
+                    try {
+                        newRevision = Integer.parseInt(args[3]);
+                    } catch (NumberFormatException ex) {
+                        s.sendMessage("§cInforme um número válido para a revisão.");
+                        return true;
+                    }
 
-            if (action.equals("set")) {
-                if (args.length < 4) {
-                    s.sendMessage("§cUso: /item revision " + itemId + " set <valor>");
+                    for (Item catItem : category.getAllItems()) {
+                        catItem.setRevision(newRevision);
+                        catItem.getConfig().set("revision", newRevision);
+                    }
+                    category.saveFile();
+                    s.sendMessage("§aRevisão de todos os §f" + category.getAllItems().size() + " §aitens da categoria §f" + category.getName() + " §adefinida para §f" + newRevision + "§a.");
                     return true;
                 }
 
-                int newRevision;
-                try {
-                    newRevision = Integer.parseInt(args[3]);
-                } catch (NumberFormatException ex) {
-                    s.sendMessage("§cInforme um número válido para a revisão.");
-                    return true;
-                }
-
-                item.setRevision(newRevision);
-                item.getConfig().set("revision", newRevision);
-                item.getCategory().saveFile();
-                s.sendMessage("§aRevisão do item §f" + item.getId() + " §adefinida para §f" + newRevision + "§a.");
+                s.sendMessage("§cAção inválida. Utilize 'add' ou 'set'.");
                 return true;
             }
 
-            s.sendMessage("§cAção inválida. Utilize 'add' ou 'set'.");
+            if (item != null) {
+                if (args.length == 2) {
+                    s.sendMessage("§6Item: §f" + item.getMetadata().displayName() + " §7(" + item.getId() + ")");
+                    s.sendMessage("§6Revisão atual: §a" + item.getRevision());
+                    return true;
+                }
+
+                String action = args[2].toLowerCase();
+
+                if (action.equals("add")) {
+                    int amount = 1;
+                    if (args.length >= 4) {
+                        try {
+                            amount = Integer.parseInt(args[3]);
+                        } catch (NumberFormatException ex) {
+                            s.sendMessage("§cInforme um número válido para incrementar.");
+                            return true;
+                        }
+                    }
+
+                    int newRevision = item.getRevision() + amount;
+                    item.setRevision(newRevision);
+                    item.getConfig().set("revision", newRevision);
+                    item.getCategory().saveFile();
+                    s.sendMessage("§aRevisão do item §f" + item.getId() + " §aaumentada para §f" + newRevision + "§a.");
+                    return true;
+                }
+
+                if (action.equals("set")) {
+                    if (args.length < 4) {
+                        s.sendMessage("§cUso: /item revision " + target + " set <valor>");
+                        return true;
+                    }
+
+                    int newRevision;
+                    try {
+                        newRevision = Integer.parseInt(args[3]);
+                    } catch (NumberFormatException ex) {
+                        s.sendMessage("§cInforme um número válido para a revisão.");
+                        return true;
+                    }
+
+                    item.setRevision(newRevision);
+                    item.getConfig().set("revision", newRevision);
+                    item.getCategory().saveFile();
+                    s.sendMessage("§aRevisão do item §f" + item.getId() + " §adefinida para §f" + newRevision + "§a.");
+                    return true;
+                }
+
+                s.sendMessage("§cAção inválida. Utilize 'add' ou 'set'.");
+                return true;
+            }
+
             return true;
         }
 
@@ -835,7 +899,14 @@ public class ItemCommand implements TabExecutor {
 
         if(args[0].equalsIgnoreCase("revision")) {
             if(args.length == 2) {
-                return ItemHandler.getAllItems().stream().map(Item::getId).filter(id -> id.toLowerCase().startsWith(args[1].toLowerCase())).toList();
+                List<String> list = new ArrayList<>();
+                for (Category category : CategoryHandler.categories) {
+                    list.add(category.getId());
+                }
+                for (Item item : ItemHandler.getAllItems()) {
+                    list.add(item.getId());
+                }
+                return list.stream().filter(id -> id.toLowerCase().startsWith(args[1].toLowerCase())).distinct().toList();
             } else if(args.length == 3) {
                 return List.of("add", "set");
             } else if(args.length == 4) {
