@@ -1,6 +1,7 @@
 package net.mineskyitems.events;
 
-import net.minesky.mineskygameplay.advancements.AdvancementsAPI;
+import net.minesky.gameplay.api.MineSkyAPI;
+import net.minesky.gameplay.api.advancements.AdvancementsAPI;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemHandler;
 import org.bukkit.GameMode;
@@ -70,8 +71,12 @@ public class OffhandAttackListener implements Listener {
         p.swingOffHand();
 
         try {
-            if(customItem.getCategory().getName().equalsIgnoreCase("luvas"))
-                AdvancementsAPI.get().grantAsync(p, "minesky:sociedade/multiplamente_rapido");
+            if(customItem.getCategory().getName().equalsIgnoreCase("luvas")) {
+                AdvancementsAPI api = MineSkyAPI.getAdvancements();
+                if(api != null) {
+                    api.grantAsync(p, "minesky:sociedade/multiplamente_rapido");
+                }
+            }
         } catch (Exception ignored) {}
 
         if(rayTrace == null)

@@ -1,6 +1,7 @@
 package net.mineskyitems.hook;
 
-import net.minesky.mineskygameplay.advancements.AdvancementsAPI;
+import net.minesky.gameplay.api.MineSkyAPI;
+import net.minesky.gameplay.api.advancements.AdvancementsAPI;
 import net.mineskyitems.entities.item.Item;
 import org.bukkit.entity.Player;
 
@@ -11,15 +12,19 @@ public class AdvancementHook {
 
         final String id = item.getId();
 
+        AdvancementsAPI api = MineSkyAPI.getAdvancements();
+        if(api == null)
+            return;
+
         switch(id.toLowerCase()) {
             case "obsidiana_refinada" -> {
-                AdvancementsAPI.get().grantAsync(player, "minesky:mineracao/forja_dura");
+                api.grantAsync(player, "minesky:mineracao/forja_dura");
             }
             case "bloco_de_onix" -> {
-                AdvancementsAPI.get().grantAsync(player, "minesky:mineracao/profundezas_ocultas");
+                api.grantAsync(player, "minesky:mineracao/profundezas_ocultas");
             }
             case "meteorita" -> {
-                AdvancementsAPI.get().grantAsync(player, "minesky:mineracao/pelos_cosmos");
+                api.grantAsync(player, "minesky:mineracao/pelos_cosmos");
             }
         }
     }

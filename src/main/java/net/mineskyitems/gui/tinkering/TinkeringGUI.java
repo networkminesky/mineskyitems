@@ -1,7 +1,8 @@
 package net.mineskyitems.gui.tinkering;
 
 import net.kyori.adventure.text.Component;
-import net.minesky.mineskygameplay.advancements.AdvancementsAPI;
+import net.minesky.gameplay.api.MineSkyAPI;
+import net.minesky.gameplay.api.advancements.AdvancementsAPI;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemHandler;
@@ -175,23 +176,27 @@ public class TinkeringGUI implements Listener {
             } else {
                 craftNormal(player, e.getInventory());
             }
-            AdvancementsAPI.get().grantAsync(player, "minesky:invencao/equipado");
 
-            Item item = ItemHandler.getItemFromStack(result);
-            if(item != null && item.getItemRarity() != null) {
-                String id = item.getItemRarity().getId();
-                if(id.equalsIgnoreCase("rare")) {
-                    AdvancementsAPI.get().grantAsync(player, "minesky:invencao/equipado");
+            AdvancementsAPI api = MineSkyAPI.getAdvancements();
+            if(api != null) {
+                api.grantAsync(player, "minesky:invencao/equipado");
+
+                Item item = ItemHandler.getItemFromStack(result);
+                if(item != null && item.getItemRarity() != null) {
+                    String id = item.getItemRarity().getId();
+                    if(id.equalsIgnoreCase("rare")) {
+                        AdvancementsAPI.get().grantAsync(player, "minesky:invencao/equipado");
+                    }
+                    else if(id.equalsIgnoreCase("legendary")) {
+                        AdvancementsAPI.get().grantAsync(player, "minesky:invencao/destrutivo");
+                    }
+                    else if(id.equalsIgnoreCase("special")) {
+                        AdvancementsAPI.get().grantAsync(player, "minesky:invencao/no_apice");
+                    }
                 }
-                else if(id.equalsIgnoreCase("legendary")) {
-                    AdvancementsAPI.get().grantAsync(player, "minesky:invencao/destrutivo");
-                }
-                else if(id.equalsIgnoreCase("special")) {
-                    AdvancementsAPI.get().grantAsync(player, "minesky:invencao/no_apice");
-                }
+
+                AdvancementHook.onCraft(player, item);
             }
-
-            AdvancementHook.onCraft(player, item);
 
             return;
         }
