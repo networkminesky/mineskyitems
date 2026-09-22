@@ -7,6 +7,7 @@ import net.mineskyitems.entities.ItemDustHandler;
 import net.mineskyitems.entities.curves.CurveHandler;
 import net.mineskyitems.entities.rarities.RarityHandler;
 import net.mineskyitems.events.InteractionEvents;
+import net.mineskyitems.events.KitEvents;
 import net.mineskyitems.events.MiscEvents;
 import net.mineskyitems.events.OffhandAttackListener;
 import net.mineskyitems.gui.crafting.CraftingCreatorGUI;
@@ -36,7 +37,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.inventory.Recipe;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -100,6 +100,13 @@ public final class MineSkyItems extends JavaPlugin {
 
         if(config.getBoolean("offhand-attack", false)) {
             Bukkit.getPluginManager().registerEvents(new OffhandAttackListener(), this);
+        }
+
+        if(config.getBoolean("first-time.kit.enabled", false)) {
+            KitEvents.initialKit = config.getString("first-time.kit.id", "");
+
+            l.info("First-time kit enabled, registering events, initial kit: "+KitEvents.initialKit);
+            Bukkit.getPluginManager().registerEvents(new KitEvents(), this);
         }
 
         Bukkit.getPluginManager().registerEvents(new InteractionEvents(), this);

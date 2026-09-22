@@ -2,3 +2,8 @@ rotating-shop:
   time: 48 # in hours, 48h = 2 days
 
 offhand-attack: true
+
+first-time:
+  kit: #should we give an initial kit to new joining players?
+    enabled: true
+    id: "iniciante"

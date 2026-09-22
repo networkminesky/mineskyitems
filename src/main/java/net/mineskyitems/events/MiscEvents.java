@@ -32,6 +32,10 @@ public class MiscEvents implements Listener {
         if (RevisionHandler.checkAndApply(player, off)) {
             player.getInventory().setItemInOffHand(off);
         }
+
+        if(!player.hasPlayedBefore()) {
+
+        }
     }
 
     @EventHandler
