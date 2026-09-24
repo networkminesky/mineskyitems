@@ -74,7 +74,7 @@ public final class MineSkyItems extends JavaPlugin {
         System();
     }
 
-    private void System() {
+    public static void loadEverything() {
         l.info("Carregando item curves...");
         CurveHandler.setupCurves();
 
@@ -89,6 +89,10 @@ public final class MineSkyItems extends JavaPlugin {
 
         l.info("Carregando itens hardcoded...");
         ItemDustHandler.registerDusts();
+    }
+
+    private void System() {
+        loadEverything();
 
         Runnables.equipmentChecker();
 

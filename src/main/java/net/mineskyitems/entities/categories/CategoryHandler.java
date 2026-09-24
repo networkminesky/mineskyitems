@@ -41,6 +41,8 @@ public class CategoryHandler {
     }
 
     public static void setupCategories() {
+        categories.clear();
+
         configuration = YamlConfiguration.loadConfiguration(file);
         if (!file.exists()) {
             try {

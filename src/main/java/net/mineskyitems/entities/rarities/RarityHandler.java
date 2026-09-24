@@ -29,6 +29,8 @@ public class RarityHandler {
     }
 
     public static void setupRarities() {
+        rarities.clear();
+
         configuration = YamlConfiguration.loadConfiguration(file);
         if (!file.exists()) {
             try {
@@ -42,13 +44,11 @@ public class RarityHandler {
         configuration = YamlConfiguration.loadConfiguration(file);
 
         for(String key : configuration.getKeys(false)) {
-
             ItemRarity rarity = new ItemRarity(key, configuration.getConfigurationSection(key));
 
             MineSkyItems.l.info("| Carregando raridade "+rarity.getId() + " com custom font?: "+rarity.hasCustomFont());
 
             rarities.add(rarity);
-
         }
     }
 

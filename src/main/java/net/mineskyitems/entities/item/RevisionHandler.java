@@ -8,6 +8,7 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.mineskyitems.MineSkyItems;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
 import org.bukkit.Tag;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -136,6 +137,7 @@ public class RevisionHandler {
             EquippableComponent equippableComponent = im.getEquippable();
             equippableComponent.setModel(NamespacedKey.minecraft("part_" + item.getMetadata().modelData()));
             equippableComponent.setSlot(item.getMetadata().material().getEquipmentSlot());
+            equippableComponent.setEquipSound(Sound.ITEM_ARMOR_EQUIP_DIAMOND);
             im.setEquippable(equippableComponent);
         }
 

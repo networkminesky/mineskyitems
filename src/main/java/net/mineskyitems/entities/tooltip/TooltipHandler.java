@@ -21,6 +21,8 @@ public class TooltipHandler {
     }
 
     public static void setupTooltips() {
+        tooltips.clear();
+
         configuration = YamlConfiguration.loadConfiguration(file);
         if (!file.exists()) {
             try {

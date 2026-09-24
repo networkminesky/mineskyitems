@@ -7,6 +7,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -36,6 +37,8 @@ public class ItemAttributes {
     private float defaultToolSpeed = 1f;
 
     private double attackKnockback = 1.0;
+
+    public static final AttributeModifier.Operation defaultOperation = AttributeModifier.Operation.ADD_NUMBER;
 
     public ItemAttributes(Item item) {
         this.item = item;
@@ -129,59 +132,63 @@ public class ItemAttributes {
         return item;
     }
 
-    public static final NamespacedKey namespace = new NamespacedKey(MineSkyItems.getInstance(), "attr");
-    public static final AttributeModifier.Operation defaultOperation = AttributeModifier.Operation.ADD_NUMBER;
+    private NamespacedKey randomKey() {
+        return new NamespacedKey(MineSkyItems.getInstance(), UUID.randomUUID().toString());
+    }
 
     public ItemStack translateAndUpdate(ItemStack itemStack) {
-        if (itemStack == null || !itemStack.hasItemMeta()) {
-            return itemStack;
+        if (itemStack == null) {
+            return null;
         }
 
         ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null) {
+            return itemStack;
+        }
+
         itemMeta.setAttributeModifiers(null);
+
+        EquipmentSlot slot = getItem().getMetadata().material().getEquipmentSlot();
+        EquipmentSlotGroup group = slot != null ? slot.getGroup() : EquipmentSlotGroup.HAND;
 
         if (this.damage != 0.0) {
             itemMeta.addAttributeModifier(Attribute.ATTACK_DAMAGE,
-                    new AttributeModifier(namespace, this.damage - 1, defaultOperation, EquipmentSlotGroup.HAND));
+                    new AttributeModifier(randomKey(), this.damage - 1, defaultOperation, EquipmentSlotGroup.HAND));
         }
 
         if (this.speed != 0.0) {
             itemMeta.addAttributeModifier(Attribute.ATTACK_SPEED,
-                    new AttributeModifier(namespace, this.speed - 4, defaultOperation, EquipmentSlotGroup.HAND));
+                    new AttributeModifier(randomKey(), this.speed - 4, defaultOperation, EquipmentSlotGroup.HAND));
         }
 
         if (this.maxHealth != 0.0) {
             itemMeta.addAttributeModifier(Attribute.MAX_HEALTH,
-                    new AttributeModifier(new NamespacedKey(MineSkyItems.getInstance(), UUID.randomUUID().toString()), this.maxHealth, defaultOperation,
-                            getItem().getMetadata().material().getEquipmentSlot().getGroup()));
+                    new AttributeModifier(randomKey(), this.maxHealth, defaultOperation, group));
         }
 
         if (this.armor != 0.0) {
             itemMeta.addAttributeModifier(Attribute.ARMOR,
-                    new AttributeModifier(new NamespacedKey(MineSkyItems.getInstance(), UUID.randomUUID().toString()), this.armor, defaultOperation,
-                            getItem().getMetadata().material().getEquipmentSlot().getGroup()));
+                    new AttributeModifier(randomKey(), this.armor, defaultOperation, group));
         }
 
         if (this.armorToughness != 0.0) {
             itemMeta.addAttributeModifier(Attribute.ARMOR_TOUGHNESS,
-                    new AttributeModifier(new NamespacedKey(MineSkyItems.getInstance(), UUID.randomUUID().toString()), this.armorToughness, defaultOperation,
-                            getItem().getMetadata().material().getEquipmentSlot().getGroup()));
+                    new AttributeModifier(randomKey(), this.armorToughness, defaultOperation, group));
         }
 
         if (this.knockbackResistance != 0.0) {
             itemMeta.addAttributeModifier(Attribute.KNOCKBACK_RESISTANCE,
-                    new AttributeModifier(new NamespacedKey(MineSkyItems.getInstance(), UUID.randomUUID().toString()), this.knockbackResistance, defaultOperation,
-                            getItem().getMetadata().material().getEquipmentSlot().getGroup()));
+                    new AttributeModifier(randomKey(), this.knockbackResistance, defaultOperation, group));
         }
 
         if (this.attackRange != 0.0) {
             itemMeta.addAttributeModifier(Attribute.ENTITY_INTERACTION_RANGE,
-                    new AttributeModifier(namespace, this.attackRange, defaultOperation, EquipmentSlotGroup.HAND));
+                    new AttributeModifier(randomKey(), this.attackRange, defaultOperation, EquipmentSlotGroup.HAND));
         }
 
         if (this.attackKnockback != 1.0) {
             itemMeta.addAttributeModifier(Attribute.ATTACK_KNOCKBACK,
-                    new AttributeModifier(namespace, this.attackKnockback, defaultOperation, EquipmentSlotGroup.HAND));
+                    new AttributeModifier(randomKey(), this.attackKnockback, defaultOperation, EquipmentSlotGroup.HAND));
         }
 
         itemStack.setItemMeta(itemMeta);

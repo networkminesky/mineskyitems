@@ -29,6 +29,7 @@ public class CurveHandler {
 
     public static void setupCurves() {
         folder.mkdirs();
+        curves.clear();
 
         ItemCurve defaultCurve = new ItemCurve("default-curves.yml");
         curves.add(defaultCurve);

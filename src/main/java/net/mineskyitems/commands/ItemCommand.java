@@ -290,16 +290,13 @@ public class ItemCommand implements TabExecutor {
         }
 
         if(args[0].equalsIgnoreCase("reload")) {
-            s.sendMessage("§7Recarregando arquivos...");
-            CategoryHandler.categories.forEach(category -> {
-                category.reloadFile();
-                category.reloadCategory();
-            });
+            s.sendMessage("§aRecarregando tudo...");
+            MineSkyItems.loadEverything();
 
             TinkeringManager.registerAllFromFile();
             KitHandler.reload();
 
-            s.sendMessage("§aCategorias e kits recarregados! "+ItemHandler.getItemsNames().size()+" itens ativos.");
+            s.sendMessage("§aTudo recarregado!");
             return true;
         }
 

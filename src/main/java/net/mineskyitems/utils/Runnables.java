@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.item.ItemHandler;
+import net.mineskyitems.entities.item.RevisionHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -17,25 +18,28 @@ import java.util.List;
 public class Runnables {
 
     public static void equipmentChecker() {
-        /*Bukkit.getGlobalRegionScheduler().runAtFixedRate(MineSkyItems.getInstance(), (task) -> {
+        Bukkit.getGlobalRegionScheduler().runAtFixedRate(MineSkyItems.getInstance(), (task) -> {
             for(Player player : Bukkit.getOnlinePlayers()) {
-                if(player.hasPermission("mineskyitems.bypassrequirements"))
+                if(!player.hasPermission("mineskyitems.dynamic-revision"))
                     continue;
 
                 player.getScheduler().run(MineSkyItems.getInstance(), (playerTask) -> {
-                    final PlayerInventory inventory = player.getInventory();
-                    final PlayerData data = PlayerData.get(player);
+                    try {
+                        for (int i = 0; i < 40; i++) {
+                            ItemStack stack = player.getInventory().getItem(i);
+                            if (stack == null || stack.getType().isAir())
+                                continue;
 
-                    final int level = data.getLevel();
-                    final String className = data.getProfess().getName();
-
-                    checkArmorPiece(level, className, player, inventory.getHelmet(), EquipmentSlot.HEAD);
-                    checkArmorPiece(level, className, player, inventory.getChestplate(), EquipmentSlot.CHEST);
-                    checkArmorPiece(level, className, player, inventory.getLeggings(), EquipmentSlot.LEGS);
-                    checkArmorPiece(level, className, player, inventory.getBoots(), EquipmentSlot.FEET);
+                            if (RevisionHandler.checkAndApply(player, stack)) {
+                                player.getInventory().setItem(i, stack);
+                            }
+                        }
+                    } catch(Exception ex) {
+                        MineSkyItems.l.severe("Um erro ocorreu ao revisar itens dinamicamente no inventário do jogador "+player.getName());
+                    }
                 }, null);
             }
-        }, 20, 5);*/
+        }, 20, 10 * 20);
     }
 
     public static void checkArmorPiece(final int playerLevel, final String className, final Player player,

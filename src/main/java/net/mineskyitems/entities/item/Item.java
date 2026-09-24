@@ -571,6 +571,7 @@ public class Item {
             EquippableComponent equippableComponent = im.getEquippable();
             equippableComponent.setModel(NamespacedKey.minecraft("part_" + metadata.modelData));
             equippableComponent.setSlot(metadata.material().getEquipmentSlot());
+            equippableComponent.setEquipSound(Sound.ITEM_ARMOR_EQUIP_DIAMOND);
             im.setEquippable(equippableComponent);
         }
 
