@@ -40,6 +40,9 @@ public class ItemAttributes {
 
     private double movementSpeed = 0.0;
 
+    private double entityInteractionRange = 0.0;
+    private double blockInteractionRange = 0.0;
+
     private int maxTotems = 0;
 
     public static final AttributeModifier.Operation defaultOperation = AttributeModifier.Operation.ADD_NUMBER;
@@ -82,6 +85,9 @@ public class ItemAttributes {
         this.movementSpeed = curve.calculateValue(this.item, level, Attribute.MOVEMENT_SPEED);
 
         this.maxTotems = (int) Math.round(curve.calculateValue(this.item, level, CurveHandler.MAX_TOTEMS));
+
+        this.entityInteractionRange = curve.calculateValue(this.item, level, Attribute.ENTITY_INTERACTION_RANGE);
+        this.blockInteractionRange = curve.calculateValue(this.item, level, Attribute.BLOCK_INTERACTION_RANGE);
     }
 
     public ConfigurationSection getAttributesSection() {
@@ -90,6 +96,13 @@ public class ItemAttributes {
 
     public int getMaxTotems() {
         return maxTotems;
+    }
+
+    public double getBlockInteractionRange() {
+        return blockInteractionRange;
+    }
+    public double getEntityInteractionRange() {
+        return entityInteractionRange;
     }
 
     public float getDefaultToolSpeed() {
@@ -165,16 +178,16 @@ public class ItemAttributes {
         itemMeta.setAttributeModifiers(null);
 
         EquipmentSlot slot = getItem().getMetadata().material().getEquipmentSlot();
-        EquipmentSlotGroup group = slot != null ? slot.getGroup() : EquipmentSlotGroup.HAND;
+        EquipmentSlotGroup group = slot != null ? slot.getGroup() : EquipmentSlotGroup.MAINHAND;
 
         if (this.damage != 0.0) {
             itemMeta.addAttributeModifier(Attribute.ATTACK_DAMAGE,
-                    new AttributeModifier(randomKey(), this.damage - 1, defaultOperation, EquipmentSlotGroup.HAND));
+                    new AttributeModifier(randomKey(), this.damage - 1, defaultOperation, EquipmentSlotGroup.MAINHAND));
         }
 
         if (this.speed != 0.0) {
             itemMeta.addAttributeModifier(Attribute.ATTACK_SPEED,
-                    new AttributeModifier(randomKey(), this.speed - 4, defaultOperation, EquipmentSlotGroup.HAND));
+                    new AttributeModifier(randomKey(), this.speed - 4, defaultOperation, EquipmentSlotGroup.MAINHAND));
         }
 
         if (this.maxHealth != 0.0) {
@@ -199,17 +212,28 @@ public class ItemAttributes {
 
         if (this.attackRange != 0.0) {
             itemMeta.addAttributeModifier(Attribute.ENTITY_INTERACTION_RANGE,
-                    new AttributeModifier(randomKey(), this.attackRange, defaultOperation, EquipmentSlotGroup.HAND));
+                    new AttributeModifier(randomKey(), this.attackRange, defaultOperation, EquipmentSlotGroup.MAINHAND));
         }
 
         if (this.attackKnockback != 1.0) {
             itemMeta.addAttributeModifier(Attribute.ATTACK_KNOCKBACK,
-                    new AttributeModifier(randomKey(), this.attackKnockback, defaultOperation, EquipmentSlotGroup.HAND));
+                    new AttributeModifier(randomKey(), this.attackKnockback, defaultOperation, EquipmentSlotGroup.MAINHAND));
+        }
+
+        if(this.blockInteractionRange != 0.0) {
+            itemMeta.addAttributeModifier(Attribute.BLOCK_INTERACTION_RANGE,
+                    new AttributeModifier(randomKey(), this.blockInteractionRange, defaultOperation, EquipmentSlotGroup.MAINHAND));
+        }
+        if(this.entityInteractionRange != 0.0) {
+            itemMeta.addAttributeModifier(Attribute.ENTITY_INTERACTION_RANGE,
+                    new AttributeModifier(randomKey(), this.entityInteractionRange, defaultOperation, EquipmentSlotGroup.MAINHAND));
         }
 
         if (this.movementSpeed != 0.0) {
             itemMeta.addAttributeModifier(Attribute.MOVEMENT_SPEED,
-                    new AttributeModifier(randomKey(), this.movementSpeed, defaultOperation, group));
+                    new AttributeModifier(randomKey(), this.movementSpeed, defaultOperation, EquipmentSlotGroup.MAINHAND));
+            itemMeta.addAttributeModifier(Attribute.MOVEMENT_SPEED,
+                    new AttributeModifier(randomKey(), this.movementSpeed, defaultOperation, EquipmentSlotGroup.ARMOR));
         }
 
         itemStack.setItemMeta(itemMeta);

@@ -5,6 +5,7 @@ import io.lumine.mythic.core.utils.MythicUtil;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Consumable;
 import io.papermc.paper.datacomponent.item.FoodProperties;
+import io.papermc.paper.datacomponent.item.UseEffects;
 import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
@@ -31,6 +32,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.components.EquippableComponent;
 import org.bukkit.inventory.meta.components.ToolComponent;
+import org.bukkit.inventory.meta.components.UseCooldownComponent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
@@ -279,7 +281,7 @@ public class Item {
             }
         }
 
-        forceDamageItem(player, itemStack, result);
+        forceDamageItem(player, itemStack, amount);
     }
 
     public void updateItemOnDamage(ItemStack itemStack, final int result) {
@@ -337,8 +339,8 @@ public class Item {
             double damage = getItemAttributes().getArrowDamage();
             final double cooldownInSeconds = getItemAttributes().getSpeed();
 
-            ItemStack stack = Utils.getFirstArrowItem(player);
-            if(stack == null) return;
+            ItemStack arrowItem = Utils.getFirstArrowItem(player);
+            if(arrowItem == null) return;
 
             if(CooldownManager.inItemCooldown(player, this))
                 return;
@@ -349,21 +351,22 @@ public class Item {
             }
 
             if(itemStack.containsEnchantment(Enchantment.POWER)) {
-                int level = stack.getEnchantmentLevel(Enchantment.POWER);
+                int level = itemStack.getEnchantmentLevel(Enchantment.POWER);
                 damage = (damage*0.25) * (level+1);
             }
 
             if(cooldownInSeconds != 0.0) {
                 CooldownManager.createItemCooldown(player, this, (float) (20/cooldownInSeconds));
             }
+            player.setCooldown(itemStack, (int)(20/cooldownInSeconds));
 
             if(!itemStack.containsEnchantment(Enchantment.INFINITY)
                     && player.getGameMode() != GameMode.CREATIVE)
-                stack.setAmount(stack.getAmount()-1);
+                arrowItem.setAmount(arrowItem.getAmount()-1);
 
             Vector baseDirection = player.getLocation().getDirection();
 
-            Class<? extends AbstractArrow> arrowClass = (stack.getType() == Material.SPECTRAL_ARROW)
+            Class<? extends AbstractArrow> arrowClass = (arrowItem.getType() == Material.SPECTRAL_ARROW)
                     ? SpectralArrow.class : Arrow.class;
 
             boolean multishot = itemStack.containsEnchantment(Enchantment.MULTISHOT);
@@ -386,16 +389,19 @@ public class Item {
                     shotDirection.rotateAroundY(Math.toRadians(angle));
                 }
 
+                final Location arrowLocation = player.getEyeLocation().clone();
+                arrowLocation.setRotation(player.getYaw(), player.getPitch());
+
                 final double finalDamage = multdamage;
-                player.getWorld().spawn(player.getEyeLocation(), arrowClass, arr -> {
+                player.getWorld().spawn(arrowLocation, arrowClass, arr -> {
                     arr.setShooter(player);
                     arr.setVelocity(shotDirection.multiply(FIXED_VELOCITY_MULTIPLIER));
                     arr.setDamage(0);
                     arr.getPersistentDataContainer().set(MineSkyItems.NAMESPACED_KEY, PersistentDataType.DOUBLE, finalDamage);
 
-                    if (stack.getType() == Material.TIPPED_ARROW
+                    if (arrowItem.getType() == Material.TIPPED_ARROW
                             && arr instanceof Arrow) {
-                        PotionMeta potionMeta = (PotionMeta) stack.getItemMeta();
+                        PotionMeta potionMeta = (PotionMeta) arrowItem.getItemMeta();
                         ((Arrow) arr).setBasePotionType(potionMeta.getBasePotionType());
                         potionMeta.getCustomEffects().forEach(potionEffect -> {
                             ((Arrow) arr).addCustomEffect(potionEffect, true);
@@ -425,10 +431,18 @@ public class Item {
                 return;
         }
 
-        if(interactionType == InteractionType.LEFT_CLICK) {
+        if(interactionType == InteractionType.KEY_F) {
             if(getCategory().getShield() != null) {
                 //if(!player.isBlocking())
                 //    return;
+                if(event != null)
+                    event.setCancelled(true);
+
+                if(isItemBroken(itemStack)) {
+                    noDurability(player, itemStack);
+                    return;
+                }
+
                 EquipmentSlot actualHand = hand != null ? hand : EquipmentSlot.HAND;
                 ShieldManager.handleShieldAbility(player, itemStack, this, actualHand, event);
                 return;
@@ -447,7 +461,6 @@ public class Item {
                         event.setCancelled(true);
                         return;
                     }
-
                     player.playSound(player, Sound.UI_BUTTON_CLICK, 0.3f, 1.2f);
                     event.setCancelled(true);
 
@@ -573,6 +586,11 @@ public class Item {
             im.setTool(toolComponent);
         }
 
+        UseCooldownComponent useCooldown = im.getUseCooldown();
+        useCooldown.setCooldownGroup(new NamespacedKey("mineskyitems",
+                getId().toLowerCase().replaceAll("[^a-z0-9_\\-./]", "")));
+        im.setUseCooldown(useCooldown);
+
         Component itemName = Component.text(metadata.displayName()).color(getItemRarity().getTextColor());
         im.itemName(itemName);
         im.lore(getCategory().getTooltip().getFormattedLore(this, itemStack));
@@ -606,6 +624,15 @@ public class Item {
                     .canAlwaysEat(false)
                     .build();
             itemStack.setData(DataComponentTypes.FOOD, foodProp);
+        }
+
+        if(getCategory().getShield() != null) {
+            final String shield = getCategory().getShield();
+            UseEffects useEffects = UseEffects.useEffects()
+                    .canSprint(shield.equalsIgnoreCase("rush"))
+                    .speedMultiplier(shield.equalsIgnoreCase("rush") ? 0.6f : 0.2f)
+                    .build();
+            itemStack.setData(DataComponentTypes.USE_EFFECTS, useEffects);
         }
 
         fixVanillaDurability(itemStack);

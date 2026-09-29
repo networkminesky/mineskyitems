@@ -14,12 +14,12 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityResurrectEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -48,6 +48,7 @@ public class ShieldManager implements Listener {
     private static final Set<UUID> rushingPlayers = ConcurrentHashMap.newKeySet();
     private static final Map<UUID, BoomerangSession> activeBoomerangs = new ConcurrentHashMap<>();
     private static final Map<UUID, UUID> playerToBoomerang = new ConcurrentHashMap<>();
+    private static final Map<UUID, BoomerangSession> hitboxToSession = new ConcurrentHashMap<>();
 
     private static File storageFile;
     private static YamlConfiguration storageConfig;
@@ -91,13 +92,16 @@ public class ShieldManager implements Listener {
             EquipmentSlot slot = EquipmentSlot.valueOf(sec.getString("slot", "OFF_HAND"));
             ItemStack item = sec.getItemStack("item");
             String displayUuidStr = sec.getString("display");
+            String hitboxUuidStr = sec.getString("hitbox");
 
             if (displayUuidStr != null) {
-                UUID displayUuid = UUID.fromString(displayUuidStr);
-                Entity entity = Bukkit.getEntity(displayUuid);
-                if (entity != null) {
-                    entity.remove();
-                }
+                Entity entity = Bukkit.getEntity(UUID.fromString(displayUuidStr));
+                if (entity != null) entity.remove();
+            }
+
+            if (hitboxUuidStr != null) {
+                Entity entity = Bukkit.getEntity(UUID.fromString(hitboxUuidStr));
+                if (entity != null) entity.remove();
             }
 
             Player player = Bukkit.getPlayer(playerUuid);
@@ -121,6 +125,14 @@ public class ShieldManager implements Listener {
         saveStorageFile();
     }
 
+    private static boolean canHurt(Player damager, LivingEntity target, double damage) {
+        if (target instanceof ArmorStand) return false;
+        if (damager.equals(target)) return false;
+        EntityDamageByEntityEvent event = new EntityDamageByEntityEvent(damager, target, EntityDamageEvent.DamageCause.ENTITY_ATTACK, damage);
+        Bukkit.getPluginManager().callEvent(event);
+        return !event.isCancelled();
+    }
+
     public static void handleShieldAbility(Player player, ItemStack itemStack, Item item, EquipmentSlot hand, Cancellable event) {
         String shieldType = item.getCategory().getShield();
         if (shieldType == null) return;
@@ -137,17 +149,27 @@ public class ShieldManager implements Listener {
             case "rush" -> executeRush(player, itemStack, item, hand, event);
             case "boomerang" -> executeBoomerang(player, itemStack, item, hand, event);
         }
+
+        player.swingHand(hand);
     }
 
     private static void executeRush(Player player, ItemStack itemStack, Item item, EquipmentSlot hand, Cancellable event) {
         if (event != null) event.setCancelled(true);
 
         CooldownManager.createItemCooldown(player, item, 6 * 20);
+        //player.setCooldown(itemStack, 6 * 20);
         item.damageItem(player, itemStack, 2, null);
+
+        if (hand == EquipmentSlot.OFF_HAND) {
+            player.getInventory().setItemInOffHand(itemStack);
+        } else {
+            player.getInventory().setItemInMainHand(itemStack);
+        }
 
         rushingPlayers.add(player.getUniqueId());
 
-        Vector dir = player.getLocation().getDirection().setY(0.15).normalize().multiply(1.85);
+        double yaw = Math.toRadians(player.getLocation().getYaw());
+        Vector dir = new Vector(-Math.sin(yaw), 0.0, Math.cos(yaw)).normalize().multiply(2.4).setY(0.28);
         player.setVelocity(dir);
 
         player.getWorld().playSound(player.getLocation(), Sound.ITEM_SHIELD_BLOCK, 1.0f, 0.7f);
@@ -155,7 +177,7 @@ public class ShieldManager implements Listener {
         player.getWorld().spawnParticle(Particle.EXPLOSION, player.getLocation().add(0, 1, 0), 1, 0, 0, 0, 0);
 
         final int durationTicks = 16;
-        final double damage = Math.max(2.0, item.getItemAttributes().getDamage() * 1.5);
+        final double damage = Math.max(2.0, item.getItemAttributes().getSkillDamage() * 1.5);
 
         player.getScheduler().runAtFixedRate(MineSkyItems.getInstance(), new java.util.function.Consumer<ScheduledTask>() {
             int ticks = 0;
@@ -173,6 +195,10 @@ public class ShieldManager implements Listener {
 
                 for (Entity entity : player.getWorld().getNearbyEntities(loc, 2.2, 2.0, 2.2)) {
                     if (entity.equals(player) || !(entity instanceof LivingEntity target) || entity instanceof ArmorStand) {
+                        continue;
+                    }
+
+                    if (!canHurt(player, target, damage)) {
                         continue;
                     }
 
@@ -194,11 +220,18 @@ public class ShieldManager implements Listener {
             return;
         }
 
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_RAVAGER_STUNNED, 1, 0.8f);
+
         ItemStack thrownStack = itemStack.clone();
         thrownStack.setAmount(1);
 
         if (itemStack.getAmount() > 1) {
             itemStack.setAmount(itemStack.getAmount() - 1);
+            if (hand == EquipmentSlot.OFF_HAND) {
+                player.getInventory().setItemInOffHand(itemStack);
+            } else {
+                player.getInventory().setItemInMainHand(itemStack);
+            }
         } else {
             if (hand == EquipmentSlot.OFF_HAND) {
                 player.getInventory().setItemInOffHand(null);
@@ -217,16 +250,25 @@ public class ShieldManager implements Listener {
             ent.addScoreboardTag(BOOMERANG_TAG);
             ent.setTransformation(new Transformation(
                     new Vector3f(0, 0, 0),
-                    new AxisAngle4f((float) Math.toRadians(90), 1, 0, 0),
+                    new AxisAngle4f((float) Math.toRadians(270), 1, 0, 0),
                     new Vector3f(1.1f, 1.1f, 1.1f),
                     new AxisAngle4f(0, 0, 0, 1)
             ));
-            ent.setInterpolationDuration(1);
+            ent.setTeleportDuration(2);
+            ent.setInterpolationDuration(2);
             ent.setInterpolationDelay(0);
         });
 
-        BoomerangSession session = new BoomerangSession(player, item, thrownStack, hand, display);
+        Interaction hitbox = world.spawn(spawnLoc.clone().subtract(0, 2.25, 0), Interaction.class, ent -> {
+            ent.setInteractionWidth(4.5f);
+            ent.setInteractionHeight(4.5f);
+            ent.setResponsive(true);
+            ent.addScoreboardTag(BOOMERANG_TAG);
+        });
+
+        BoomerangSession session = new BoomerangSession(player, item, thrownStack, hand, display, hitbox);
         activeBoomerangs.put(display.getUniqueId(), session);
+        hitboxToSession.put(hitbox.getUniqueId(), session);
         playerToBoomerang.put(player.getUniqueId(), display.getUniqueId());
 
         session.start();
@@ -238,26 +280,38 @@ public class ShieldManager implements Listener {
         private final ItemStack itemStack;
         private final EquipmentSlot originalSlot;
         private final ItemDisplay display;
+        private final Interaction hitbox;
         private final UUID displayId;
+        private final UUID hitboxId;
         private final String storageKey;
 
         private Vector direction;
+        private double speed = 1.35;
         private boolean returning = false;
         private int bounces = 0;
         private int ticksLived = 0;
+        private int returnTicks = 0;
+        private int maceDeflections = 0;
+        private long lastDeflectTime = 0;
         private ScheduledTask task;
         private float currentYaw = 0;
+        private double currentDamage;
+        private UUID lastDeflector = null;
+        private final Set<UUID> hitEntities = new HashSet<>();
 
-        public BoomerangSession(Player player, Item customItem, ItemStack itemStack, EquipmentSlot originalSlot, ItemDisplay display) {
+        public BoomerangSession(Player player, Item customItem, ItemStack itemStack, EquipmentSlot originalSlot, ItemDisplay display, Interaction hitbox) {
             this.playerId = player.getUniqueId();
             this.customItem = customItem;
             this.itemStack = itemStack;
             this.originalSlot = originalSlot;
             this.display = display;
+            this.hitbox = hitbox;
             this.displayId = display.getUniqueId();
+            this.hitboxId = hitbox.getUniqueId();
             this.storageKey = UUID.randomUUID().toString();
 
-            this.direction = player.getEyeLocation().getDirection().normalize().multiply(1.25);
+            this.currentDamage = Math.max(1.0, customItem.getItemAttributes().getSkillDamage());
+            this.direction = player.getEyeLocation().getDirection().normalize().multiply(this.speed);
             saveToConfig();
         }
 
@@ -266,6 +320,7 @@ public class ShieldManager implements Listener {
             storageConfig.set(storageKey + ".slot", originalSlot.name());
             storageConfig.set(storageKey + ".item", itemStack);
             storageConfig.set(storageKey + ".display", displayId.toString());
+            storageConfig.set(storageKey + ".hitbox", hitboxId.toString());
             Location loc = display.getLocation();
             storageConfig.set(storageKey + ".world", loc.getWorld().getName());
             storageConfig.set(storageKey + ".x", loc.getX());
@@ -283,6 +338,34 @@ public class ShieldManager implements Listener {
             this.task = display.getScheduler().runAtFixedRate(MineSkyItems.getInstance(), t -> tick(t), null, 1, 1);
         }
 
+        public void deflectWithMace(Player deflector) {
+            long now = System.currentTimeMillis();
+            if (now - this.lastDeflectTime < 200) {
+                return;
+            }
+            if (this.maceDeflections >= 20) {
+                return;
+            }
+
+            this.lastDeflectTime = now;
+            this.maceDeflections++;
+            this.currentDamage *= 1.25;
+            this.speed = Math.min(2.5, this.speed * 1.04);
+            this.direction = deflector.getEyeLocation().getDirection().normalize().multiply(this.speed);
+            this.lastDeflector = deflector.getUniqueId();
+            this.returning = false;
+            this.returnTicks = 0;
+            this.ticksLived = 0;
+            this.bounces = 0;
+            this.hitEntities.clear();
+
+            Location loc = display.getLocation();
+            loc.getWorld().spawnParticle(Particle.FLASH, loc, 1, 0, 0, 0, 0, Color.WHITE);
+            loc.getWorld().playSound(loc, Sound.ITEM_MACE_SMASH_GROUND, 1.2f, 1.0f);
+            loc.getWorld().playSound(loc, Sound.ITEM_SHIELD_BLOCK, 1.2f, 1.6f);
+            loc.getWorld().playSound(loc, Sound.BLOCK_ANVIL_PLACE, 0.7f, 1.8f);
+        }
+
         private void tick(ScheduledTask runningTask) {
             ticksLived++;
 
@@ -295,18 +378,61 @@ public class ShieldManager implements Listener {
 
             Location currentLoc = display.getLocation();
 
-            currentYaw += 45f;
+            for (BoomerangSession other : activeBoomerangs.values()) {
+                if (other == this) continue;
+                if (this.displayId.compareTo(other.displayId) >= 0) continue;
+
+                Location otherLoc = other.display.getLocation();
+                if (!otherLoc.getWorld().equals(currentLoc.getWorld())) continue;
+
+                if (currentLoc.distanceSquared(otherLoc) <= 3.2 * 3.2) {
+                    Vector diff = currentLoc.toVector().subtract(otherLoc.toVector()).normalize();
+                    if (diff.lengthSquared() < 0.001) {
+                        diff = new Vector(0, 1, 0);
+                    }
+
+                    this.direction = diff.clone().multiply(this.speed);
+                    other.direction = diff.clone().multiply(-1).multiply(other.speed);
+
+                    this.bounces++;
+                    other.bounces++;
+
+                    Location mid = currentLoc.clone().add(otherLoc).multiply(0.5);
+                    mid.getWorld().spawnParticle(Particle.SONIC_BOOM, mid, 1, 0, 0, 0, 0);
+                    mid.getWorld().spawnParticle(Particle.SWEEP_ATTACK, mid, 10, 0.8, 0.8, 0.8, 0.1);
+                    mid.getWorld().playSound(mid, Sound.ENTITY_WARDEN_SONIC_BOOM, 3.0f, 1.2f);
+                    mid.getWorld().playSound(mid, Sound.ITEM_SHIELD_BLOCK, 3.0f, 0.6f);
+
+                    Player damager = lastDeflector != null ? Bukkit.getPlayer(lastDeflector) : player;
+                    if (damager == null || !damager.isOnline()) damager = player;
+
+                    for (Entity entity : mid.getWorld().getNearbyEntities(mid, 6.0, 4.0, 6.0)) {
+                        if (entity instanceof LivingEntity living && !(entity instanceof ArmorStand)) {
+                            if (!entity.equals(damager) && canHurt(damager, living, 1.0)) {
+                                Vector push = living.getLocation().toVector().subtract(mid.toVector());
+                                if (push.lengthSquared() < 0.001) push = new Vector(0, 1, 0);
+                                push.normalize().multiply(2.2).setY(0.6);
+                                living.setVelocity(push);
+                                living.damage(Math.max(2.0, currentDamage * 0.5), damager);
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+
+            currentYaw += 50f;
             display.setTransformation(new Transformation(
                     new Vector3f(0, 0, 0),
                     new AxisAngle4f((float) Math.toRadians(currentYaw), 0, 1, 0),
                     new Vector3f(1.1f, 1.1f, 1.1f),
-                    new AxisAngle4f((float) Math.toRadians(90), 1, 0, 0)
+                    new AxisAngle4f((float) Math.toRadians(270), 1, 0, 0)
             ));
             display.setInterpolationDuration(1);
             display.setInterpolationDelay(0);
 
             if (!returning) {
-                if (ticksLived >= 26 || currentLoc.distance(player.getEyeLocation()) >= 20.0) {
+                if (ticksLived >= 48 || currentLoc.distance(player.getEyeLocation()) >= 38.0) {
                     returning = true;
                 }
 
@@ -316,67 +442,99 @@ public class ShieldManager implements Listener {
                 if (blockHit != null && blockHit.getHitBlockFace() != null) {
                     BlockFace face = blockHit.getHitBlockFace();
                     Vector normal = face.getDirection();
-                    direction = direction.subtract(normal.multiply(2 * direction.dot(normal))).multiply(0.85);
+                    direction = direction.subtract(normal.multiply(2 * direction.dot(normal))).multiply(0.9);
 
                     currentLoc.getWorld().playSound(currentLoc, Sound.ITEM_SHIELD_BLOCK, 1.0f, 1.4f);
                     currentLoc.getWorld().spawnParticle(Particle.CRIT, blockHit.getHitPosition().toLocation(currentLoc.getWorld()), 6, 0.1, 0.1, 0.1, 0.1);
 
                     bounces++;
-                    if (bounces >= 3) {
+                    if (bounces >= 5) {
                         returning = true;
                     }
                 }
 
-                for (Entity entity : currentLoc.getWorld().getNearbyEntities(currentLoc, 1.4, 1.4, 1.4)) {
-                    if (entity.equals(player) || !(entity instanceof LivingEntity target) || entity instanceof ArmorStand) {
+                Player currentDamager = lastDeflector != null ? Bukkit.getPlayer(lastDeflector) : player;
+                if (currentDamager == null || !currentDamager.isOnline()) {
+                    currentDamager = player;
+                }
+
+                for (Entity entity : currentLoc.getWorld().getNearbyEntities(currentLoc, 1.8, 1.8, 1.8)) {
+                    if (entity.equals(currentDamager) || !(entity instanceof LivingEntity target) || entity instanceof ArmorStand || hitEntities.contains(target.getUniqueId())) {
                         continue;
                     }
 
-                    target.damage(customItem.getItemAttributes().getDamage(), player);
+                    if (!canHurt(currentDamager, target, currentDamage)) {
+                        continue;
+                    }
+
+                    target.damage(currentDamage, currentDamager);
                     target.getWorld().playSound(target.getLocation(), Sound.ITEM_SHIELD_BLOCK, 1.0f, 0.9f);
                     target.getWorld().spawnParticle(Particle.SWEEP_ATTACK, target.getLocation().add(0, 1, 0), 1);
-                    returning = true;
+
+                    hitEntities.add(target.getUniqueId());
+                    currentDamage = Math.max(1.0, currentDamage * 0.75);
+                    bounces++;
+
+                    LivingEntity nextTarget = null;
+                    double closestDist = Double.MAX_VALUE;
+                    for (Entity nearby : currentLoc.getWorld().getNearbyEntities(currentLoc, 8.0, 5.0, 8.0)) {
+                        if (nearby.equals(currentDamager) || nearby.equals(target) || !(nearby instanceof LivingEntity living) || nearby instanceof ArmorStand || hitEntities.contains(nearby.getUniqueId())) {
+                            continue;
+                        }
+                        if (!canHurt(currentDamager, living, currentDamage)) {
+                            continue;
+                        }
+                        double d = currentLoc.distanceSquared(nearby.getLocation());
+                        if (d < closestDist) {
+                            closestDist = d;
+                            nextTarget = living;
+                        }
+                    }
+
+                    if (nextTarget != null) {
+                        direction = nextTarget.getEyeLocation().toVector().subtract(currentLoc.toVector()).normalize().multiply(this.speed);
+                    } else {
+                        Vector away = currentLoc.toVector().subtract(target.getLocation().toVector()).setY(0.15).normalize();
+                        direction = away.multiply(this.speed);
+                    }
+
+                    if (bounces >= 5) {
+                        returning = true;
+                    }
                     break;
                 }
             } else {
+                returnTicks++;
+
                 Location targetLoc = player.getEyeLocation();
                 Vector toPlayer = targetLoc.toVector().subtract(currentLoc.toVector());
                 double dist = toPlayer.length();
 
-                if (dist <= 1.35) {
-                    finishReturn(player, false);
+                if (dist <= 1.2 || returnTicks >= 70 || dist >= 60.0) {
+                    finishReturn(player);
                     runningTask.cancel();
                     return;
                 }
 
-                direction = toPlayer.normalize().multiply(1.3);
+                direction = toPlayer.normalize().multiply(this.speed);
             }
 
             Location nextLoc = currentLoc.clone().add(direction);
             display.teleportAsync(nextLoc);
+            hitbox.teleportAsync(nextLoc.clone().subtract(0, 2.25, 0));
 
-            currentLoc.getWorld().spawnParticle(Particle.DUST, currentLoc, 1,
+            currentLoc.getWorld().spawnParticle(Particle.DUST, nextLoc, 1,
                     new Particle.DustOptions(Color.fromRGB(206, 245, 66), 0.7f));
         }
 
-        public void catchManual(Player player) {
-            if (task != null) task.cancel();
-            finishReturn(player, true);
-        }
-
-        private void finishReturn(Player player, boolean manualCatch) {
+        private void finishReturn(Player player) {
             cleanupSession();
 
             player.getScheduler().run(MineSkyItems.getInstance(), t -> {
                 returnItemToPlayer(player, itemStack, originalSlot);
-
-                if (manualCatch) {
-                    player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_DIAMOND, 1.0f, 1.2f);
-                    player.getWorld().spawnParticle(Particle.HEART, player.getEyeLocation().add(0, 0.3, 0), 2, 0.2, 0.2, 0.2, 0.05);
-                } else {
-                    player.playSound(player.getLocation(), Sound.ITEM_SHIELD_BLOCK, 0.8f, 0.5f);
-                    CooldownManager.createItemCooldown(player, customItem, 6 * 20);
-                }
+                player.playSound(player.getLocation(), Sound.ITEM_SHIELD_BLOCK, 0.8f, 0.5f);
+                CooldownManager.createItemCooldown(player, customItem, 6 * 20);
+                player.setCooldown(itemStack, 6 * 20);
             }, null);
         }
 
@@ -394,13 +552,16 @@ public class ShieldManager implements Listener {
             storageConfig.set(storageKey + ".y", loc.getY());
             storageConfig.set(storageKey + ".z", loc.getZ());
             display.remove();
+            hitbox.remove();
         }
 
         private void cleanupSession() {
             activeBoomerangs.remove(displayId);
+            hitboxToSession.remove(hitboxId);
             playerToBoomerang.remove(playerId);
             removeFromConfig();
             display.remove();
+            hitbox.remove();
         }
 
         public boolean isReturning() {
@@ -409,6 +570,10 @@ public class ShieldManager implements Listener {
 
         public UUID getPlayerId() {
             return playerId;
+        }
+
+        public ItemDisplay getDisplay() {
+            return display;
         }
     }
 
@@ -540,38 +705,55 @@ public class ShieldManager implements Listener {
         }
     }
 
-    @EventHandler
-    public void onPlayerInteractEntity(PlayerInteractEntityEvent e) {
-        if (e.getRightClicked() instanceof ItemDisplay display) {
-            BoomerangSession session = activeBoomerangs.get(display.getUniqueId());
-            if (session != null && session.getPlayerId().equals(e.getPlayer().getUniqueId())) {
-                e.setCancelled(true);
-                session.catchManual(e.getPlayer());
-            }
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
+    public void onHitboxDamage(EntityDamageByEntityEvent e) {
+        BoomerangSession session = hitboxToSession.get(e.getEntity().getUniqueId());
+        if (session == null) {
+            return;
         }
+
+        e.setCancelled(true);
+
+        if (!(e.getDamager() instanceof Player damager)) {
+            return;
+        }
+
+        ItemStack handItem = damager.getInventory().getItemInMainHand();
+        if (handItem.getType() != Material.MACE) {
+            return;
+        }
+
+        session.deflectWithMace(damager);
     }
 
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent e) {
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onMaceSwing(PlayerInteractEvent e) {
+        if (e.getAction() != Action.LEFT_CLICK_AIR && e.getAction() != Action.LEFT_CLICK_BLOCK) {
+            return;
+        }
+
         Player player = e.getPlayer();
-        UUID boomerangId = playerToBoomerang.get(player.getUniqueId());
-        if (boomerangId == null) {
+        ItemStack handItem = player.getInventory().getItemInMainHand();
+        if (handItem.getType() != Material.MACE) {
             return;
         }
 
-        BoomerangSession session = activeBoomerangs.get(boomerangId);
-        if (session == null || !session.isReturning()) {
-            return;
-        }
+        Location eye = player.getEyeLocation();
+        Vector look = eye.getDirection().normalize();
 
-        Entity displayEntity = Bukkit.getEntity(boomerangId);
-        if (displayEntity == null) {
-            return;
-        }
+        for (BoomerangSession session : activeBoomerangs.values()) {
+            Location bLoc = session.display.getLocation();
+            if (!bLoc.getWorld().equals(player.getWorld())) continue;
 
-        if (player.getEyeLocation().distance(displayEntity.getLocation()) <= 5.0) {
-            e.setCancelled(true);
-            session.catchManual(player);
+            Vector toB = bLoc.toVector().subtract(eye.toVector());
+            double dist = toB.length();
+            if (dist <= 5.5) {
+                double dot = look.dot(toB.normalize());
+                if (dot > 0.35) {
+                    session.deflectWithMace(player);
+                    break;
+                }
+            }
         }
     }
 

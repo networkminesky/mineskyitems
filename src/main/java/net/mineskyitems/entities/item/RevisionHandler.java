@@ -3,6 +3,7 @@ package net.mineskyitems.entities.item;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Consumable;
 import io.papermc.paper.datacomponent.item.FoodProperties;
+import io.papermc.paper.datacomponent.item.UseEffects;
 import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
@@ -16,6 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.components.EquippableComponent;
 import org.bukkit.inventory.meta.components.ToolComponent;
+import org.bukkit.inventory.meta.components.UseCooldownComponent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -133,6 +135,11 @@ public class RevisionHandler {
             im.setTool(toolComponent);
         }
 
+        UseCooldownComponent useCooldown = im.getUseCooldown();
+        useCooldown.setCooldownGroup(new NamespacedKey("mineskyitems",
+                item.getId().toLowerCase().replaceAll("[^a-z0-9_\\-./]", "")));
+        im.setUseCooldown(useCooldown);
+
         if (item.getCategory().getType().equalsIgnoreCase("armor") && !item.isNoAutoArmor()) {
             EquippableComponent equippableComponent = im.getEquippable();
             equippableComponent.setModel(NamespacedKey.minecraft("part_" + item.getMetadata().modelData()));
@@ -160,6 +167,15 @@ public class RevisionHandler {
                     .canAlwaysEat(false)
                     .build();
             stack.setData(DataComponentTypes.FOOD, foodProp);
+        }
+
+        if(item.getCategory().getShield() != null) {
+            final String shield = item.getCategory().getShield();
+            UseEffects useEffects = UseEffects.useEffects()
+                    .canSprint(shield.equalsIgnoreCase("rush"))
+                    .speedMultiplier(shield.equalsIgnoreCase("rush") ? 0.6f : 0.2f)
+                    .build();
+            stack.setData(DataComponentTypes.USE_EFFECTS, useEffects);
         }
 
         if (!item.getCategory().isNoAttributes()) {

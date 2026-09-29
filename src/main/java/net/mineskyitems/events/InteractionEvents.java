@@ -76,7 +76,7 @@ public class InteractionEvents implements Listener {
             return;
 
         if(item.getCategory().getShield() != null
-        && item.getCategory().getShield().equalsIgnoreCase("tank")) {
+                && item.getCategory().getShield().equalsIgnoreCase("tank")) {
             e.setCancelled(true);
             p.playSound(p.getLocation(), Sound.ENTITY_IRON_GOLEM_REPAIR, 0.8f, 0.9f);
         }
@@ -86,22 +86,48 @@ public class InteractionEvents implements Listener {
     public void onSwap(PlayerSwapHandItemsEvent e) {
         final Player p = e.getPlayer();
 
-        if (e.getMainHandItem() != null && RevisionHandler.checkAndApply(p, e.getMainHandItem())) {
+        if (RevisionHandler.checkAndApply(p, e.getMainHandItem())) {
             e.setMainHandItem(e.getMainHandItem());
         }
 
-        if (e.getOffHandItem() != null && RevisionHandler.checkAndApply(p, e.getOffHandItem())) {
+        if (RevisionHandler.checkAndApply(p, e.getOffHandItem())) {
             e.setOffHandItem(e.getOffHandItem());
         }
 
-        if (e.getOffHandItem() == null)
+        ItemStack mainHandStack = e.getOffHandItem();
+        Item mainHandItem = ItemHandler.getItemFromStack(mainHandStack);
+
+        ItemStack offHandStack = e.getMainHandItem();
+        Item offHandItem = ItemHandler.getItemFromStack(offHandStack);
+
+        if (offHandItem != null && offHandItem.getCategory().getShield() != null) {
+            e.setCancelled(true);
+            offHandItem.onInteraction(p, offHandStack, InteractionType.KEY_F, e, EquipmentSlot.OFF_HAND);
+            p.getScheduler().run(MineSkyItems.getInstance(), t -> p.updateInventory(), null);
             return;
+        }
 
-        ItemStack itemStack = e.getOffHandItem();
-        Item item = ItemHandler.getItemFromStack(itemStack);
+        if (mainHandItem != null && mainHandItem.getCategory().getShield() != null) {
+            e.setCancelled(true);
+            mainHandItem.onInteraction(p, mainHandStack, InteractionType.KEY_F, e, EquipmentSlot.HAND);
+            p.getScheduler().run(MineSkyItems.getInstance(), t -> p.updateInventory(), null);
+            return;
+        }
 
-        if (item != null)
-            item.onInteraction(p, itemStack, InteractionType.KEY_F, e, EquipmentSlot.OFF_HAND);
+        if (mainHandItem != null) {
+            mainHandItem.onInteraction(p, mainHandStack, InteractionType.KEY_F, e, EquipmentSlot.HAND);
+            if (e.isCancelled()) {
+                p.getScheduler().run(MineSkyItems.getInstance(), t -> p.updateInventory(), null);
+                return;
+            }
+        }
+
+        if (offHandItem != null) {
+            offHandItem.onInteraction(p, offHandStack, InteractionType.KEY_F, e, EquipmentSlot.OFF_HAND);
+            if (e.isCancelled()) {
+                p.getScheduler().run(MineSkyItems.getInstance(), t -> p.updateInventory(), null);
+            }
+        }
     }
 
     @EventHandler
