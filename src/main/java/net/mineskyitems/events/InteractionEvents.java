@@ -1,6 +1,7 @@
 package net.mineskyitems.events;
 
 import io.papermc.paper.event.player.PlayerPickEntityEvent;
+import io.papermc.paper.event.player.PlayerShieldDisableEvent;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemHandler;
@@ -8,6 +9,7 @@ import net.mineskyitems.entities.item.RevisionHandler;
 import net.mineskyitems.utils.InteractionType;
 import net.mineskyitems.utils.Utils;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -50,9 +52,34 @@ public class InteractionEvents implements Listener {
         }
 
         Item item = ItemHandler.getItemFromStack(itemStack);
-
         if (item != null)
             item.onInteraction(p, itemStack, Utils.convertInteractionType(e.getAction()), e, e.getHand());
+    }
+
+    @EventHandler
+    public void shieldDisable(PlayerShieldDisableEvent e) {
+        final Player p = e.getPlayer();
+        ItemStack shield = null;
+
+        if (p.getInventory().getItemInOffHand().getType() == Material.SHIELD) {
+            shield = p.getInventory().getItemInOffHand();
+        }
+        else if (p.getInventory().getItemInMainHand().getType() == Material.SHIELD) {
+            shield = p.getInventory().getItemInMainHand();
+        }
+
+        if(shield == null)
+            return;
+
+        Item item = ItemHandler.getItemFromStack(shield);
+        if(item == null)
+            return;
+
+        if(item.getCategory().getShield() != null
+        && item.getCategory().getShield().equalsIgnoreCase("tank")) {
+            e.setCancelled(true);
+            p.playSound(p.getLocation(), Sound.ENTITY_IRON_GOLEM_REPAIR, 0.8f, 0.9f);
+        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)

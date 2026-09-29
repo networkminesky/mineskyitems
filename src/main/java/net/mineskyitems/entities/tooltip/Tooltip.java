@@ -7,8 +7,10 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemAttributes;
+import net.mineskyitems.entities.shields.ShieldManager;
 import net.mineskyitems.utils.Utils;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,10 +56,33 @@ public class Tooltip {
                         .color(item.getItemRarity().getTextColor());
 
                 Component full = item.getItemRarity().getFullComponent()
-                                .append(categoryName);
+                        .append(categoryName);
 
                 n++;
                 definitiveLore.add(full);
+                continue;
+            }
+
+            if(s.contains("%totems%")) {
+                int maxTotems = attributes.getMaxTotems();
+                if(maxTotems > 0) {
+                    definitiveLore.add(LegacyComponentSerializer.legacySection().deserialize(Utils.c(" &#cef542\uD83D\uDD25 ⒺⓃⒸⒶⒾⓍⒺ ⒹⒺ ⓉⓄⓉⒺⓃⓈ:")).decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE));
+                    n++;
+
+                    int currentTotems = 0;
+                    if(stack != null && stack.hasItemMeta()) {
+                        currentTotems = stack.getItemMeta().getPersistentDataContainer().getOrDefault(ShieldManager.TOTEM_KEY, PersistentDataType.INTEGER, 0);
+                    }
+
+                    for(int i = 0; i < maxTotems; i++) {
+                        if(i < currentTotems) {
+                            definitiveLore.add(LegacyComponentSerializer.legacySection().deserialize(Utils.c("  &#cef542• &#cef542ⓉⓄⓉⒺⓂ ⒺⓃⒸⒶⒾⓍⒶⒹⓄ")).decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE));
+                        } else {
+                            definitiveLore.add(LegacyComponentSerializer.legacySection().deserialize(Utils.c("  &#cef542• &#7b8a46ⒺⓃⒸⒶⒾⓍⒺ ⓋⒶⓏⒾⓄ")).decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE));
+                        }
+                        n++;
+                    }
+                }
                 continue;
             }
 

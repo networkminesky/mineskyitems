@@ -14,6 +14,7 @@ import net.mineskyitems.entities.categories.Category;
 import net.mineskyitems.entities.curves.CurveHandler;
 import net.mineskyitems.entities.rarities.ItemRarity;
 import net.mineskyitems.entities.rarities.RarityHandler;
+import net.mineskyitems.entities.shields.ShieldManager;
 import net.mineskyitems.utils.InteractionType;
 import net.mineskyitems.utils.Utils;
 import net.mineskyitems.utils.cooldown.CooldownManager;
@@ -422,6 +423,16 @@ public class Item {
             Item offhand = ItemHandler.getItemFromStack(player.getInventory().getItemInOffHand());
             if(offhand != null && offhand.getCategory().isDualHanded())
                 return;
+        }
+
+        if(interactionType == InteractionType.LEFT_CLICK) {
+            if(getCategory().getShield() != null) {
+                //if(!player.isBlocking())
+                //    return;
+                EquipmentSlot actualHand = hand != null ? hand : EquipmentSlot.HAND;
+                ShieldManager.handleShieldAbility(player, itemStack, this, actualHand, event);
+                return;
+            }
         }
 
         final float baseDamage = (float)getItemAttributes().getSkillDamage();

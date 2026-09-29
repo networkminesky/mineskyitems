@@ -38,6 +38,10 @@ public class ItemAttributes {
 
     private double attackKnockback = 1.0;
 
+    private double movementSpeed = 0.0;
+
+    private int maxTotems = 0;
+
     public static final AttributeModifier.Operation defaultOperation = AttributeModifier.Operation.ADD_NUMBER;
 
     public ItemAttributes(Item item) {
@@ -74,10 +78,18 @@ public class ItemAttributes {
         this.attackKnockback = curve.calculateValue(this.item, level, Attribute.ATTACK_KNOCKBACK);
 
         this.arrowDamage = curve.calculateValue(this.item, level, CurveHandler.ARROW_DAMAGE_CURVE);
+
+        this.movementSpeed = curve.calculateValue(this.item, level, Attribute.MOVEMENT_SPEED);
+
+        this.maxTotems = (int) Math.round(curve.calculateValue(this.item, level, CurveHandler.MAX_TOTEMS));
     }
 
     public ConfigurationSection getAttributesSection() {
         return section;
+    }
+
+    public int getMaxTotems() {
+        return maxTotems;
     }
 
     public float getDefaultToolSpeed() {
@@ -126,6 +138,10 @@ public class ItemAttributes {
 
     public double getAttackKnockback() {
         return this.attackKnockback;
+    }
+
+    public double getMovementSpeed() {
+        return movementSpeed;
     }
 
     public Item getItem() {
@@ -189,6 +205,11 @@ public class ItemAttributes {
         if (this.attackKnockback != 1.0) {
             itemMeta.addAttributeModifier(Attribute.ATTACK_KNOCKBACK,
                     new AttributeModifier(randomKey(), this.attackKnockback, defaultOperation, EquipmentSlotGroup.HAND));
+        }
+
+        if (this.movementSpeed != 0.0) {
+            itemMeta.addAttributeModifier(Attribute.MOVEMENT_SPEED,
+                    new AttributeModifier(randomKey(), this.movementSpeed, defaultOperation, group));
         }
 
         itemStack.setItemMeta(itemMeta);

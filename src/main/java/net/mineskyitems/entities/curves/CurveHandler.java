@@ -23,6 +23,8 @@ public class CurveHandler {
     public static final String TOOL_SPEED = "TOOL_SPEED"; // when breaking the right set of blocks
     public static final String DEFAULT_TOOL_SPEED  = "DEFAULT_TOOL_SPEED"; // when breaking unknown blocks
 
+    public static final String MAX_TOTEMS = "MAX_TOTEMS";
+
     public static Set<ItemCurve> curves = new HashSet<>();
 
     public static File folder = new File(MineSkyItems.getInstance().getDataFolder(), "curves");

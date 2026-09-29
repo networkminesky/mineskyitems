@@ -6,6 +6,7 @@ import net.mineskyitems.commands.KitCommand;
 import net.mineskyitems.entities.ItemDustHandler;
 import net.mineskyitems.entities.curves.CurveHandler;
 import net.mineskyitems.entities.rarities.RarityHandler;
+import net.mineskyitems.entities.shields.ShieldManager;
 import net.mineskyitems.events.InteractionEvents;
 import net.mineskyitems.events.KitEvents;
 import net.mineskyitems.events.MiscEvents;
@@ -74,6 +75,11 @@ public final class MineSkyItems extends JavaPlugin {
         System();
     }
 
+    @Override
+    public void onDisable() {
+        ShieldManager.shutdown();
+    }
+
     public static void loadEverything() {
         l.info("Carregando item curves...");
         CurveHandler.setupCurves();
@@ -112,6 +118,9 @@ public final class MineSkyItems extends JavaPlugin {
             l.info("First-time kit enabled, registering events, initial kit: "+KitEvents.initialKit);
             Bukkit.getPluginManager().registerEvents(new KitEvents(), this);
         }
+
+        ShieldManager.init();
+        Bukkit.getPluginManager().registerEvents(new ShieldManager(), this);
 
         Bukkit.getPluginManager().registerEvents(new InteractionEvents(), this);
         Bukkit.getPluginManager().registerEvents(new MiscEvents(), this);

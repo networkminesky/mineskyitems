@@ -109,6 +109,8 @@ public class ItemCurve {
 
         registerCurve(CurveHandler.TOOL_SPEED);
         registerCurve(CurveHandler.DEFAULT_TOOL_SPEED);
+
+        registerCurve(CurveHandler.MAX_TOTEMS);
     }
 
     public List<Double> getCurve(String key) {

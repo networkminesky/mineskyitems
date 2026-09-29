@@ -40,6 +40,10 @@ public class Category {
      * FOOD, DRINK
      */
     private final @Nullable String food;
+    /** nullable
+     * TANK, RUSH, BOOMERANG
+     */
+    private final @Nullable String shield;
 
     private final String name;
     private final Material defaultItem;
@@ -70,6 +74,7 @@ public class Category {
         this.type = categoriesSection.getString("type", "MELEE");
         this.tool = categoriesSection.getString("tool", null);
         this.food = categoriesSection.getString("food", "FOOD");
+        this.shield = categoriesSection.getString("shield", null);
 
         this.vanillaDurability = categoriesSection.getBoolean("vanilla-durability", true);
 
@@ -123,6 +128,10 @@ public class Category {
 
     public boolean isTool() {
         return this.tool != null;
+    }
+
+    public @Nullable String getShield() {
+        return shield;
     }
 
     @Nullable
