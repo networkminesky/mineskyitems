@@ -41,7 +41,7 @@ public class RevisionHandler {
         Item item = ItemHandler.getItemFromStack(stack);
         if (item != null) {
             final int revision = getRevision(stack);
-            return item.getRevision() > revision;
+            return item.getRevision() != revision;
         }
         return false;
     }
@@ -135,10 +135,12 @@ public class RevisionHandler {
             im.setTool(toolComponent);
         }
 
-        UseCooldownComponent useCooldown = im.getUseCooldown();
-        useCooldown.setCooldownGroup(new NamespacedKey("mineskyitems",
-                item.getId().toLowerCase().replaceAll("[^a-z0-9_\\-./]", "")));
-        im.setUseCooldown(useCooldown);
+        if(!item.getCategory().isNoAttributes()) {
+            UseCooldownComponent useCooldown = im.getUseCooldown();
+            useCooldown.setCooldownGroup(new NamespacedKey("mineskyitems",
+                    item.getId().toLowerCase().replaceAll("[^a-z0-9_\\-./]", "")));
+            im.setUseCooldown(useCooldown);
+        }
 
         if (item.getCategory().getType().equalsIgnoreCase("armor") && !item.isNoAutoArmor()) {
             EquippableComponent equippableComponent = im.getEquippable();

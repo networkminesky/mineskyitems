@@ -42,7 +42,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Item {
-
     private final ConfigurationSection itemSection;
 
     private final List<ItemSkill> itemSkills;
@@ -68,6 +67,8 @@ public class Item {
         return itemSection;
     }
 
+    private final boolean limited;
+
     private final AttributeOverrider attributeOverrider;
     private final boolean hasAnyOverride;
 
@@ -80,9 +81,12 @@ public class Item {
     public void setRevision(int revision) {
         this.revision = revision;
     }
-
     public int getRevision() {
         return revision;
+    }
+
+    public boolean isLimited() {
+        return limited;
     }
 
     public Item(Category category, String id, ConfigurationSection itemSection) {
@@ -134,6 +138,8 @@ public class Item {
 
         this.requiredClasses = List.of();
         this.levelRequirement = itemSection.getInt("required-level", 0);
+
+        this.limited = itemSection.getBoolean("limited", false);
 
         ConfigurationSection skillsSection = itemSection.getConfigurationSection("skills");
 
@@ -586,10 +592,12 @@ public class Item {
             im.setTool(toolComponent);
         }
 
-        UseCooldownComponent useCooldown = im.getUseCooldown();
-        useCooldown.setCooldownGroup(new NamespacedKey("mineskyitems",
-                getId().toLowerCase().replaceAll("[^a-z0-9_\\-./]", "")));
-        im.setUseCooldown(useCooldown);
+        if(!getCategory().isNoAttributes()) {
+            UseCooldownComponent useCooldown = im.getUseCooldown();
+            useCooldown.setCooldownGroup(new NamespacedKey("mineskyitems",
+                    getId().toLowerCase().replaceAll("[^a-z0-9_\\-./]", "")));
+            im.setUseCooldown(useCooldown);
+        }
 
         Component itemName = Component.text(metadata.displayName()).color(getItemRarity().getTextColor());
         im.itemName(itemName);

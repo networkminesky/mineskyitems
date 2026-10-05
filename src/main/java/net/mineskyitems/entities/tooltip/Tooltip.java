@@ -1,5 +1,6 @@
 package net.mineskyitems.entities.tooltip;
 
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
@@ -7,6 +8,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemAttributes;
+import net.mineskyitems.entities.rarities.ItemRarity;
 import net.mineskyitems.entities.shields.ShieldManager;
 import net.mineskyitems.utils.Utils;
 import org.bukkit.inventory.ItemStack;
@@ -50,13 +52,24 @@ public class Tooltip {
             }
 
             if(s.equalsIgnoreCase("%rarity%")) {
+                Component limited = item.isLimited() ?
+                        Component.text("H")
+                                .font(ItemRarity.KEY)
+                                .decoration(TextDecoration.ITALIC, false)
+                                .color(NamedTextColor.WHITE)
+                                .append(Component.space().font(Style.DEFAULT_FONT))
+                        :
+                        Component.empty();
+
                 Component categoryName = Component.space().append(Component.text(item.getCategory().getName()))
                         .font(Style.DEFAULT_FONT)
                         .decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE)
                         .color(item.getItemRarity().getTextColor());
 
-                Component full = item.getItemRarity().getFullComponent()
-                        .append(categoryName);
+                Component full =
+                        limited
+                                .append(item.getItemRarity().getFullComponent())
+                                .append(categoryName);
 
                 n++;
                 definitiveLore.add(full);

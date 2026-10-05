@@ -31,6 +31,7 @@ public class ItemBuilder {
     private int revision;
     private String forceRarity;
     private boolean noAutoArmor;
+    private boolean limited;
     private Set<ObtainingMethod> obtainingMethods;
     private ConfigurationSection rawSection;
 
@@ -45,6 +46,7 @@ public class ItemBuilder {
         this.itemSkills = new ArrayList<>();
         this.revision = 0;
         this.noAutoArmor = false;
+        this.limited = false;
         this.obtainingMethods = new HashSet<>();
         this.forceRarity = null;
 
@@ -68,6 +70,7 @@ public class ItemBuilder {
         this.playerClass = new ArrayList<>(item.getRequiredClasses());
         this.itemSkills = new ArrayList<>(item.getItemSkills());
         this.revision = item.getRevision();
+        this.limited = item.isLimited();
         this.noAutoArmor = item.isNoAutoArmor();
         this.obtainingMethods = new HashSet<>(item.getObtainingMethods());
         this.rawSection = item.getConfig();
@@ -153,6 +156,7 @@ public class ItemBuilder {
         section.set("required-level", itemLevel);
         section.set("classes", playerClass != null ? playerClass : new ArrayList<>());
         section.set("revision", revision);
+        section.set("limited", limited);
         section.set("no-auto-armor", noAutoArmor);
 
         if (forceRarity != null && !forceRarity.isEmpty()) {
@@ -294,6 +298,14 @@ public class ItemBuilder {
 
     public void setRevision(int revision) {
         this.revision = revision;
+    }
+
+    public boolean isLimited() {
+        return limited;
+    }
+
+    public void setLimited(boolean limited) {
+        this.limited = limited;
     }
 
     public String getForceRarity() {

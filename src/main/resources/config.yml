@@ -7,3 +7,8 @@ first-time:
   kit: #should we give an initial kit to new joining players?
     enabled: true
     id: "iniciante"
+
+limited:
+  custom-font:
+    font: "rarity"
+    char: "H"
