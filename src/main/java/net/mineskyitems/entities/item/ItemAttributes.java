@@ -231,7 +231,7 @@ public class ItemAttributes {
 
         if (this.movementSpeed != 0.0) {
             itemMeta.addAttributeModifier(Attribute.MOVEMENT_SPEED,
-                    new AttributeModifier(randomKey(), this.movementSpeed, defaultOperation, EquipmentSlotGroup.MAINHAND));
+                    new AttributeModifier(randomKey(), this.movementSpeed, defaultOperation, EquipmentSlotGroup.HAND));
             itemMeta.addAttributeModifier(Attribute.MOVEMENT_SPEED,
                     new AttributeModifier(randomKey(), this.movementSpeed, defaultOperation, EquipmentSlotGroup.ARMOR));
         }

@@ -549,6 +549,7 @@ public class Item {
         container.set(ItemHandler.CLASS_NAMESPACE, PersistentDataType.LIST.strings(), this.requiredClasses);
         container.set(MineSkyItems.NAMESPACED_KEY, PersistentDataType.STRING, getId());
         container.set(RevisionHandler.REVISION_KEY, PersistentDataType.INTEGER, this.revision);
+        container.set(RevisionHandler.UNIQUE_REVISION_KEY, PersistentDataType.INTEGER, RevisionHandler.UNIQUE_REVISION);
 
         if(getCategory().isDoNotStack()) {
             container.set(NamespacedKey.minecraft("unique"), PersistentDataType.STRING, UUID.randomUUID().toString());

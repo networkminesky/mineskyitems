@@ -20,12 +20,14 @@ import org.bukkit.inventory.meta.components.ToolComponent;
 import org.bukkit.inventory.meta.components.UseCooldownComponent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
 public class RevisionHandler {
 
     public static final NamespacedKey REVISION_KEY = new NamespacedKey("mineskyitems", "revision");
+    public static final NamespacedKey UNIQUE_REVISION_KEY = new NamespacedKey("mineskyitems", "urevision");
 
     public static int getRevision(final ItemStack stack) {
         if (stack == null || !stack.hasItemMeta()) {
@@ -33,17 +35,32 @@ public class RevisionHandler {
         }
         return stack.getItemMeta().getPersistentDataContainer().getOrDefault(REVISION_KEY, PersistentDataType.INTEGER, -1);
     }
+    public static int getUniqueRevision(final ItemStack stack) {
+        if (stack == null || !stack.hasItemMeta()) {
+            return 0;
+        }
+        return stack.getItemMeta().getPersistentDataContainer().getOrDefault(UNIQUE_REVISION_KEY, PersistentDataType.INTEGER, 0);
+    }
+
+    // Unique Revision is a revision applied to all custom items
+    // when the plugin/server has a major change.
+    // It will force-revision all existing items.
+    public static final int UNIQUE_REVISION = 2;
 
     public static boolean shouldRevision(final ItemStack stack) {
         if (stack == null || stack.getType().isAir()) {
             return false;
         }
         Item item = ItemHandler.getItemFromStack(stack);
-        if (item != null) {
-            final int revision = getRevision(stack);
-            return item.getRevision() != revision;
-        }
-        return false;
+        if(item == null)
+            return false;
+
+        final int revision = getRevision(stack);
+        if(item.getRevision() != revision)
+            return true;
+
+        final int urevision = getUniqueRevision(stack);
+        return urevision != UNIQUE_REVISION;
     }
 
     public static boolean checkAndApply(final Player player, final ItemStack stack) {
@@ -74,12 +91,15 @@ public class RevisionHandler {
         }
 
         ItemMeta im = stack.getItemMeta();
+        im.setUseCooldown(null); // nulling it now to fix issues
+
         PersistentDataContainer container = im.getPersistentDataContainer();
 
         container.set(ItemHandler.LEVEL_NAMESPACE, PersistentDataType.INTEGER, item.getRequiredLevel());
         container.set(ItemHandler.CLASS_NAMESPACE, PersistentDataType.LIST.strings(), item.getRequiredClasses());
         container.set(MineSkyItems.NAMESPACED_KEY, PersistentDataType.STRING, item.getId());
         container.set(REVISION_KEY, PersistentDataType.INTEGER, item.getRevision());
+        container.set(UNIQUE_REVISION_KEY, PersistentDataType.INTEGER, UNIQUE_REVISION);
 
         if (item.getCategory().isDoNotStack()) {
             if (!container.has(NamespacedKey.minecraft("unique"), PersistentDataType.STRING)) {

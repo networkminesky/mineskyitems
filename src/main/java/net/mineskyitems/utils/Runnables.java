@@ -39,7 +39,7 @@ public class Runnables {
                     }
                 }, null);
             }
-        }, 20, 10 * 20);
+        }, 20, 5 * 20);
     }
 
     public static void checkArmorPiece(final int playerLevel, final String className, final Player player,
