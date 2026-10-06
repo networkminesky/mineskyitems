@@ -17,6 +17,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -162,5 +163,10 @@ public class Utils {
     }
 
     public static final String PURPLE_COLOR = net.md_5.bungee.api.ChatColor.of("#9a4bfa")+"";
+
+    public static boolean isMathematicallyBedrock(final Player p) {
+        final UUID uuid = p.getUniqueId();
+        return uuid.toString().startsWith("00000000-0000-0000-") || uuid.getMostSignificantBits() == 0L;
+    }
 
 }

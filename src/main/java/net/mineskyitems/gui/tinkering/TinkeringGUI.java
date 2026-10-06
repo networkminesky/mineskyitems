@@ -9,6 +9,7 @@ import net.mineskyitems.entities.item.ItemHandler;
 import net.mineskyitems.gui.tinkering.recipe.TinkeringManager;
 import net.mineskyitems.gui.tinkering.recipe.TinkeringRecipe;
 import net.mineskyitems.hook.AdvancementHook;
+import net.mineskyitems.utils.Utils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -42,8 +43,13 @@ public class TinkeringGUI implements Listener {
     private static final Set<Integer> SEARCH_BUTTON_SLOTS = Set.of(51, 52, 53); // slots do botão de procurar
 
     public static void openGUI(Player player, Block origin) {
-        Inventory inventory = Bukkit.createInventory(null, 54,
-                "[{\"text\":\"VZX\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\"Inventando\",\"font\":\"default\",\"color\":\"black\"}]");
+        Inventory inventory;
+        if(Utils.isMathematicallyBedrock(player)) {
+            inventory = Bukkit.createInventory(null, 54, "[{\"text\":\"\\uF808\"},{\"color\":\"white\",\"text\":\"Z\",\"font\":\"guis\"}]");
+        } else {
+            inventory = Bukkit.createInventory(null, 54,
+                    "[{\"text\":\"VZX\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\"Inventando\",\"font\":\"default\",\"color\":\"black\"}]");
+        }
 
         ItemStack filler = getFillerItem();
 
