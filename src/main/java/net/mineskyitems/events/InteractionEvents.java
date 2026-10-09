@@ -6,10 +6,12 @@ import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemHandler;
 import net.mineskyitems.entities.item.RevisionHandler;
+import net.mineskyitems.entities.shields.ShieldManager;
 import net.mineskyitems.utils.InteractionType;
 import net.mineskyitems.utils.Utils;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,6 +24,10 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.components.EquippableComponent;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 
 public class InteractionEvents implements Listener {
 
@@ -79,6 +85,81 @@ public class InteractionEvents implements Listener {
                 && item.getCategory().getShield().equalsIgnoreCase("tank")) {
             e.setCancelled(true);
             p.playSound(p.getLocation(), Sound.ENTITY_IRON_GOLEM_REPAIR, 0.8f, 0.9f);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onInventoryClick(InventoryClickEvent e) {
+        if(e.getCursor() == null)
+            return;
+
+        final Player player = (Player) e.getWhoClicked();
+        final ItemStack targetStack = e.getCurrentItem();
+
+        Item customItem = ItemHandler.getItemFromStack(targetStack);
+        if (customItem == null)
+            return;
+
+        final Item customCursor = ItemHandler.getItemFromStack(e.getCursor());
+        if (customCursor != null && customCursor.getCategory().isSkin()) {
+            ItemMeta meta = targetStack.getItemMeta();
+            PersistentDataContainer pdc = meta.getPersistentDataContainer();
+            if(!meta.hasEquippable())
+                return;
+            if(pdc.has(ItemHandler.SKIN, PersistentDataType.STRING))
+                return;
+            if(customCursor.getSkinMetadata() == null)
+                return;
+
+            e.setCancelled(true);
+            ItemStack cursor = e.getCursor();
+            cursor.setAmount(cursor.getAmount() - 1);
+
+            EquippableComponent equippableComponent = meta.getEquippable();
+            equippableComponent.setModel(NamespacedKey.minecraft(customCursor.getSkinMetadata().model()));
+            equippableComponent.setSlot(targetStack.getType().getEquipmentSlot());
+            equippableComponent.setEquipSound(Sound.ITEM_ARMOR_EQUIP_LEATHER);
+            meta.setEquippable(equippableComponent);
+
+            pdc.set(ItemHandler.SKIN, PersistentDataType.STRING, customCursor.getId());
+
+            targetStack.setItemMeta(meta);
+            targetStack.lore(customItem.getCategory().getTooltip().getFormattedLore(customItem, targetStack));
+
+            player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 1.0f, 1.4f);
+            player.playSound(player.getLocation(), Sound.BLOCK_SMITHING_TABLE_USE, 1.0f, 1.8f);
+
+            return;
+        }
+
+        // Totem Shield applier
+        if (e.getCursor().getType() == Material.TOTEM_OF_UNDYING) {
+            int maxTotems = customItem.getItemAttributes().getMaxTotems();
+            if (maxTotems <= 0) {
+                return;
+            }
+
+            ItemMeta meta = targetStack.getItemMeta();
+            PersistentDataContainer pdc = meta.getPersistentDataContainer();
+            int currentTotems = pdc.getOrDefault(ShieldManager.TOTEM_KEY, PersistentDataType.INTEGER, 0);
+
+            if (currentTotems >= maxTotems) {
+                return;
+            }
+
+            e.setCancelled(true);
+
+            ItemStack cursor = e.getCursor();
+            cursor.setAmount(cursor.getAmount() - 1);
+
+            currentTotems++;
+            pdc.set(ShieldManager.TOTEM_KEY, PersistentDataType.INTEGER, currentTotems);
+            targetStack.setItemMeta(meta);
+
+            targetStack.lore(customItem.getCategory().getTooltip().getFormattedLore(customItem, targetStack));
+
+            player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_GOLD, 1.0f, 1.4f);
+            player.playSound(player.getLocation(), Sound.BLOCK_SMITHING_TABLE_USE, 1.0f, 1.2f);
         }
     }
 

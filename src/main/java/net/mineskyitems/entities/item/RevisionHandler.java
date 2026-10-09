@@ -45,7 +45,7 @@ public class RevisionHandler {
     // Unique Revision is a revision applied to all custom items
     // when the plugin/server has a major change.
     // It will force-revision all existing items.
-    public static final int UNIQUE_REVISION = 2;
+    public static final int UNIQUE_REVISION = 4;
 
     public static boolean shouldRevision(final ItemStack stack) {
         if (stack == null || stack.getType().isAir()) {
@@ -162,7 +162,8 @@ public class RevisionHandler {
             im.setUseCooldown(useCooldown);
         }
 
-        if (item.getCategory().getType().equalsIgnoreCase("armor") && !item.isNoAutoArmor()) {
+        if (item.getCategory().getType().equalsIgnoreCase("armor") && !item.isNoAutoArmor()
+        && !im.getPersistentDataContainer().has(ItemHandler.SKIN, PersistentDataType.STRING)) {
             EquippableComponent equippableComponent = im.getEquippable();
             equippableComponent.setModel(NamespacedKey.minecraft("part_" + item.getMetadata().modelData()));
             equippableComponent.setSlot(item.getMetadata().material().getEquipmentSlot());

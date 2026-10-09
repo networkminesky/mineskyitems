@@ -50,6 +50,7 @@ public class Category {
 
     private final ItemCurve curve;
 
+    private final boolean skin;
     private final boolean noAttributes;
     private final boolean doNotStack;
     private final boolean dualHanded;
@@ -85,11 +86,14 @@ public class Category {
         this.dualHanded = categoriesSection.getBoolean("dual-handed", false);
         this.oneHanded = categoriesSection.getBoolean("one-handed", false);
 
+        this.skin = categoriesSection.getBoolean("skin", false);
         this.noAttributes = categoriesSection.getBoolean("no-attributes", false);
         this.doNotStack = categoriesSection.getBoolean("do-not-stack", false);
         this.disappearWhenBroken = categoriesSection.getBoolean("disappear-when-broken", true);
         this.showAlmostBroken = categoriesSection.getBoolean("show-almost-broken", true);
     }
+
+    public boolean isSkin() {return this.skin;}
 
     public boolean isVanillaDurability() {
         return this.vanillaDurability;

@@ -596,51 +596,6 @@ public class ShieldManager implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onInventoryClick(InventoryClickEvent e) {
-        if (e.getCursor() == null || e.getCursor().getType() != Material.TOTEM_OF_UNDYING) {
-            return;
-        }
-
-        ItemStack targetStack = e.getCurrentItem();
-        if (targetStack == null || targetStack.getType() == Material.AIR) {
-            return;
-        }
-
-        Item customItem = ItemHandler.getItemFromStack(targetStack);
-        if (customItem == null) {
-            return;
-        }
-
-        int maxTotems = customItem.getItemAttributes().getMaxTotems();
-        if (maxTotems <= 0) {
-            return;
-        }
-
-        ItemMeta meta = targetStack.getItemMeta();
-        PersistentDataContainer pdc = meta.getPersistentDataContainer();
-        int currentTotems = pdc.getOrDefault(TOTEM_KEY, PersistentDataType.INTEGER, 0);
-
-        if (currentTotems >= maxTotems) {
-            return;
-        }
-
-        e.setCancelled(true);
-
-        ItemStack cursor = e.getCursor();
-        cursor.setAmount(cursor.getAmount() - 1);
-
-        currentTotems++;
-        pdc.set(TOTEM_KEY, PersistentDataType.INTEGER, currentTotems);
-        targetStack.setItemMeta(meta);
-
-        targetStack.lore(customItem.getCategory().getTooltip().getFormattedLore(customItem, targetStack));
-
-        Player player = (Player) e.getWhoClicked();
-        player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_GOLD, 1.0f, 1.4f);
-        player.playSound(player.getLocation(), Sound.BLOCK_SMITHING_TABLE_USE, 1.0f, 1.2f);
-    }
-
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityResurrect(EntityResurrectEvent e) {
         if (!(e.getEntity() instanceof Player player)) {

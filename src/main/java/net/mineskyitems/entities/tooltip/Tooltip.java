@@ -8,10 +8,12 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemAttributes;
+import net.mineskyitems.entities.item.ItemHandler;
 import net.mineskyitems.entities.rarities.ItemRarity;
 import net.mineskyitems.entities.shields.ShieldManager;
 import net.mineskyitems.utils.Utils;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
@@ -40,6 +42,9 @@ public class Tooltip {
 
         int n = 0;
         for(String s : getRawFormat()) {
+            if(stack == null)
+                continue;
+
             if(s.contains("%empty%") || s.contains("%vazio%")) {
                 try {
                     final int check = (n - 1);
@@ -76,6 +81,25 @@ public class Tooltip {
                 continue;
             }
 
+            if(s.contains("%skin%")) {
+                if(!stack.hasItemMeta())
+                    continue;
+
+                final PersistentDataContainer container = stack.getItemMeta().getPersistentDataContainer();
+                final String raw = container.getOrDefault(ItemHandler.SKIN, PersistentDataType.STRING, "");
+
+                final Item skinItem = ItemHandler.getItemById(raw);
+
+                if(skinItem == null) {
+                    definitiveLore.add(LegacyComponentSerializer.legacySection().deserialize(Utils.c(" &#ff6eaf\uD83D\uDD8C ⓈⓀⒾⓃ: &#59293fⓈⒺⓂ")).decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE));
+                } else {
+                    definitiveLore.add(LegacyComponentSerializer.legacySection().deserialize(Utils.c(" &#ff6eaf\uD83D\uDD8C ⓈⓀⒾⓃ: &f")).decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE)
+                            .append(Component.text(skinItem.getMetadata().displayName())));
+                }
+                n++;
+                continue;
+            }
+
             if(s.contains("%totems%")) {
                 int maxTotems = attributes.getMaxTotems();
                 if(maxTotems > 0) {
@@ -83,7 +107,7 @@ public class Tooltip {
                     n++;
 
                     int currentTotems = 0;
-                    if(stack != null && stack.hasItemMeta()) {
+                    if(stack.hasItemMeta()) {
                         currentTotems = stack.getItemMeta().getPersistentDataContainer().getOrDefault(ShieldManager.TOTEM_KEY, PersistentDataType.INTEGER, 0);
                     }
 

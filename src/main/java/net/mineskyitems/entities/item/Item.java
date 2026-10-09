@@ -48,6 +48,7 @@ public class Item {
 
     private final ItemMetadata metadata;
     private final @Nullable FoodMetadata foodMetadata;
+    private final @Nullable SkinMetadata skinMetadata;
 
     private final String id;
 
@@ -76,6 +77,9 @@ public class Item {
 
     public @Nullable FoodMetadata getFoodMetadata() {
         return foodMetadata;
+    }
+    public @Nullable SkinMetadata getSkinMetadata() {
+        return skinMetadata;
     }
 
     public void setRevision(int revision) {
@@ -118,6 +122,13 @@ public class Item {
                     (float)food.getDouble("consume-seconds", 1.6)
             );
         } else this.foodMetadata = null;
+
+        ConfigurationSection skin = itemSection.getConfigurationSection("skin");
+        if(skin != null) {
+            this.skinMetadata = new SkinMetadata(
+                    skin.getString("model", "part_0")
+            );
+        } else this.skinMetadata = null;
 
         final ConfigurationSection overrider = itemSection.getConfigurationSection("attribute-overrider");
         this.attributeOverrider = new AttributeOverrider(overrider);
@@ -669,4 +680,6 @@ public class Item {
                                List<String> lore) {}
 
     public record FoodMetadata(int nutrition, float saturation, float consumeSeconds) {}
+
+    public record SkinMetadata(String model) {}
 }

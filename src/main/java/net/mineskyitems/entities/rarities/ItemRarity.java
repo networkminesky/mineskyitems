@@ -15,6 +15,8 @@ public class ItemRarity {
     private final boolean glowing;
 
     private final int maxLevel;
+    // exclusive means this rarity could not be achieved using the item level as a base
+    private final boolean exclusive;
 
     private final boolean customFont;
 
@@ -30,6 +32,7 @@ public class ItemRarity {
         this.config = config;
 
         this.name = config.getString("name", id);
+        this.exclusive = config.getBoolean("exclusive", false);
         this.glowing = config.getBoolean("glowing", false);
         this.customFont = config.contains("custom-font", false);
         this.color = config.getString("color", "#ffffff");
@@ -37,6 +40,10 @@ public class ItemRarity {
         this.tooltip = config.getString("tooltip", null);
 
         this.maxLevel = config.getInt("max-level", 15);
+    }
+
+    public boolean isExclusive() {
+        return exclusive;
     }
 
     @Nullable

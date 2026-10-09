@@ -16,8 +16,10 @@ import java.util.stream.Collectors;
 
 public class ItemHandler {
 
-    public static NamespacedKey LEVEL_NAMESPACE = NamespacedKey.fromString("item_level");
-    public static NamespacedKey CLASS_NAMESPACE = NamespacedKey.fromString("classes");
+    public static final NamespacedKey LEVEL_NAMESPACE = NamespacedKey.fromString("item_level");
+    public static final NamespacedKey CLASS_NAMESPACE = NamespacedKey.fromString("classes");
+
+    public static final NamespacedKey SKIN = new NamespacedKey(MineSkyItems.getInstance(), "skin");
 
     public static int getStaticRequiredLevel(final ItemStack itemStack) {
         if(itemStack == null) return 0;
@@ -100,6 +102,8 @@ public class ItemHandler {
 
     public static Item getItemFromStack(ItemStack itemStack) {
         if(itemStack == null)
+            return null;
+        if(itemStack.getType().isAir())
             return null;
         if(!itemStack.hasItemMeta())
             return null;
