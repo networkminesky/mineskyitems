@@ -2,6 +2,8 @@ package net.mineskyitems.events;
 
 import io.papermc.paper.event.player.PlayerPickEntityEvent;
 import io.papermc.paper.event.player.PlayerShieldDisableEvent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemHandler;
@@ -96,41 +98,63 @@ public class InteractionEvents implements Listener {
         final Player player = (Player) e.getWhoClicked();
         final ItemStack targetStack = e.getCurrentItem();
 
-        Item customItem = ItemHandler.getItemFromStack(targetStack);
-        if (customItem == null)
+        if(targetStack == null)
             return;
+        ItemMeta meta = targetStack.getItemMeta();
+        if(targetStack.getType().isAir() || meta == null)
+            return;
+
+        Item customItem = ItemHandler.getItemFromStack(targetStack);
 
         final Item customCursor = ItemHandler.getItemFromStack(e.getCursor());
         if (customCursor != null && customCursor.getCategory().isSkin()) {
-            ItemMeta meta = targetStack.getItemMeta();
-            PersistentDataContainer pdc = meta.getPersistentDataContainer();
-            if(!meta.hasEquippable())
-                return;
-            if(pdc.has(ItemHandler.SKIN, PersistentDataType.STRING))
-                return;
             if(customCursor.getSkinMetadata() == null)
                 return;
 
+            if(!meta.hasEquippable()) {
+                if(!(targetStack.isSimilar(e.getCursor()))) {
+                    player.playSound(player, Sound.ENTITY_VILLAGER_NO, 0.8f, 1);
+                    player.sendMessage(Component.text("Este item não pode ter skins.").color(NamedTextColor.RED));
+                }
+                return;
+            }
+
             e.setCancelled(true);
+
+            PersistentDataContainer pdc = meta.getPersistentDataContainer();
+            if(pdc.has(ItemHandler.SKIN, PersistentDataType.STRING)) {
+                player.playSound(player, Sound.ENTITY_VILLAGER_NO, 0.8f, 1);
+                player.sendMessage(Component.text("Este item já possui uma skin aplicada. Remova skins usando um balde de água.").color(NamedTextColor.RED));
+                return;
+            }
+
             ItemStack cursor = e.getCursor();
             cursor.setAmount(cursor.getAmount() - 1);
 
+            final EquipmentSlot equipSlot = meta.getEquippable().getSlot();
+
             EquippableComponent equippableComponent = meta.getEquippable();
             equippableComponent.setModel(NamespacedKey.minecraft(customCursor.getSkinMetadata().model()));
-            equippableComponent.setSlot(targetStack.getType().getEquipmentSlot());
-            equippableComponent.setEquipSound(Sound.ITEM_ARMOR_EQUIP_LEATHER);
+            //equippableComponent.setSlot(equipSlot);
+            //equippableComponent.setEquipSound(Sound.ITEM_ARMOR_EQUIP_LEATHER);
             meta.setEquippable(equippableComponent);
 
             pdc.set(ItemHandler.SKIN, PersistentDataType.STRING, customCursor.getId());
 
             targetStack.setItemMeta(meta);
-            targetStack.lore(customItem.getCategory().getTooltip().getFormattedLore(customItem, targetStack));
+
+            if (customItem != null) {
+                targetStack.lore(customItem.getCategory().getTooltip().getFormattedLore(customItem, targetStack));
+            }
 
             player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 1.0f, 1.4f);
             player.playSound(player.getLocation(), Sound.BLOCK_SMITHING_TABLE_USE, 1.0f, 1.8f);
 
             return;
         }
+
+        if(customItem == null)
+            return;
 
         // Totem Shield applier
         if (e.getCursor().getType() == Material.TOTEM_OF_UNDYING) {
@@ -139,7 +163,6 @@ public class InteractionEvents implements Listener {
                 return;
             }
 
-            ItemMeta meta = targetStack.getItemMeta();
             PersistentDataContainer pdc = meta.getPersistentDataContainer();
             int currentTotems = pdc.getOrDefault(ShieldManager.TOTEM_KEY, PersistentDataType.INTEGER, 0);
 

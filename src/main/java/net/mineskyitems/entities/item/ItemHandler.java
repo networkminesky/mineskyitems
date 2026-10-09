@@ -8,6 +8,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -100,7 +101,7 @@ public class ItemHandler {
         category.reloadCategory();
     }
 
-    public static Item getItemFromStack(ItemStack itemStack) {
+    public static @Nullable Item getItemFromStack(ItemStack itemStack) {
         if(itemStack == null)
             return null;
         if(itemStack.getType().isAir())
