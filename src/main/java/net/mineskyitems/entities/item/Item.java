@@ -126,7 +126,9 @@ public class Item {
         ConfigurationSection skin = itemSection.getConfigurationSection("skin");
         if(skin != null) {
             this.skinMetadata = new SkinMetadata(
-                    skin.getString("model", "part_0")
+                    skin.getString("equippable", ""),
+                    skin.getInt("model", -1),
+                    skin.getString("item", "")
             );
         } else this.skinMetadata = null;
 
@@ -681,5 +683,5 @@ public class Item {
 
     public record FoodMetadata(int nutrition, float saturation, float consumeSeconds) {}
 
-    public record SkinMetadata(String model) {}
+    public record SkinMetadata(String equippable, int model, String item) {}
 }

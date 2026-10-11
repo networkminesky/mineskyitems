@@ -96,7 +96,7 @@ public class InteractionEvents implements Listener {
             return;
 
         final Player player = (Player) e.getWhoClicked();
-        final ItemStack targetStack = e.getCurrentItem();
+        ItemStack targetStack = e.getCurrentItem();
 
         if(targetStack == null)
             return;
@@ -108,7 +108,8 @@ public class InteractionEvents implements Listener {
 
         final Item customCursor = ItemHandler.getItemFromStack(e.getCursor());
         if (customCursor != null && customCursor.getCategory().isSkin()) {
-            if(customCursor.getSkinMetadata() == null)
+            final Item.SkinMetadata skinMetadata = customCursor.getSkinMetadata();
+            if(skinMetadata == null)
                 return;
 
             if(!meta.hasEquippable()) {
@@ -133,15 +134,26 @@ public class InteractionEvents implements Listener {
 
             final EquipmentSlot equipSlot = meta.getEquippable().getSlot();
 
-            EquippableComponent equippableComponent = meta.getEquippable();
-            equippableComponent.setModel(NamespacedKey.minecraft(customCursor.getSkinMetadata().model()));
-            //equippableComponent.setSlot(equipSlot);
-            //equippableComponent.setEquipSound(Sound.ITEM_ARMOR_EQUIP_LEATHER);
-            meta.setEquippable(equippableComponent);
+            if(!skinMetadata.equippable().isEmpty()) {
+                EquippableComponent equippableComponent = meta.getEquippable();
+                equippableComponent.setModel(NamespacedKey.minecraft(customCursor.getSkinMetadata().equippable()));
+                meta.setEquippable(equippableComponent);
+            }
+
+            if(skinMetadata.model() != -1) {
+                meta.setCustomModelData(skinMetadata.model());
+            }
 
             pdc.set(ItemHandler.SKIN, PersistentDataType.STRING, customCursor.getId());
 
             targetStack.setItemMeta(meta);
+
+            if(!skinMetadata.item().isEmpty()) {
+                Material material = Material.matchMaterial(skinMetadata.item());
+                if(material != null) {
+                    targetStack = targetStack.withType(material);
+                }
+            }
 
             if (customItem != null) {
                 targetStack.lore(customItem.getCategory().getTooltip().getFormattedLore(customItem, targetStack));
