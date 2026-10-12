@@ -4,6 +4,7 @@ import io.lumine.mythic.bukkit.MythicBukkit;
 import io.lumine.mythic.core.utils.MythicUtil;
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.Consumable;
+import io.papermc.paper.datacomponent.item.DyedItemColor;
 import io.papermc.paper.datacomponent.item.FoodProperties;
 import io.papermc.paper.datacomponent.item.UseEffects;
 import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
@@ -36,6 +37,7 @@ import org.bukkit.inventory.meta.components.UseCooldownComponent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -59,6 +61,10 @@ public class Item {
 
     private final ItemAttributes itemAttributes;
     private final ItemRarity itemRarity;
+
+    public static record RGBEntry(int r, int g, int b) {}
+
+    private final RGBEntry dyedColor;
 
     private final boolean noAutoArmor;
 
@@ -93,12 +99,28 @@ public class Item {
         return limited;
     }
 
+    private SkinFace generateFace(ConfigurationSection section) {
+        if(section == null)
+            return null;
+        return new SkinFace(
+                section.getString("equippable", ""),
+                section.getInt("model", -1),
+                section.getString("item", "")
+        );
+    }
+
     public Item(Category category, String id, ConfigurationSection itemSection) {
         this.category = category;
         this.id = id;
 
         this.itemSection = itemSection;
         this.revision = itemSection.getInt("revision", 0);
+
+        if(itemSection.isList("dyed-color")) {
+            final List<Integer> list = itemSection.getIntegerList("dyed-color");
+            this.dyedColor = new RGBEntry(list.get(0), list.get(1), list.get(2));
+        } else
+            this.dyedColor = null;
 
         final ConfigurationSection metadataSec = itemSection.getConfigurationSection("metadata");
         List<String> lore = new ArrayList<>();
@@ -126,9 +148,11 @@ public class Item {
         ConfigurationSection skin = itemSection.getConfigurationSection("skin");
         if(skin != null) {
             this.skinMetadata = new SkinMetadata(
-                    skin.getString("equippable", ""),
-                    skin.getInt("model", -1),
-                    skin.getString("item", "")
+                    generateFace(skin),
+                    generateFace(skin.getConfigurationSection("HEAD")),
+                    generateFace(skin.getConfigurationSection("CHEST")),
+                    generateFace(skin.getConfigurationSection("LEGS")),
+                    generateFace(skin.getConfigurationSection("FEET"))
             );
         } else this.skinMetadata = null;
 
@@ -648,6 +672,15 @@ public class Item {
             itemStack.setData(DataComponentTypes.FOOD, foodProp);
         }
 
+        if(this.dyedColor != null) {
+            final Color color = Color.fromRGB(this.dyedColor.r(), this.dyedColor.g(), this.dyedColor.b());
+            DyedItemColor dyedItemColor = DyedItemColor.dyedItemColor()
+                    .color(color)
+                    .build();
+            itemStack.setData(DataComponentTypes.DYED_COLOR, dyedItemColor);
+            itemStack.setData(DataComponentTypes.DYE, DyeColor.WHITE);
+        }
+
         if(getCategory().getShield() != null) {
             final String shield = getCategory().getShield();
             UseEffects useEffects = UseEffects.useEffects()
@@ -676,6 +709,10 @@ public class Item {
         }
     }
 
+    public @Nullable RGBEntry getDyedColor() {
+        return dyedColor;
+    }
+
     public record ItemMetadata(Material material,
                                String displayName,
                                int modelData,
@@ -683,5 +720,8 @@ public class Item {
 
     public record FoodMetadata(int nutrition, float saturation, float consumeSeconds) {}
 
-    public record SkinMetadata(String equippable, int model, String item) {}
+    public record SkinMetadata(@Nullable SkinFace DEFAULT,
+                               @Nullable SkinFace HEAD, @Nullable SkinFace CHEST,
+                               @Nullable SkinFace LEGS, @Nullable SkinFace FEET) {}
+    public record SkinFace(String equippable, int model, String item) {}
 }

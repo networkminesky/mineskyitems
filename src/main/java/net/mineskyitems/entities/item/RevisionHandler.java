@@ -95,6 +95,8 @@ public class RevisionHandler {
 
         PersistentDataContainer container = im.getPersistentDataContainer();
 
+        final boolean hasSkin = im.getPersistentDataContainer().has(ItemHandler.SKIN, PersistentDataType.STRING);
+
         container.set(ItemHandler.LEVEL_NAMESPACE, PersistentDataType.INTEGER, item.getRequiredLevel());
         container.set(ItemHandler.CLASS_NAMESPACE, PersistentDataType.LIST.strings(), item.getRequiredClasses());
         container.set(MineSkyItems.NAMESPACED_KEY, PersistentDataType.STRING, item.getId());
@@ -130,7 +132,9 @@ public class RevisionHandler {
             im.itemName(itemName);
         }
 
-        im.setCustomModelData(item.getMetadata().modelData());
+        if(!hasSkin) {
+            im.setCustomModelData(item.getMetadata().modelData());
+        }
 
         if (item.getCategory().isTool()) {
             ToolComponent toolComponent = im.getTool();
@@ -163,7 +167,7 @@ public class RevisionHandler {
         }
 
         if (item.getCategory().getType().equalsIgnoreCase("armor") && !item.isNoAutoArmor()
-        && !im.getPersistentDataContainer().has(ItemHandler.SKIN, PersistentDataType.STRING)) {
+        && !hasSkin) {
             EquippableComponent equippableComponent = im.getEquippable();
             equippableComponent.setModel(NamespacedKey.minecraft("part_" + item.getMetadata().modelData()));
             equippableComponent.setSlot(item.getMetadata().material().getEquipmentSlot());

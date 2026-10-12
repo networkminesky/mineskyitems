@@ -1,5 +1,7 @@
 package net.mineskyitems.events;
 
+import io.papermc.paper.datacomponent.DataComponentTypes;
+import io.papermc.paper.datacomponent.item.DyedItemColor;
 import io.papermc.paper.event.player.PlayerPickEntityEvent;
 import io.papermc.paper.event.player.PlayerShieldDisableEvent;
 import net.kyori.adventure.text.Component;
@@ -11,10 +13,7 @@ import net.mineskyitems.entities.item.RevisionHandler;
 import net.mineskyitems.entities.shields.ShieldManager;
 import net.mineskyitems.utils.InteractionType;
 import net.mineskyitems.utils.Utils;
-import org.bukkit.GameMode;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -111,7 +110,6 @@ public class InteractionEvents implements Listener {
             final Item.SkinMetadata skinMetadata = customCursor.getSkinMetadata();
             if(skinMetadata == null)
                 return;
-
             if(!meta.hasEquippable()) {
                 if(!(targetStack.isSimilar(e.getCursor()))) {
                     player.playSound(player, Sound.ENTITY_VILLAGER_NO, 0.8f, 1);
@@ -120,6 +118,7 @@ public class InteractionEvents implements Listener {
                 return;
             }
 
+            final EquipmentSlot equipSlot = meta.getEquippable().getSlot();
             e.setCancelled(true);
 
             PersistentDataContainer pdc = meta.getPersistentDataContainer();
@@ -129,27 +128,58 @@ public class InteractionEvents implements Listener {
                 return;
             }
 
+            String item = "";
+            String equippable = "";
+            int model = -1;
+
             ItemStack cursor = e.getCursor();
             cursor.setAmount(cursor.getAmount() - 1);
 
-            final EquipmentSlot equipSlot = meta.getEquippable().getSlot();
-
-            if(!skinMetadata.equippable().isEmpty()) {
-                EquippableComponent equippableComponent = meta.getEquippable();
-                equippableComponent.setModel(NamespacedKey.minecraft(customCursor.getSkinMetadata().equippable()));
-                meta.setEquippable(equippableComponent);
+            if(skinMetadata.DEFAULT() != null) {
+                item = skinMetadata.DEFAULT().item();
+                equippable = skinMetadata.DEFAULT().equippable();
+                model = skinMetadata.DEFAULT().model();
             }
 
-            if(skinMetadata.model() != -1) {
-                meta.setCustomModelData(skinMetadata.model());
+            if(equipSlot == EquipmentSlot.HEAD && skinMetadata.HEAD() != null) {
+                model = skinMetadata.HEAD().model();
+                item = skinMetadata.HEAD().item();
+                equippable = skinMetadata.HEAD().equippable();
             }
+            else if(equipSlot == EquipmentSlot.CHEST && skinMetadata.CHEST() != null) {
+                model = skinMetadata.CHEST().model();
+                item = skinMetadata.CHEST().item();
+                equippable = skinMetadata.CHEST().equippable();
+            }
+            else if(equipSlot == EquipmentSlot.LEGS && skinMetadata.LEGS() != null) {
+                model = skinMetadata.LEGS().model();
+                item = skinMetadata.LEGS().item();
+                equippable = skinMetadata.LEGS().equippable();
+            }
+            else if(equipSlot == EquipmentSlot.FEET && skinMetadata.FEET() != null) {
+                model = skinMetadata.FEET().model();
+                item = skinMetadata.FEET().item();
+                equippable = skinMetadata.FEET().equippable();
+            }
+
+            if(model != -1) {
+                meta.setCustomModelData(model);
+            }
+
+            EquippableComponent component = meta.getEquippable();
+            if(!equippable.isEmpty()) {
+                if(equippable.equals("null"))
+                    component.setModel(null);
+                else
+                    component.setModel(NamespacedKey.minecraft(equippable));
+            }
+            meta.setEquippable(component);
 
             pdc.set(ItemHandler.SKIN, PersistentDataType.STRING, customCursor.getId());
-
             targetStack.setItemMeta(meta);
 
-            if(!skinMetadata.item().isEmpty()) {
-                Material material = Material.matchMaterial(skinMetadata.item());
+            if(!item.isEmpty()) {
+                Material material = Material.matchMaterial(item);
                 if(material != null) {
                     targetStack = targetStack.withType(material);
                 }
@@ -157,6 +187,15 @@ public class InteractionEvents implements Listener {
 
             if (customItem != null) {
                 targetStack.lore(customItem.getCategory().getTooltip().getFormattedLore(customItem, targetStack));
+            }
+
+            final Item.RGBEntry dyedColor = customCursor.getDyedColor();
+            if(dyedColor != null) {
+                DyedItemColor dyedItemColor = DyedItemColor.dyedItemColor()
+                        .color(Color.fromRGB(dyedColor.r(), dyedColor.g(), dyedColor.b()))
+                        .build();
+                targetStack.setData(DataComponentTypes.DYED_COLOR, dyedItemColor);
+                targetStack.setData(DataComponentTypes.DYE, DyeColor.WHITE);
             }
 
             player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 1.0f, 1.4f);
