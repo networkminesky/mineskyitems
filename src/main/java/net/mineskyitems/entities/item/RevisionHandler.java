@@ -8,6 +8,8 @@ import io.papermc.paper.datacomponent.item.consumable.ItemUseAnimation;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.mineskyitems.MineSkyItems;
+import net.mineskyitems.utils.DyedColorHelper;
+import org.bukkit.Color;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.Tag;
@@ -96,6 +98,9 @@ public class RevisionHandler {
         PersistentDataContainer container = im.getPersistentDataContainer();
 
         final boolean hasSkin = im.getPersistentDataContainer().has(ItemHandler.SKIN, PersistentDataType.STRING);
+        final Color preservedDyedColor = stack.hasData(DataComponentTypes.DYED_COLOR)
+                ? stack.getData(DataComponentTypes.DYED_COLOR).color()
+                : null;
 
         container.set(ItemHandler.LEVEL_NAMESPACE, PersistentDataType.INTEGER, item.getRequiredLevel());
         container.set(ItemHandler.CLASS_NAMESPACE, PersistentDataType.LIST.strings(), item.getRequiredClasses());
@@ -226,6 +231,12 @@ public class RevisionHandler {
                 stack.resetData(DataComponentTypes.MAX_DAMAGE);
                 stack.resetData(DataComponentTypes.DAMAGE);
             }
+        }
+
+        if (preservedDyedColor != null) {
+            DyedColorHelper.applyColor(stack, preservedDyedColor, null);
+        } else if (item.getDyedColor() != null) {
+            DyedColorHelper.applyFromItemConfig(stack, item);
         }
 
         ItemMeta finalMeta = stack.getItemMeta();

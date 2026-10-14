@@ -1,7 +1,5 @@
 package net.mineskyitems.events;
 
-import io.papermc.paper.datacomponent.DataComponentTypes;
-import io.papermc.paper.datacomponent.item.DyedItemColor;
 import io.papermc.paper.event.player.PlayerPickEntityEvent;
 import io.papermc.paper.event.player.PlayerShieldDisableEvent;
 import net.kyori.adventure.text.Component;
@@ -11,6 +9,7 @@ import net.mineskyitems.entities.item.Item;
 import net.mineskyitems.entities.item.ItemHandler;
 import net.mineskyitems.entities.item.RevisionHandler;
 import net.mineskyitems.entities.shields.ShieldManager;
+import net.mineskyitems.utils.DyedColorHelper;
 import net.mineskyitems.utils.InteractionType;
 import net.mineskyitems.utils.Utils;
 import org.bukkit.*;
@@ -189,19 +188,56 @@ public class InteractionEvents implements Listener {
                 targetStack.lore(customItem.getCategory().getTooltip().getFormattedLore(customItem, targetStack));
             }
 
-            final Item.RGBEntry dyedColor = customCursor.getDyedColor();
-            if(dyedColor != null) {
-                DyedItemColor dyedItemColor = DyedItemColor.dyedItemColor()
-                        .color(Color.fromRGB(dyedColor.r(), dyedColor.g(), dyedColor.b()))
-                        .build();
-                targetStack.setData(DataComponentTypes.DYED_COLOR, dyedItemColor);
-                targetStack.setData(DataComponentTypes.DYE, DyeColor.WHITE);
+            final Color skinDyedColor = DyedColorHelper.resolveColor(cursor, customCursor);
+            if (skinDyedColor != null) {
+                DyedColorHelper.applyColor(targetStack, skinDyedColor, null);
             }
 
+            e.setCurrentItem(targetStack);
             player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, 1.0f, 1.4f);
             player.playSound(player.getLocation(), Sound.BLOCK_SMITHING_TABLE_USE, 1.0f, 1.8f);
 
             return;
+        }
+
+        if (customItem != null
+                && e.getCursor().getType() == Material.WATER_BUCKET
+                && meta.getPersistentDataContainer().has(ItemHandler.SKIN, PersistentDataType.STRING)) {
+            e.setCancelled(true);
+
+            meta.getPersistentDataContainer().remove(ItemHandler.SKIN);
+            targetStack.setItemMeta(meta);
+
+            if (customItem.getDyedColor() != null) {
+                DyedColorHelper.applyFromItemConfig(targetStack, customItem);
+            } else {
+                DyedColorHelper.clearColor(targetStack);
+            }
+
+            RevisionHandler.startRevision(targetStack, customItem);
+            e.setCurrentItem(targetStack);
+            e.setCursor(new ItemStack(Material.BUCKET));
+
+            player.playSound(player.getLocation(), Sound.ITEM_BUCKET_EMPTY, 1.0f, 1.0f);
+            player.playSound(player.getLocation(), Sound.BLOCK_WATER_AMBIENT, 0.6f, 1.2f);
+            return;
+        }
+
+        if (customItem != null && DyedColorHelper.isDyeMaterial(e.getCursor().getType())) {
+            final DyeColor dyeColor = DyedColorHelper.getDyeColor(e.getCursor().getType());
+            if (dyeColor != null && DyedColorHelper.canBeDyed(customItem, targetStack)) {
+                e.setCancelled(true);
+
+                ItemStack cursor = e.getCursor();
+                cursor.setAmount(cursor.getAmount() - 1);
+
+                DyedColorHelper.applyDye(targetStack, customItem, dyeColor);
+                targetStack.lore(customItem.getCategory().getTooltip().getFormattedLore(customItem, targetStack));
+
+                e.setCurrentItem(targetStack);
+                player.playSound(player.getLocation(), Sound.ITEM_DYE_USE, 1.0f, 1.0f);
+                return;
+            }
         }
 
         if(customItem == null)
@@ -231,6 +267,7 @@ public class InteractionEvents implements Listener {
             targetStack.setItemMeta(meta);
 
             targetStack.lore(customItem.getCategory().getTooltip().getFormattedLore(customItem, targetStack));
+            e.setCurrentItem(targetStack);
 
             player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_GOLD, 1.0f, 1.4f);
             player.playSound(player.getLocation(), Sound.BLOCK_SMITHING_TABLE_USE, 1.0f, 1.2f);

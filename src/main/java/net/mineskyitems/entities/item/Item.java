@@ -713,6 +713,10 @@ public class Item {
         return dyedColor;
     }
 
+    public boolean isDyable() {
+        return dyedColor != null;
+    }
+
     public record ItemMetadata(Material material,
                                String displayName,
                                int modelData,
