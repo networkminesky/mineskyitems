@@ -19,11 +19,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TinkeringRecipePreviewGUI implements Listener {
 
     public static final Set<Inventory> previewInventories = Collections.synchronizedSet(new HashSet<>());
-    public static final Map<UUID, PreviewSession> activeSessions = new HashMap<>();
+    public static final Map<UUID, PreviewSession> activeSessions = new ConcurrentHashMap<>();
+    /** True while swapping preview inventories, so the close event does not drop the session. */
+    private static final Set<UUID> navigating = ConcurrentHashMap.newKeySet();
 
     private static final Set<Integer> INPUT_SLOTS = Set.of(
             0, 1, 2, 3, 4,
@@ -52,14 +55,8 @@ public class TinkeringRecipePreviewGUI implements Listener {
     }
 
     public static void openGUI(Player player, TinkeringRecipe recipe, TinkeringSearchGUI.SearchState previousSearchState) {
-        PreviewSession session = activeSessions.get(player.getUniqueId());
-        if (session == null) {
-            session = new PreviewSession(recipe, previousSearchState);
-            activeSessions.put(player.getUniqueId(), session);
-        } else if (session.getCurrentRecipe() != recipe) {
-            session.recipeHistory.push(recipe);
-        }
-
+        PreviewSession session = new PreviewSession(recipe, previousSearchState);
+        activeSessions.put(player.getUniqueId(), session);
         openGUIInternal(player, session);
     }
 
@@ -151,7 +148,13 @@ public class TinkeringRecipePreviewGUI implements Listener {
         inventory.setItem(FILL_SLOT, fillBtn);
 
         previewInventories.add(inventory);
-        player.openInventory(inventory);
+        UUID uuid = player.getUniqueId();
+        navigating.add(uuid);
+        try {
+            player.openInventory(inventory);
+        } finally {
+            navigating.remove(uuid);
+        }
     }
 
     @EventHandler
@@ -209,7 +212,14 @@ public class TinkeringRecipePreviewGUI implements Listener {
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent e) {
-        previewInventories.remove(e.getInventory());
+        if (!previewInventories.remove(e.getInventory())) {
+            return;
+        }
+        UUID uuid = e.getPlayer().getUniqueId();
+        if (navigating.contains(uuid)) {
+            return;
+        }
+        activeSessions.remove(uuid);
     }
 
     private static void autoFillRecipe(Player player, Inventory tinkeringInv, TinkeringRecipe recipe) {

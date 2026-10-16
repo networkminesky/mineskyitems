@@ -21,12 +21,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TinkeringSearchGUI implements Listener {
 
     public static final Set<Inventory> searchInventories = Collections.synchronizedSet(new HashSet<>());
     public static final Map<UUID, SearchState> playerStates = new HashMap<>();
     public static final Map<UUID, SearchState> awaitingSearchPrompt = new HashMap<>();
+    private static final Map<UUID, MaterialScoreCache> materialScoreCache = new ConcurrentHashMap<>();
 
     public enum SortingMode {
         DEFAULT("Padrão"),
@@ -171,6 +173,9 @@ public class TinkeringSearchGUI implements Listener {
     public static List<RecipeDisplayEntry> getFilteredEntries(Player player, SearchState state) {
         List<TinkeringRecipe> allRecipes = TinkeringManager.getRecipes();
         List<RecipeDisplayEntry> entries = new ArrayList<>();
+        Map<TinkeringRecipe, Integer> materialScores = state.sortingMode == SortingMode.MATERIALS
+                ? materialScores(player)
+                : null;
 
         for (TinkeringRecipe recipe : allRecipes) {
             TinkeringManager.ItemEntry result = recipe.getResult();
@@ -214,10 +219,7 @@ public class TinkeringSearchGUI implements Listener {
                 }
             }
 
-            int matScore = 0;
-            if (state.sortingMode == SortingMode.MATERIALS) {
-                matScore = calculateInventoryMaterialScore(player, recipe);
-            }
+            int matScore = materialScores == null ? 0 : materialScores.getOrDefault(recipe, 0);
 
             entries.add(new RecipeDisplayEntry(recipe, result, level, displayName, categoryName, matScore));
         }
@@ -259,34 +261,115 @@ public class TinkeringSearchGUI implements Listener {
         }
     }
 
-    private static int calculateInventoryMaterialScore(Player player, TinkeringRecipe recipe) {
-        int score = 0;
-        ItemStack[] invContents = player.getInventory().getContents();
-        TinkeringManager.ItemEntry[][] grid = recipe.getCroppedRecipeGrid();
+    private static Map<TinkeringRecipe, Integer> materialScores(Player player) {
+        MaterialScoreCache cache = materialScoreCache.computeIfAbsent(player.getUniqueId(), ignored -> new MaterialScoreCache());
+        cache.refresh(player);
+        return cache.scores;
+    }
 
-        for (TinkeringManager.ItemEntry[] row : grid) {
-            for (TinkeringManager.ItemEntry entry : row) {
-                if (entry == null || entry.isAir()) continue;
+    /**
+     * Scores every recipe against one inventory snapshot.
+     * Reused until the inventory contents or the loaded recipe list change.
+     */
+    private static final class MaterialScoreCache {
+        private int fingerprint;
+        private int recipeCount = -1;
+        private TinkeringRecipe first;
+        private TinkeringRecipe last;
+        private final Map<TinkeringRecipe, Integer> scores = new IdentityHashMap<>();
 
-                for (ItemStack item : invContents) {
-                    if (item == null || item.getType().isAir()) continue;
+        private void refresh(Player player) {
+            List<TinkeringRecipe> recipes = TinkeringManager.getRecipes();
+            InventorySnapshot snapshot = new InventorySnapshot(player.getInventory().getContents());
+            int fp = fingerprint(snapshot);
+            TinkeringRecipe currentFirst = recipes.isEmpty() ? null : recipes.getFirst();
+            TinkeringRecipe currentLast = recipes.isEmpty() ? null : recipes.getLast();
+            if (fp == fingerprint && recipes.size() == recipeCount && currentFirst == first && currentLast == last) {
+                return;
+            }
 
-                    if (entry.isVanilla()) {
-                        if (item.getType().name().equalsIgnoreCase(entry.getId())) {
-                            score += item.getAmount();
-                            break;
-                        }
-                    } else {
-                        Item custom = ItemHandler.getItemFromStack(item);
-                        if (custom != null && custom.getId().equalsIgnoreCase(entry.getId())) {
-                            score += item.getAmount();
+            scores.clear();
+            for (TinkeringRecipe recipe : recipes) {
+                scores.put(recipe, snapshot.score(recipe));
+            }
+            fingerprint = fp;
+            recipeCount = recipes.size();
+            first = currentFirst;
+            last = currentLast;
+        }
+
+        private static int fingerprint(InventorySnapshot snapshot) {
+            int fp = 1;
+            for (InventorySnapshot.Slot slot : snapshot.slots) {
+                fp = 31 * fp + slot.materialOrdinal;
+                fp = 31 * fp + slot.amount;
+                fp = 31 * fp + (slot.customIdHash);
+            }
+            return fp;
+        }
+    }
+
+    /**
+     * One inventory read per cache refresh; custom items resolved once per slot.
+     * Scoring uses the same rules as crafting / the original material sort.
+     */
+    private static final class InventorySnapshot {
+        private final List<Slot> slots = new ArrayList<>();
+
+        private InventorySnapshot(ItemStack[] contents) {
+            for (ItemStack item : contents) {
+                if (item == null || item.getType().isAir()) continue;
+                Item custom = ItemHandler.getItemFromStack(item);
+                String customId = custom != null ? custom.getId() : null;
+                slots.add(new Slot(
+                        item.getType().name(),
+                        item.getType().ordinal(),
+                        item.getAmount(),
+                        customId,
+                        customId == null ? 0 : customId.toLowerCase(Locale.ROOT).hashCode()
+                ));
+            }
+        }
+
+        int score(TinkeringRecipe recipe) {
+            int score = 0;
+            TinkeringManager.ItemEntry[][] grid = recipe.getCroppedRecipeGrid();
+            for (TinkeringManager.ItemEntry[] row : grid) {
+                for (TinkeringManager.ItemEntry entry : row) {
+                    if (entry == null || entry.isAir()) continue;
+                    for (Slot slot : slots) {
+                        if (slot.matches(entry)) {
+                            score += slot.amount;
                             break;
                         }
                     }
                 }
             }
+            return score;
         }
-        return score;
+
+        private static final class Slot {
+            private final String materialName;
+            private final int materialOrdinal;
+            private final int amount;
+            private final String customId;
+            private final int customIdHash;
+
+            private Slot(String materialName, int materialOrdinal, int amount, String customId, int customIdHash) {
+                this.materialName = materialName;
+                this.materialOrdinal = materialOrdinal;
+                this.amount = amount;
+                this.customId = customId;
+                this.customIdHash = customIdHash;
+            }
+
+            boolean matches(TinkeringManager.ItemEntry entry) {
+                if (entry.isVanilla()) {
+                    return materialName.equalsIgnoreCase(entry.getId());
+                }
+                return customId != null && customId.equalsIgnoreCase(entry.getId());
+            }
+        }
     }
 
     @EventHandler
