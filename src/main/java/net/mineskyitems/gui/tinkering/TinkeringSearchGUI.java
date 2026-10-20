@@ -1,6 +1,10 @@
 package net.mineskyitems.gui.tinkering;
 
 import net.kyori.adventure.text.Component;
+import net.minesky.gameplay.api.MineSkyAPI;
+import net.minesky.gameplay.api.dialogapi.DialogButton;
+import net.minesky.gameplay.api.dialogapi.DialogInputField;
+import net.minesky.gameplay.api.dialogapi.MineSkyDialog;
 import net.mineskyitems.MineSkyItems;
 import net.mineskyitems.entities.categories.CategoryHandler;
 import net.mineskyitems.entities.item.Item;
@@ -80,9 +84,9 @@ public class TinkeringSearchGUI implements Listener {
 
         String titleText = (state.query != null && !state.query.trim().isEmpty())
                 ?
-                "{\"text\":\"Vb\",\"font\":\"guis\",\"color\":\"white\"}"
+                "{\"text\":\"\uF808\uE016\",\"font\":\"guis\",\"color\":\"white\"}"
                 :
-                "{\"text\":\"Va\",\"font\":\"guis\",\"color\":\"white\"}";
+                "{\"text\":\"\uF808\uE015\",\"font\":\"guis\",\"color\":\"white\"}";
         Inventory inventory = Bukkit.createInventory(null, 54, Component.text(titleText));
 
         renderTopBar(inventory, state);
@@ -99,7 +103,8 @@ public class TinkeringSearchGUI implements Listener {
             searchMeta.displayName(Component.text("§e🔍 Botão de Pesquisar"));
             searchMeta.setCustomModelData(2);
             List<Component> lore = new ArrayList<>();
-            lore.add(Component.text("§7Clique para digitar um termo no chat."));
+            lore.add(Component.text("§7Clique para pesquisar por itens especificos."));
+            lore.add(Component.text("§7Pesquisas incluem categorias, nomes, tipos e mais!"));
             lore.add(Component.text("§fTermo Atual: §a" + (state.query != null ? state.query : "§7[Nenhum]")));
             searchMeta.lore(lore);
             searchBtn.setItemMeta(searchMeta);
@@ -389,9 +394,23 @@ public class TinkeringSearchGUI implements Listener {
         if (slot >= 0 && slot <= 4) {
             awaitingSearchPrompt.put(player.getUniqueId(), state);
             player.closeInventory();
-            player.sendMessage(" ");
-            player.sendMessage("§aDigite no chat o termo da pesquisa (ou 'cancelar'):");
-            player.sendMessage(" ");
+            MineSkyAPI.dialog().createDialog("")
+                    .textInput("search", "Digite o termo para pesquisar", null, null)
+                    .button(DialogButton.confirm("☑ Pesquisar", (clicker, response) -> {
+                        SearchState ss = awaitingSearchPrompt.remove(clicker.getUniqueId());
+                        if(ss == null) return;
+
+                        ss.query = response.getText("search");
+                        clicker.getScheduler().run(MineSkyItems.getInstance(), (task) -> openGUI(clicker, ss), null);
+                    }))
+                    .cancelButton("☒ Cancelar", clicker -> {
+                        SearchState ss = awaitingSearchPrompt.remove(clicker.getUniqueId());
+                        if(ss == null) return;
+
+                        ss.query = null;
+                        clicker.getScheduler().run(MineSkyItems.getInstance(), (task) -> openGUI(clicker, ss), null);
+                    })
+                    .show(player);
             return;
         }
 
@@ -451,7 +470,7 @@ public class TinkeringSearchGUI implements Listener {
         searchInventories.remove(e.getInventory());
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    /*@EventHandler(priority = EventPriority.LOWEST)
     public void onAsyncPlayerChat(AsyncPlayerChatEvent e) {
         Player player = e.getPlayer();
         UUID uuid = player.getUniqueId();
@@ -471,7 +490,7 @@ public class TinkeringSearchGUI implements Listener {
 
             player.getScheduler().run(MineSkyItems.getInstance(), (task) -> openGUI(player, state), null);
         }
-    }
+    }*/
 
     public static class RecipeDisplayEntry {
         public final TinkeringRecipe recipe;

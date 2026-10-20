@@ -72,8 +72,6 @@ public class ItemRepairMenu implements Listener {
         repairButtonSlots.forEach(slot -> inv.setItem(slot, button));
     }
 
-    public static final Key KEY = Key.key(Key.MINECRAFT_NAMESPACE, "guis");
-
     public static void openMainMenu(Player player) {
         // raw implementation because fuck you kyori
         // thank you mineskycore

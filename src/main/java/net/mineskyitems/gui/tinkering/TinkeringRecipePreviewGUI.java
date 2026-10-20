@@ -64,7 +64,7 @@ public class TinkeringRecipePreviewGUI implements Listener {
         TinkeringRecipe recipe = session.getCurrentRecipe();
 
         Inventory inventory = Bukkit.createInventory(null, 54,
-                "[{\"text\":\"VZX\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\"Pré-visualização\",\"font\":\"default\",\"color\":\"black\"}]");
+                "[{\"text\":\"\uF808\uE014\uF828\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\"Pré-visualização\",\"font\":\"default\",\"color\":\"dark_gray\"}]");
 
         ItemStack filler = new ItemStack(Material.PAPER);
         ItemMeta meta = filler.getItemMeta();

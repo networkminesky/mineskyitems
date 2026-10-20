@@ -43,13 +43,8 @@ public class TinkeringGUI implements Listener {
     private static final Set<Integer> SEARCH_BUTTON_SLOTS = Set.of(51, 52, 53); // slots do botão de procurar
 
     public static void openGUI(Player player, Block origin) {
-        Inventory inventory;
-        if(Utils.isMathematicallyBedrock(player)) {
-            inventory = Bukkit.createInventory(null, 54, "[{\"text\":\"\\uF808\"},{\"color\":\"white\",\"text\":\"Z\",\"font\":\"guis\"}]");
-        } else {
-            inventory = Bukkit.createInventory(null, 54,
-                    "[{\"text\":\"VZX\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\"Inventando\",\"font\":\"default\",\"color\":\"black\"}]");
-        }
+        Inventory inventory = Bukkit.createInventory(null, 54,
+                "[{\"text\":\"\uF808\uE014\uF828\",\"font\":\"guis\",\"color\":\"white\"},{\"text\":\"Inventando\",\"font\":\"default\",\"color\":\"dark_gray\"}]");
 
         ItemStack filler = getFillerItem();
 
